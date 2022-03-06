@@ -32,8 +32,10 @@ class Spot_Main:
         
     def print(self, socket_index, message, all=False, type="output"):
         # If socket index == -1, then the command came from Scratch, so there is no websocket to output to
-        assert socket_index != -1, print(message)
-        websocket.websocket_list.print(socket_index, message, all=all, type=type)
+        if socket_index == -1: 
+            print(message)
+        else:
+            websocket.websocket_list.print(socket_index, message, all=all, type=type)
 
     def print_exception(self, socket_index):
         # Copy and pasted from stack overflow. It works
@@ -48,14 +50,18 @@ class Spot_Main:
     def turn_on(self, robot, socket_index):
         self.print(socket_index, "Powering On...")
         robot.power_on(timeout_sec=20)
-        assert robot.is_powered_on(), "<red>Robot Power On Failed</red>"
-        self.print(socket_index, "Powered On")
+        if not robot.is_powered_on():
+            self.print(socket_index, "<red>Robot Power On Failed</red>")
+        else:
+            self.print(socket_index, "Powered On")
         
     def turn_off(self, robot, socket_index):
         self.print(socket_index, "Powering off...")
         robot.power_off(cut_immediately=False, timeout_sec=20)
-        assert not robot.is_powered_on(), self.print(socket_index, "<red>Robot power off failed</red>")
-        self.print(socket_index, "Powered Off")
+        if robot.is_powered_on():
+            self.print(socket_index, "<red>Robot power off failed</red>")
+        else:
+            self.print(socket_index, "Powered Off")
         
     def get_checksum(self):
         # Used to detect file changes for hot reload (not currently used)
@@ -65,9 +71,7 @@ class Spot_Main:
 
     def start(self, socket_index):
         # Starts the background process / connects to robot and stays connected
-        
-        assert not self.is_running, self.print(socket_index, "Cannot start background process because background process is already running")
-        
+                
         self.print(socket_index, "Connecting...")
         
         try:
@@ -80,14 +84,15 @@ class Spot_Main:
             robot.authenticate(secrets.username, secrets.password)
             robot.time_sync.wait_for_sync()
             
-            assert not robot.is_estopped(), self.print(socket_index, "Robot is estopped. The program will now exit.")
+            if robot.is_estopped():
+                self.print(socket_index, "Robot is estopped. The program will now exit.")
+                return
             
             lease_client = robot.ensure_client(bosdyn.client.lease.LeaseClient.default_service_name)
             lease = lease_client.acquire()
         except Exception as e:
             self.print_exception(socket_index)
             self.print(socket_index, "<red>Connection Failed</red>")
-            print("FAILED")
             return
         
         self.print(socket_index, "<green>Connected</green>")
@@ -164,41 +169,49 @@ class background_process:
     def end(self):
         self.main_function.is_running = False
         
-    def start_bg_process(socket_index):
+    def start_bg_process(self, socket_index):
         # Create a thread so the background process can be run in the background
         from threading import Thread
-        thread = Thread(target=self.bg_process.start, args=(socket_index))
+        thread = Thread(target=self.start, args=(socket_index))
         thread.start()
     
 # Creates an instance of the background_process class used for interacting with the background process connected to the robot
 # Don't like declaring it globally in this way but not sure how else to do it
 bg_process = background_process()
     
-# Handles actions from the client, pretty intuitive
+# Handles actions from the client
 # background_process class helps with readability here
 def do_action(action, socket_index, args=None):
     if action == "start":
-        assert not bg_process.main_function.is_running, bg_process.main_function.print(socket_index,
-            "Cannot start background process because background process is already running")  
-        
-        bg_process.start_bg_process(socket_index)      
+        # Makes sure that the background process is not already running before it starts it
+        if bg_process.main_function.is_running:
+            bg_process.main_function.print(socket_index,
+            "Cannot start background process because background process is already running") 
+        else:
+            bg_process.start_bg_process(socket_index)      
             
     elif action == "end":
-        assert bg_process.main_function.is_running, bg_process.main_function.print(socket_index, 
+        # Makes sure that the background process is running before it ends it
+        if not bg_process.main_function.is_running:
+            bg_process.main_function.print(socket_index, 
             "Cannot end background process because background process is not running")
-        
-        bg_process.end()
-        bg_process.main_function.print(socket_index, "Background process ended")
+        else:
+            bg_process.end()
+            bg_process.main_function.print(socket_index, "Background process ended")
             
     elif action == "run_program":
-        assert bg_process.main_function.is_running, bg_process.main_function.print(socket_index, 
+        # Makes sure that the background process is running (robot is connected) before it tries to run a program
+        if not bg_process.main_function.is_running:
+            bg_process.main_function.print(socket_index, 
             "Cannot run program because background process is not running")
-        assert not bg_process.main_function.program_is_running, bg_process.main_function.print(socket_index, 
+        # Makes sure that a program is not already running before it runs one
+        elif bg_process.main_function.program_is_running:
+            bg_process.main_function.print(socket_index, 
             "Cannot run program because program is already running")
-
-        bg_process.main_function.socket_index_program_start = socket_index
-        bg_process.run_program()
-        bg_process.main_function.print(socket_index, "Running Program")
+        else:
+            bg_process.main_function.socket_index_program_start = socket_index
+            bg_process.run_program()
+            bg_process.main_function.print(socket_index, "Running Program")
     
     elif action == "check_if_running":
         return bg_process.main_function.is_running

@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from SpotSite import spotMain, output, websocket
+from SpotSite import spotMain, websocket
 from django.http import HttpResponseRedirect
 from django.http import JsonResponse
 from django.core import serializers
