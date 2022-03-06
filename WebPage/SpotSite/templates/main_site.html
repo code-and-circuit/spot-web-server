@@ -1,0 +1,140 @@
+<html>
+    <head>
+        <title>Spot Control</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400&display=swap" rel="stylesheet">
+
+        {% load static %}
+        <link rel="stylesheet" type="text/css" href="{% static 'global.css' %}" >
+        <script src="{% static 'js/jquery-3.6.0.min.js' %}"></script>
+    </head>
+    <body>
+        <h1>Spot Control Panel</h1>
+        <h1 id="isRunning" style="font-size: 20px; color: yellow">
+            {% if is_running %}
+                Background process is running
+            {% else %}
+                Background process is not running
+            {% endif %}
+
+        </h1>
+        <div class="container">
+            <div class="panel">
+                <div class="bg-process-container">
+                        <div class="form">
+                            <button id="bgStart">Connect</button>
+                        </div>
+                        <div class="form">
+                            <button id="bgEnd">Disconnect</button>
+                        </div>
+                </div>
+                <div class="program-container">
+                    <div class="form">
+                        <button id="runProgram">
+                            {% csrf_token %}
+                            Run Program
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="output">
+                <p id="output"></p>
+            </div>
+        </div>
+
+
+        <script>
+            var href = "ws" + window.location.href.substring(4, window.location.href.length - 1) + "/ws/";
+            socket = new WebSocket(href);
+            var socket_index = null;
+
+            function getCookie(name) {
+                var cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    var cookies = document.cookie.split(';');
+                    for (var i = 0; i < cookies.length; i++) {
+                        var cookie = jQuery.trim(cookies[i]);
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+            var csrftoken = getCookie('csrftoken');
+            
+            socket.onmessage = function(message) {
+                var data = JSON.parse(message['data'])
+                if (data["type"] == "socket_create") {
+                    socket_index = data["socket_index"];
+                    addOutput("Successfully connected to the server at <green>socket index " + socket_index + "</green>")
+                    socket.send("TEST")
+                }
+                else if (data["type"] == "bg_close"){
+                    $("#isRunning").html("Background process is running")
+                }
+                else if (data["type"] == "output") {
+                    addOutput(data["output"])
+                }
+                else {
+                    add("<red>Type not recognized: " + data["type"] + "</red>")
+                }
+            };
+
+            socket.onclose = function(message) {
+                socket.send("unload")
+                setTimeout(function() {
+                    addOutput("<red>Socket " + socket_index + " has closed.<br> You should be seeing this only if the server is being worked on.</red>");
+                }, 500)
+            }
+
+            function addOutput(text, sameLine=false) {
+                if (sameLine) {
+                    $("#output").html($("#output").html() + " " + text);
+                }
+                else {
+                    $("#output").html($("#output").html() + "<br>> " + text);
+                }
+                $("#output").scrollTop($("#output").scrollTop() + 100);
+            }
+
+            function sendRequest(url) {
+                $.ajax({
+                    type: 'GET',
+                    url: url,
+                    data: {
+                        "socket_index" : socket_index
+                    },
+                    success: function(response) {
+                        console.log(response);
+                    },
+                    error: function(response) {
+                        addOutput("<red>Server error: " + response["status"] + ".</red>");
+                        if (response["status"] == "500") {
+                            addOutput("Did the socket close? If so, try reloading.", true)
+                        }
+                    }
+                });
+            }
+
+            $("#runProgram").click(function() {
+                sendRequest("{% url 'runProgram' %}");
+            });
+
+            $('#bgStart').click(function() {
+                sendRequest("{% url 'startProcess' %}");
+            });
+
+            $('#bgEnd').click(function() {
+                sendRequest("{% url 'endProcess' %}");
+            });
+
+            $(window).on("beforeunload", function() { 
+                socket.send("unload")
+            })
+
+        </script>
+    </body>
+</html>

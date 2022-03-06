@@ -1,0 +1,2 @@
+username = 'spot'
+password = 'spotspotspot'
