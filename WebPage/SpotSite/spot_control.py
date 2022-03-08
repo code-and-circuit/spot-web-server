@@ -1,17 +1,18 @@
 import time, math
-from bosdyn.api import robot_command_pb2, mobility_command_pb2
-from bosdyn.api.spot import robot_command_pb2 as spot_command_pb2
-
-import bosdyn.client.util, bosdyn.geometry
-
-from bosdyn.client.robot_command import RobotCommandBuilder, blocking_stand
-
 from SpotSite import websocket
 
-# TODO: Make many commands part of a module so they don't need to be declared here. Would make creating 
-# commands less messy
+from bosdyn.api import robot_command_pb2, mobility_command_pb2
+from bosdyn.api.spot import robot_command_pb2 as spot_command_pb2
+import bosdyn.client.util, bosdyn.geometry
+from bosdyn.client.robot_command import RobotCommandBuilder, blocking_stand
 
-class SpotFunction:
+
+# TODO: Make many commands part of a module so they don't need to be declared here. Would make creating 
+# commands less messy. Maybe make the commands work the same as the Scratch commands do so they send a request
+# to the server? This would allow for very clean code and a file would only need to import the module and have a single
+# line of code for a command
+
+class Spot_Control:
     def __init__(self, cmd_client, s):
         self.command_client = cmd_client
         self.socket_index = s

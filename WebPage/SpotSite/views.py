@@ -1,7 +1,6 @@
 from django.shortcuts import render
-from SpotSite import spotMain, websocket
-from django.http import HttpResponseRedirect
-from django.http import JsonResponse
+from SpotSite import background_process, websocket
+from django.http import HttpResponseRedirect, JsonResponse
 from django.core import serializers
 
 import json
@@ -12,14 +11,14 @@ def main_site(request):
     # Is the background process running or not? 
     # Reflected in the yellow text output at top of webpage
     context = {
-        "is_running": spotMain.bg_process.main_function.is_running,
+        "is_running": background_process.bg_process.is_running,
     }
     return render(request, 'main_site.html', context)
 
 # Relays action information
 def do_action(request, action):
     if request.method == "GET":
-        spotMain.do_action(action, request.GET["socket_index"])
+        background_process.do_action(action, request.GET["socket_index"])
 
 # Starts the background process
 def start_process(request):
@@ -52,7 +51,7 @@ def run_command(request):
         action = data['Command']
         args = data['Args']
         # Adds the command to the queue of commands
-        spotMain.bg_process.main_function.command_queue.append({
+        background_process.bg_process.command_queue.append({
             action: action, 
             args: args
         })
@@ -67,7 +66,7 @@ def get_info(request):
     if request.method == "GET":
         return JsonResponse({
             "valid": True,
-            "is_running": spotMain.bg_process.main_function.is_running,
+            "is_running": background_process.bg_process.is_running,
         }, status=200)
         
 # Handles new websockets and adds them to a list of active sockets. Then keeps the socket alive forever (until it closes itself)
