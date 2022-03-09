@@ -7,7 +7,7 @@ import json
 
 # Renders the main site
 def main_site(request):
-    
+    print("WEBSITE!?")
     # Is the background process running or not? 
     # Reflected in the yellow text output at top of webpage
     context = {
@@ -71,6 +71,7 @@ def get_info(request):
         
 # Handles new websockets and adds them to a list of active sockets. Then keeps the socket alive forever (until it closes itself)
 async def websocket_view(socket):
+    print("WEB SOCKET??")
     socket_index = websocket.websocket_list.add_socket(socket)
     await socket.accept()
     await socket.send_json({

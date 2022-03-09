@@ -18,7 +18,7 @@ class Background_Process:
         self.program_is_running = False
         # The class needed to send motor commands to the robot (sit, stand, walk, etc.)
         self.spot_control_class = None
-        self.scratch_spot_control_class = spot_control.Spot_Control(self.command_client, -1)
+        self.scratch_spot_control_class = None
         self.command_client = None
         self.command_queue = []
         # The index of the socket that sent the command to run a program. Used to output
@@ -99,6 +99,7 @@ class Background_Process:
                 self.turn_on(robot, socket_index)
                 # Command client necessary for sending motor commands to the robot
                 self.command_client = robot.ensure_client(RobotCommandClient.default_service_name)
+                self.scratch_spot_control_class = spot_control.Spot_Control(self.command_client, -1)
                                         
                 self.is_running = True
                 while self.is_running:
@@ -147,8 +148,6 @@ class Background_Process:
         
         if action == 'stand':
             self.scratch_spot_control_class.stand()
-            
-        
             
     def start_bg_process(self, socket_index):
          # Create a thread so the background process can be run in the background
