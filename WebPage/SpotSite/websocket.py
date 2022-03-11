@@ -1,5 +1,7 @@
 import asyncio
+import json
 from threading import Thread
+from SpotSite import background_process
 
 # A class to hold a websocket and its information
 # I did not write the class for the python websocket
@@ -26,16 +28,34 @@ class Websocket:
             # The socket is removed from the list of active sockets if an error occurs
             
             # TODO: Fix the issue in a better way. This is more of a temporary fix but might just stay because it's
-            # not worth the effort to figure it out. This works.
+            # not worth the effort to figure it out. This works.            
+            newMessage = await self.socket.receive_text()
+            message = json.loads(newMessage)
+
+            '''
             try:
-                message = await self.socket.receive_text()
-            except:
-                self.alive = False # MAY NOT WORK, but hopefully we will never find out
-                self.list.remove_key(self.index)
-            # Command sent by the client when the page is closed. This works but the command is not always sent
-            if message == "unload":
+                pass
+            except Exception as e:
+                print("EXCEPTION: ", e)
                 self.alive = False
-        await self.close()
+                self.list.remove_key(self.index)
+            '''
+            
+            
+            if message:
+                if message['action'] == "unload":
+                    self.alive = False
+                elif message['action'] == 'key_press':
+                    websocket_list.key_press(message['keys_pressed'], self.index)
+                elif message['action'] == 'keyboard_control_start':
+                    websocket_list.start_keyboard_control(self.index)
+                elif message['action'] == 'keyboard_control_release':
+                    websocket_list.release_keyboard_control(self.index)
+                    
+        try:    
+            await self.close()
+        except RuntimeError:
+            print("ERROR CLOSING SOCKET")
         # Removes itself from the list of sockets so that the list does not get arbitrarily long if many devices are connecting
         # and disconnecting
         self.list.remove_key(self.index)
@@ -52,6 +72,7 @@ class Websocket_List:
         self.sockets = {}
         # A list of queued outputs
         self.print_queue = []
+        self.keyboard_control_socket_index = -1
         # Starts the process for printing things out. Used so that async functions and awaits aren't needed every time
         # something needs to be outputted to the client. If this wasn't used, almost every function would need to be asynchronous
         # and would need to be awaited. This was messy and was causing issues
@@ -87,16 +108,21 @@ class Websocket_List:
                 })
         # Outputs to a single specified socket
         else:
-            await self.sockets[socket_index].socket.send_json({
-                "type" : type,
-                "output" : message
-            })
+            try:
+                await self.sockets[socket_index].socket.send_json({
+                    "type" : type,
+                    "output" : message
+                })
+            except KeyError:
+                print ("KEY ERORR: ", socket_index)
+                print("MESSAGE: ", message)
             
     # The loop that is always running to be able to handle outputting information
     async def print_loop(self):
         while True:
             if self.print_queue:
-                await self.print_out(self.print_queue[0]['socket_index'], self.print_queue[0]["message"])
+                await self.print_out(self.print_queue[0]['socket_index'], self.print_queue[0]["message"], 
+                                     all=self.print_queue[0]['all'], type=self.print_queue[0]['type'])
                 self.print_queue.pop(0)
                 
     # Used to start the loop using asyncio
@@ -105,7 +131,6 @@ class Websocket_List:
         asyncio.set_event_loop(loop)
         loop.run_until_complete(self.print_loop())
         loop.close()
-        print("LOOP STARTED")
             
     # Used to add an output to the queue of outputs
     def print(self, socket_index, message, all=False, type="output"):
@@ -115,6 +140,20 @@ class Websocket_List:
             "all": all,
             "type": type
         })
+        
+    def start_keyboard_control(self, socket_index):
+        if not background_process.bg_process.is_handling_keyboard_commands:
+            background_process.bg_process.is_handling_keyboard_commands = True
+            self.keyboard_control_socket_index = socket_index
+        
+    def release_keyboard_control(self, socket_index):
+        if socket_index == self.keyboard_control_socket_index:
+            self.keyboard_control_socket_index = -1
+            background_process.bg_process.is_handling_keyboard_commands = False
+    
+    def key_press(self, keys_pressed, socket_index):
+        if socket_index == self.keyboard_control_socket_index:
+            background_process.bg_process.do_keyboard_commands(keys_pressed)
     
 # Creates an instance of the Websocket_list() class. I don't like declaring it globally like this
 # but I don't know of any other way.

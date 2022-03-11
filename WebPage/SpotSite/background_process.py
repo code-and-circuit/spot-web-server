@@ -1,5 +1,9 @@
 from importlib import reload
-import time, sys, math, linecache, hashlib
+import time 
+import sys
+import math
+import linecache
+import hashlib
 
 from SpotSite import spot_control, secrets, websocket
 
@@ -16,6 +20,10 @@ class Background_Process:
         self.is_running = False
         # Tells if a program is being run from a file
         self.program_is_running = False
+        # Tells if commands from scratch are being run
+        self.is_running_scratch_commands = False
+        # Tells if someone is controlling the robot with the keyboard
+        self.is_handling_keyboard_commands = False
         # The class needed to send motor commands to the robot (sit, stand, walk, etc.)
         self.spot_control_class = None
         self.scratch_spot_control_class = None
@@ -105,7 +113,7 @@ class Background_Process:
                 while self.is_running:
                     # If the program is not already running and if no instance of spot function exists, run the program.
                     # An instance of a spot function can exist without the program being run if commands are being sent from Scratch
-                    if self.program_is_running and not self.spot_control_class:
+                    if self.program_is_running:
                         # Reload the function to allow for changes
                         time.sleep(0.2)
                         reload(spot_control)
@@ -117,7 +125,6 @@ class Background_Process:
                             self.print_exception(self.socket_index_program_start)
                             
                         self.program_is_running = False
-                        self.spot_control_class = None
                     # If there are commands in the queue from Scratch and no program is already running, run the commands
                     # from the queue. All commands in the queue will be executed before anything else is allowed to happen.
                     # Currently, all commands from Scratch are executed by the same instance of the Spot_Control class. Since
@@ -125,14 +132,15 @@ class Background_Process:
                     # TODO: Allow queued command execution to halt or pause based on user input or a special command type. Maybe a chunk
                     # of code from a single source could be run at a time, and then the next chunk does not run until further user input?
                     elif self.command_queue:
+                        self.is_running_scratch_commands = True
                         while self.command_queue:
                             command = self.command_queue[0]
                             try:
-                                do_command(command)
+                                self.do_command(command)
                             except:
                                 self.print_exception(socket_index)
                             self.command_queue.pop(0) 
-                        self.spot_control_class = None
+                        self.is_running_scratch_commands = False
                         
         finally:
             # IMPORTANT: turn of the robot and return the lease
@@ -141,14 +149,65 @@ class Background_Process:
             self.turn_off(robot, socket_index)
             lease_client.return_lease(lease)
             
-    def do_command(command):
+    def do_command(self, command):
         # Executes commands from the queue
-        action = command['action']
-        args = command['args']
+        action = command['Command']
         
         if action == 'stand':
             self.scratch_spot_control_class.stand()
+        
+        if action == 'sit':
+            self.scratch_spot_control_class.sit()
             
+        if action == 'rotate':
+            args = command['Args']
+            pitch = float(args['pitch'])
+            yaw = float(args['yaw'])
+            roll = float(args['roll'])
+            
+            self.scratch_spot_control_class.rotate(yaw, roll, pitch)
+        
+        if action == 'move':
+            args= command['Args']
+            x = float(args['x'])
+            y = float(args['y'])
+            z = float(args['y'])
+            
+            self.scratch_spot_control_class.walk(x, y, z, d=1)
+            
+    def do_keyboard_commands(self, keys_pressed):
+        if self.program_is_running or self.is_running_scratch_commands or not self.scratch_spot_control_class:
+            return
+        
+        d_x = 0
+        d_y = 0
+        d_z = 0
+        
+        d_h = 0
+        
+        if keys_pressed['w']:
+            d_x += 1
+        if keys_pressed['s']:
+            d_x -= 1
+            
+        if keys_pressed['d']:
+            d_y += 1
+        if keys_pressed['a']:
+            d_y -= 1
+            
+        if keys_pressed['q']:
+            d_z += 1
+        if keys_pressed['e']:
+            d_z -= 1
+            
+        if keys_pressed['r']:
+            d_h += 1
+        if keys_pressed['f']:
+            d_h -= 1
+        
+        self.scratch_spot_control_class.keyboard_walk(d_x, d_y, d_z)
+        
+    
     def start_bg_process(self, socket_index):
          # Create a thread so the background process can be run in the background
         from threading import Thread
@@ -161,34 +220,11 @@ class Background_Process:
     def run_program(self):
         self.program_is_running = True
             
-
-# Can potentially be removed but is nice for readability in code handling actions from the client
-# -- UNUSED --
-class background_process:
-    def __init__(self):
-        self.main_function = Background_Process()
-        
-    def start(self, socket_index):
-        self.main_function.start(socket_index)
-        
-    def run_program(self):
-        self.main_function.program_is_running = True
-        
-    def end(self):
-        self.main_function.is_running = False
-        
-    def start_bg_process(self, socket_index):
-        # Create a thread so the background process can be run in the background
-        from threading import Thread
-        thread = Thread(target=self.start, args=(socket_index))
-        thread.start()
-    
 # Creates an instance of the background_process class used for interacting with the background process connected to the robot
 # Don't like declaring it globally in this way but not sure how else to do it
 bg_process = Background_Process()
     
 # Handles actions from the client
-# background_process class helps with readability here
 def do_action(action, socket_index, args=None):
     if action == "start":
         # Makes sure that the background process is not already running before it starts it
@@ -204,7 +240,7 @@ def do_action(action, socket_index, args=None):
             bg_process.print(socket_index, 
             "Cannot end background process because background process is not running")
         else:
-            bg_process.end()
+            bg_process.end_bg_process()
             bg_process.print(socket_index, "Background process ended")
             
     elif action == "run_program":

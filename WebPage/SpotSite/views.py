@@ -4,14 +4,18 @@ from django.http import HttpResponseRedirect, JsonResponse
 from django.core import serializers
 
 import json
+from importlib import reload
+import pyttsx3 as pyttsx
 
 # Renders the main site
 def main_site(request):
-    print("WEBSITE!?")
+    speakEngine = pyttsx.init()
+    speakEngine.say('Page Loaded Successfully')
+    speakEngine.runAndWait()
     # Is the background process running or not? 
     # Reflected in the yellow text output at top of webpage
     context = {
-        "is_running": background_process.bg_process.is_running,
+        "is_running": True#background_process.bg_process.is_running,
     }
     return render(request, 'main_site.html', context)
 
@@ -48,13 +52,8 @@ def run_command(request):
     if request.method == "POST":
         # Obtains data from the json file
         data = json.loads(request.body.decode("utf-8"))
-        action = data['Command']
-        args = data['Args']
         # Adds the command to the queue of commands
-        background_process.bg_process.command_queue.append({
-            action: action, 
-            args: args
-        })
+        background_process.bg_process.command_queue.append(data)
         
     return JsonResponse({
         "valid": True,
@@ -71,7 +70,6 @@ def get_info(request):
         
 # Handles new websockets and adds them to a list of active sockets. Then keeps the socket alive forever (until it closes itself)
 async def websocket_view(socket):
-    print("WEB SOCKET??")
     socket_index = websocket.websocket_list.add_socket(socket)
     await socket.accept()
     await socket.send_json({

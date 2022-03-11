@@ -17,7 +17,7 @@ body {
     color: white;
 }
 
-input, button {
+button {
     font-size: 1em;
     border: none;
     color: white;
@@ -31,7 +31,7 @@ input, button {
     overflow: wrap;
 }
     
-    input:hover, button:hover {
+    button:hover {
         background: white;
         color: black;
     }
@@ -78,8 +78,10 @@ red {
     flex-direction: row;
     box-shadow: 0 0 20px -13px white; 
     border-radius: 20px;
-    background: rgb(30, 30, 30)
+    background: rgb(30, 30, 30);
+    margin-bottom: 20px;
 }
+
 
 .output p {
     overflow-y: scroll;
@@ -97,7 +99,85 @@ red {
     flex-direction: column;
 }
 
+.key {
+    cursor: default;
+    width: 20px;
+    height: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    position: absolute;
+    text-align: center;
+    border-radius: 5px;
+    padding: 2px;
+}
+
+#w {
+    left: 70px;
+    top: 65px;
+}
+
+#a {
+    left: 40px;
+    top: 95px;
+}
+
+#s {
+    left: 70px;
+    top: 95px;
+}
+
+#d {
+    left: 100px;
+    top: 95px;
+}
+
+#q {
+    left: 160px;
+    top: 50px;
+}
+
+#e {
+    left: 190px;
+    top: 50px;
+}
+
+#r {
+    left: 160px;
+    top: 80px;
+    width: 50px;
+}
+
+#f {
+    left: 160px;
+    top: 110px;
+    width: 50px;
+}
+
+.key-selected {
+    cursor: default;
+    background: white;
+    color: rgb(40, 40, 42);
+}
+
 #file {
     margin-top: 30px;
     margin-bottom: 10px;
+}
+
+#ctrl {
+    position: absolute;
+    left: 30px;
+    top: 30px;
+    width: 200px;
+    height: 120px;
+    background: rgb(30, 30, 30);
+    border: none;
+    cursor: pointer;
+    border-radius: 20px;
+    color: rgb(40, 40, 42);
+}
+
+#ctrl:focus {
+    border: 2px solid white;
+    outline: none;
+    background: rgb(40, 40, 42);
 }
