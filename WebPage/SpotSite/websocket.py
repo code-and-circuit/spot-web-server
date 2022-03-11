@@ -81,7 +81,8 @@ class Websocket_List:
         
     # Removes a socket from the list
     def remove_key(self, key):
-        self.sockets.pop(key, None)
+        if key in self.sockets:
+            self.sockets.pop(key, None)
         
     # Adds a socket to the list
     def add_socket(self, s):

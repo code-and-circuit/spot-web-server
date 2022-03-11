@@ -15,7 +15,7 @@ def main_site(request):
     # Is the background process running or not? 
     # Reflected in the yellow text output at top of webpage
     context = {
-        "is_running": True#background_process.bg_process.is_running,
+        "is_running": background_process.bg_process.is_running,
     }
     return render(request, 'main_site.html', context)
 
@@ -76,4 +76,8 @@ async def websocket_view(socket):
         'type' : "socket_create",
         'socket_index' : socket_index
     })
-    await websocket.websocket_list.sockets[socket_index].keep_alive()
+    try:
+        await websocket.websocket_list.sockets[socket_index].keep_alive()
+    except Exception as e:
+        print("ERROR: ", e)
+        websocket.websocket_list.remove_key(socket_index)

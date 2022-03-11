@@ -148,6 +148,7 @@ class Background_Process:
             # but it's good practice to do it from the client side
             self.turn_off(robot, socket_index)
             lease_client.return_lease(lease)
+            self.is_running = False
             
     def do_command(self, command):
         # Executes commands from the queue
