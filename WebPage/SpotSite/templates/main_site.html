@@ -187,7 +187,8 @@
                 q: false,
                 e: false,
                 r: false,
-                f: false
+                f: false,
+                space: false
             }
             var refresh_rate = 0.2;
 
@@ -235,6 +236,7 @@
                     $("#space").removeClass("key-selected");
                     robot_mode = robot_mode == "Walk" ? "Stand" : "Walk";
                     $("#space").html(robot_mode + " Mode");
+                    keys_pressed['space'] = true
                 }
                 else if (valid_keys.includes(key_pressed)) {
                     $("#" + key_pressed).removeClass("key-selected");
@@ -262,6 +264,7 @@
                             action: 'key_press',
                             keys_pressed: keys_pressed
                         }));
+                        keys_pressed['space'] = false
                     }
                 }, refresh_rate * 1000);
             });

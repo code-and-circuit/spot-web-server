@@ -21,9 +21,10 @@ class Background_Process:
         self.is_running_scratch_commands = False
         # Tells if someone is controlling the robot with the keyboard
         self.is_handling_keyboard_commands = False
+        # Tells what mode the keyboard control is in (walk or stand)
+        self.keyboard_control_mode = "Walk"
         # The class needed to send motor commands to the robot (sit, stand, walk, etc.)
-        self.spot_control_class = None
-        self.scratch_spot_control_class = None
+        self.robot_control = None
         self.command_client = None
         self.command_queue = []
         # The index of the socket that sent the command to run a program. Used to output
@@ -104,7 +105,7 @@ class Background_Process:
                 self.turn_on(robot, socket_index)
                 # Command client necessary for sending motor commands to the robot
                 self.command_client = robot.ensure_client(RobotCommandClient.default_service_name)
-                self.scratch_spot_control_class = spot_control.Spot_Control(self.command_client, -1)
+                self.robot_control = spot_control.Spot_Control(self.command_client, -1)
                                         
                 self.is_running = True
                 while self.is_running:
@@ -116,8 +117,8 @@ class Background_Process:
                         reload(spot_control)
                         time.sleep(0.2)
                         try:
-                            self.spot_control_class = spot_control.Spot_Control(self.command_client, self.socket_index_program_start)
-                            self.spot_control_class.do_function()
+                            self.robot_control.socket_index = self.socket_index_program_start
+                            self.robot_control.do_function()
                         except:
                             self.print_exception(self.socket_index_program_start)
                             
@@ -152,10 +153,10 @@ class Background_Process:
         action = command['Command']
         
         if action == 'stand':
-            self.scratch_spot_control_class.stand()
+            self.robot_control.stand()
         
         if action == 'sit':
-            self.scratch_spot_control_class.sit()
+            self.robot_control.sit()
             
         if action == 'rotate':
             args = command['Args']
@@ -163,7 +164,7 @@ class Background_Process:
             yaw = float(args['yaw'])
             roll = float(args['roll'])
             
-            self.scratch_spot_control_class.rotate(yaw, roll, pitch)
+            self.robot_control.rotate(yaw, roll, pitch)
         
         if action == 'move':
             args= command['Args']
@@ -171,18 +172,18 @@ class Background_Process:
             y = float(args['y'])
             z = float(args['y'])
             
-            self.scratch_spot_control_class.walk(x, y, z, d=1)
+            self.robot_control.walk(x, y, z, d=1)
             
     def do_keyboard_commands(self, keys_pressed):
-        if self.program_is_running or self.is_running_scratch_commands or not self.scratch_spot_control_class:
+        if keys_pressed['space']:
+            self.keyboard_control_mode = "Walk" if self.keyboard_control_mode == "Stand" else "Stand"
             return
-        
+        if self.program_is_running or self.is_running_scratch_commands or not self.robot_control:
+            return
         d_x = 0
         d_y = 0
         d_z = 0
-        
-        d_h = 0
-        
+                
         if keys_pressed['w']:
             d_x += 1
         if keys_pressed['s']:
@@ -199,11 +200,14 @@ class Background_Process:
             d_z -= 1
             
         if keys_pressed['r']:
-            d_h += 1
-        if keys_pressed['f']:
-            d_h -= 1
-        
-        self.scratch_spot_control_class.keyboard_walk(d_x, d_y, d_z)
+            self.robot_control.stand()
+        elif keys_pressed['f']:
+            self.robot_control.sit()
+        else:
+            if self.keyboard_control_mode == "Walk":
+                self.robot_control.keyboard_walk(d_x, d_y, d_z)
+            elif self.keyboard_control_mode == "Stand":
+                self.robot_control.keyboard_rotate(d_y, d_x, d_z)
         
     
     def start_bg_process(self, socket_index):

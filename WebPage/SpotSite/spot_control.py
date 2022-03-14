@@ -74,15 +74,24 @@ class Spot_Control:
         self.command_client.robot_command(cmd)
         self.print(f'Standing at: {height}')
         
-    def keyboard_walk(self, x, y, z):
+    def keyboard_walk(self, d_x, d_y, d_z):
         walk = RobotCommandBuilder.synchro_velocity_command(
-            x * self.KEYBOARD_COMMAND_VELOCITY,
-            y * self.KEYBOARD_COMMAND_VELOCITY,
-            z * self.KEYBOARD_TURN_VELOCITY
+            d_x * self.KEYBOARD_COMMAND_VELOCITY,
+            d_y * self.KEYBOARD_COMMAND_VELOCITY,
+            d_z * self.KEYBOARD_TURN_VELOCITY
         )
         walk.synchronized_command.mobility_command.params.CopyFrom(
                         RobotCommandBuilder._to_any(self.collision_avoid_params))    
         self.command_client.robot_command(walk, end_time_secs=time.time() + self.KEYBOARD_COMMAND_DURATION)
+
+    def keyboard_rotate(self, d_yaw, d_roll, d_pitch):
+        rotation = bosdyn.geometry.EulerZXY(
+            yaw = self.yaw + d_yaw * self.KEYBOARD_ROTATION_VELOCITY, 
+            roll = self.roll + d_roll * self.KEYBOARD_ROTATION_VELOCITY, 
+            pitch = self.pitch + d_pitch * self.KEYBOARD_ROTATION_VELOCITY
+        )
+        cmd = RobotCommandBuilder.synchro_stand_command(footprint_R_body=rotation)
+        self.command_client.robot_command(cmd)
 
     def setup(self):
         self.stand()
