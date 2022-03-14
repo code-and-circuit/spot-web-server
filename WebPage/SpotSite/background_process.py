@@ -165,7 +165,7 @@ class Background_Process:
             yaw = float(args['yaw'])
             roll = float(args['roll'])
             
-            self.robot_control.rotate(yaw, roll, pitch)
+            self.robot_control.rotate(radians(yaw), radians(roll), radians(pitch))
         
         if action == 'move':
             args= command['Args']

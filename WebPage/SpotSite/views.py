@@ -49,12 +49,16 @@ def run_command(request):
     if request.method == "POST":
         # Obtains data from the json file
         data = json.loads(request.body.decode("utf-8"))
-        # Adds the command to the queue of commands
-        background_process.bg_process.command_queue.append(data)
+        if background_process.bg_process.robot_control:
+            # Adds the command to the queue of commands
+            background_process.bg_process.command_queue.append(data)
         
+            return JsonResponse({
+                "valid": True,
+            }, status = 200)
     return JsonResponse({
-        "valid": True,
-    }, status = 200)
+                "valid": False,
+            }, status = 200)
 
 # Gets information about the state of the server
 # Currently only used to tell if the background process is running

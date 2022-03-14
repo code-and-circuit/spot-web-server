@@ -69,7 +69,6 @@ class Websocket:
 # Also handles printing
 class Websocket_List:
     def __init__(self):
-        print("WEBSOCKET LIST CREATED")
         self.sockets = {}
         # A list of queued outputs
         self.print_queue = []
