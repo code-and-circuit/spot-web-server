@@ -69,10 +69,16 @@ class Websocket:
 # Also handles printing
 class Websocket_List:
     def __init__(self):
+        print("WEBSOCKET LIST CREATED")
         self.sockets = {}
         # A list of queued outputs
         self.print_queue = []
         self.keyboard_control_socket_index = -1
+        self.loop_is_running = False
+        
+        
+    def start_loop(self):
+        self.loop_is_running = True
         # Starts the process for printing things out. Used so that async functions and awaits aren't needed every time
         # something needs to be outputted to the client. If this wasn't used, almost every function would need to be asynchronous
         # and would need to be awaited. This was messy and was causing issues

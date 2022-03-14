@@ -20,7 +20,8 @@ class Spot_Control:
         self.KEYBOARD_COMMAND_DURATION = 0.2
         self.KEYBOARD_COMMAND_VELOCITY = 0.2
         self.KEYBOARD_TURN_VELOCITY = 0.1
-        self.KEYBOARD_HEIGHT_VELOCITY = 0.05
+        self.KEYBOARD_ROTATION_VELOCITY = 0.01
+        self.rotation = {pitch: 0, yaw: 0, roll: 0}
         self.collision_avoid_params = spot_command_pb2.ObstacleParams(
             obstacle_avoidance_padding = 1, disable_vision_foot_obstacle_avoidance = False, 
             disable_vision_foot_constraint_avoidance = False, disable_vision_body_obstacle_avoidance = False,
@@ -94,4 +95,3 @@ class Spot_Control:
         self.sit()
         time.sleep(1)
         self.stand()
-        #await walk(-.2, 0, 0, d=1)

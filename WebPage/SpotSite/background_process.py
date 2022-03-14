@@ -11,9 +11,6 @@ import bosdyn.client, bosdyn.client.lease
 from bosdyn.client.robot_command import RobotCommandClient
 from bosdyn.client.power import power_off
 
-# TODO: Make code cleaner, possibly remove the need for the background_process class
-# -- Should be done, just need to check to make sure it runs properly when connected to the robot --
-
 class Background_Process:
     def __init__(self):
         # Tells if background program is running (if it's connected to the robot)

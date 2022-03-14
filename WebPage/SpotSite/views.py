@@ -4,14 +4,11 @@ from django.http import HttpResponseRedirect, JsonResponse
 from django.core import serializers
 
 import json
-from importlib import reload
-import pyttsx3 as pyttsx
 
 # Renders the main site
 def main_site(request):
-    speakEngine = pyttsx.init()
-    speakEngine.say('Page Loaded Successfully')
-    speakEngine.runAndWait()
+    if not websocket.websocket_list.loop_is_running:
+        websocket.websocket_list.start_loop()
     # Is the background process running or not? 
     # Reflected in the yellow text output at top of webpage
     context = {

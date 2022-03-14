@@ -42,17 +42,21 @@
                 <p id="output"></p>
             </div>
         </div>
-        <input type="" id="ctrl">
-        <p class="key" id="w">W</p>
-        <p class="key" id="a">A</p>
-        <p class="key" id="s">S</p>
-        <p class="key" id="d">D</p>
-
-        <p class="key" id="q">Q</p>
-        <p class="key" id="e">E</p>
-
-        <p class="key" id="r">R</p>
-        <p class="key" id="f">F</p>
+        <div class="ctrl">
+            <button id="toggle" onclick="toggle()">keyboard control</button>
+            <p class="key" id="space">Walk Mode</p>
+            <p class="key" id="w">W</p>
+            <p class="key" id="a">A</p>
+            <p class="key" id="s">S</p>
+            <p class="key" id="d">D</p>
+    
+            <p class="key" id="q">Q</p>
+            <p class="key" id="e">E</p>
+    
+            <p class="key" id="r">R</p>
+            <p class="key" id="f">F</p>
+            <input type="" id="ctrl">
+        </div>
 
 
         <script>
@@ -108,10 +112,6 @@
             // Socket closes when 1) the web page closes or is reloaded 2) the server reloads during development
             // This command can be inconsistent, which is why extra code is needed in websocket.py
             socket.onclose = function(message) {
-                // Sends a command to the server to let it know that the socket is closing
-                socket.send(JSON.stringify({
-                    action: 'unload' 
-                }));
                 setTimeout(function() {
                     addOutput("<red>Socket " + socket_index + " has closed.<br> You should be seeing this only if the server is being worked on.</red>");
                 }, 500);
@@ -176,7 +176,9 @@
 
         </script>
         <script>
-            var validKeys = ['q', 'e', 'w', 'a', 's', 'd', 'r', 'f'];
+            var robot_mode = "Walk";
+            var toggled = true;
+            var valid_keys = ['q', 'e', 'w', 'a', 's', 'd', 'r', 'f', ' '];
             var keys_pressed = {
                 w: false,
                 a: false,
@@ -187,12 +189,27 @@
                 r: false,
                 f: false
             }
-            var refresh_rate = 0.2
+            var refresh_rate = 0.2;
+
+            function toggle() {
+                if (toggled) {
+                    toggled = false
+                    $("#toggle").html("keyboard control");
+                    $(".ctrl").css({"top": "-140px"});
+                }
+                else {
+                    toggled = true;
+                    $("#toggle").html("/\\");
+                    $(".ctrl").css({"top": "0"});
+                    $("#ctrl").focus();
+                }
+            }
 
             function getKey(e) {
                 var evtobj = window.event? event : e;
                 var unicode= evtobj.charCode? evtobj.charCode : evtobj.keyCode;
-                return String.fromCharCode(unicode).toLowerCase();
+                var key_name = String.fromCharCode(unicode).toLowerCase()
+                return key_name;
             }
 
             $("#ctrl").keypress(function (e) {
@@ -200,7 +217,10 @@
                 $("#ctrl").val("");
 
                 var key_pressed = getKey(e);
-                if (validKeys.includes(key_pressed)) {
+                if (key_pressed == " ") {
+                    $("#space").addClass("key-selected");
+                }
+                else if (valid_keys.includes(key_pressed)) {
                     $("#" + key_pressed).addClass("key-selected");
                     keys_pressed[key_pressed] = true;
                 }
@@ -211,7 +231,12 @@
                 $("#ctrl").val("");
 
                 var key_pressed = getKey(e);
-                if (validKeys.includes(key_pressed)) {
+                if (key_pressed == " ") {
+                    $("#space").removeClass("key-selected");
+                    robot_mode = robot_mode == "Walk" ? "Stand" : "Walk";
+                    $("#space").html(robot_mode + " Mode");
+                }
+                else if (valid_keys.includes(key_pressed)) {
                     $("#" + key_pressed).removeClass("key-selected");
                     keys_pressed[key_pressed] = false;
                 }
