@@ -96,11 +96,8 @@ class Spot_Control:
     def setup(self):
         self.stand()
         self.rotate(0, 0, 0)
+        time.sleep(0.5)
 
     # Entry point to running a program
     def do_function(self):
-        self.setup()
-        time.sleep(1)
-        self.sit()
-        time.sleep(1)
-        self.stand()
+        pass

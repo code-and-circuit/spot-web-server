@@ -29,7 +29,7 @@ class Background_Process:
         self.command_queue = []
         # The index of the socket that sent the command to run a program. Used to output
         # any information to the right client
-        self.socket_index_program_start = 0
+        self.program_socket_index = 0
         
     def print(self, socket_index, message, all=False, type="output"):
         # If socket index == -1, then the command came from Scratch, so there is no websocket to output to
@@ -117,10 +117,10 @@ class Background_Process:
                         reload(spot_control)
                         time.sleep(0.2)
                         try:
-                            self.robot_control.socket_index = self.socket_index_program_start
+                            self.robot_control.socket_index = self.program_socket_index
                             self.robot_control.do_function()
                         except:
-                            self.print_exception(self.socket_index_program_start)
+                            self.print_exception(self.program_socket_index)
                             
                         self.program_is_running = False
                     # If there are commands in the queue from Scratch and no program is already running, run the commands
@@ -131,6 +131,7 @@ class Background_Process:
                     # of code from a single source could be run at a time, and then the next chunk does not run until further user input?
                     elif self.command_queue:
                         self.is_running_scratch_commands = True
+                        self.robot_control.socket_index = -1
                         while self.command_queue:
                             command = self.command_queue[0]
                             try:
@@ -170,16 +171,21 @@ class Background_Process:
             args= command['Args']
             x = float(args['x'])
             y = float(args['y'])
-            z = float(args['y'])
+            z = float(args['z'])
             
             self.robot_control.walk(x, y, z, d=1)
             
     def do_keyboard_commands(self, keys_pressed):
+        self.robot_control.socket_index = -1
         if keys_pressed['space']:
             self.keyboard_control_mode = "Walk" if self.keyboard_control_mode == "Stand" else "Stand"
             return
         if self.program_is_running or self.is_running_scratch_commands or not self.robot_control:
             return
+        
+        if keys_pressed['space']:
+            self.robot_control.stand()
+        
         d_x = 0
         d_y = 0
         d_z = 0
@@ -255,7 +261,7 @@ def do_action(action, socket_index, args=None):
             bg_process.print(socket_index, 
             "Cannot run program because program is already running")
         else:
-            bg_process.socket_index_program_start = socket_index
+            bg_process.program_socket_index = socket_index
             bg_process.run_program()
             bg_process.print(socket_index, "Running Program")
     
