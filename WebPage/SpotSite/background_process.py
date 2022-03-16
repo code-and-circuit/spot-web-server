@@ -33,6 +33,7 @@ class Background_Process:
         self.estop_keep_alive = None
         self.robot_is_estopped = False
         self.robot = None
+        self.lease = None
         # The index of the socket that sent the command to run a program. Used to output
         # any information to the right client
         self.program_socket_index = 0
@@ -61,7 +62,7 @@ class Background_Process:
     def turn_on(self, socket_index):
         self.print(socket_index, "Powering On...")
         self.robot.power_on(timeout_sec=20)
-        if not robot.is_powered_on():
+        if not self.robot.is_powered_on():
             self.print(socket_index, "<red>Robot Power On Failed</red>")
             return False
         else:
@@ -71,7 +72,7 @@ class Background_Process:
     def turn_off(self, socket_index):
         self.print(socket_index, "Powering off...")
         self.robot.power_off(cut_immediately=False, timeout_sec=20)
-        if robot.is_powered_on():
+        if self.robot.is_powered_on():
             self.print(socket_index, "<red>Robot power off failed</red>")
             return False
         else:
@@ -113,7 +114,7 @@ class Background_Process:
                 return False
             
             self.lease_client = self.robot.ensure_client(bosdyn.client.lease.LeaseClient.default_service_name)
-            lease = lease_client.acquire()
+            self.lease = self.lease_client.acquire()
             return True
         except Exception as e:
             self.robot = None
@@ -122,10 +123,10 @@ class Background_Process:
             self.clear_values(-1)
             return False
         
-    def acquire_estop(self):
+    def acquire_estop(self, socket_index):
         try:
             estop_client = self.robot.ensure_client(EstopClient.default_service_name)
-            ep = EstopEndpoint(estop_client) 
+            ep = EstopEndpoint(estop_client, name="will-estop", estop_timeout=20) 
             ep.force_simple_setup()
             self.estop_keep_alive = EstopKeepAlive(ep)
             return True
@@ -143,7 +144,7 @@ class Background_Process:
                 self.turn_off(socket_index)
                 
             if self.lease_client:
-                self.lease_client.return_lease(lease)
+                self.lease_client.return_lease(self.lease)
                 
             self.estop_keep_alive = None
             self.robot = None    
@@ -168,8 +169,10 @@ class Background_Process:
         
         self.robot_is_estopped = False
 
-        if not self.acquire_estop():
+        '''
+        if not self.acquire_estop(socket_index):
             return
+        '''
         
         self.print(socket_index, "<green>Connected</green>")
         self.print(socket_index, "Background process started from device " + socket_index, all=True)
@@ -177,25 +180,29 @@ class Background_Process:
         
         # TODO: Automatically reconnect to the robot if it powers off by itself
         try:
-            with bosdyn.client.lease.LeaseKeepAlive(lease_client):
+            with bosdyn.client.lease.LeaseKeepAlive(self.lease_client):
                 if not self.turn_on(socket_index):
                     raise Exception("Failed to turn robot back on.")
                 # Command client necessary for sending motor commands to the robot
-                self.command_client = robot.ensure_client(RobotCommandClient.default_service_name)
+                self.command_client = self.robot.ensure_client(RobotCommandClient.default_service_name)
                 self.robot_control = spot_control.Spot_Control(self.command_client, -1)
                                                         
                 self.is_running = True
                 while self.is_running:
+                    '''
                     if self.robot_is_estopped != self.robot_is_estopped:
                         self.print(socket_index, "Robot Estop status does not match internal Estop status", all=True)
                         self.is_running = False
+                    '''
                         
                     if not self.robot.is_powered_on():
                         self.clear_values(-1)
                         if not self.acquire_lease(-1):
                             raise Exception("Failed to reacquire lease")
-                        if not self.acquire_estop():
+                        '''
+                        if not self.acquire_estop(socket_index):
                             raise Exception("Failed to reacquire estop")
+                        '''
                         if not self.turn_on(socket_index):
                             raise Exception("Failed to turn robot on")
                     # If the program is not already running and if no instance of spot function exists, run the program.
@@ -252,7 +259,7 @@ class Background_Process:
             yaw = float(args['yaw'])
             roll = float(args['roll'])
             
-            self.robot_control.rotate(radians(yaw), radians(roll), radians(pitch))
+            self.robot_control.rotate(math.radians(yaw), math.radians(roll), math.radians(pitch))
         
         if action == 'move':
             args= command['Args']
@@ -284,9 +291,9 @@ class Background_Process:
         if keys_pressed['s']:
             d_x -= 1
             
-        if keys_pressed['d']:
-            d_y += 1
         if keys_pressed['a']:
+            d_y += 1
+        if keys_pressed['d']:
             d_y -= 1
             
         if keys_pressed['q']:
@@ -300,9 +307,9 @@ class Background_Process:
             self.robot_control.sit()
         else:
             if self.keyboard_control_mode == "Walk":
-                self.robot_control.keyboard_walk(d_x, d_y, d_z)
+                self.robot_control.keyboard_walk(d_x, d_y * 0.5, d_z)
             elif self.keyboard_control_mode == "Stand":
-                self.robot_control.keyboard_rotate(d_y, d_x, d_z)
+                self.robot_control.keyboard_rotate(d_y, -d_z, d_x)
         
     def start_bg_process(self, socket_index):
          # Create a thread so the background process can be run in the background

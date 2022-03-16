@@ -17,11 +17,11 @@ class Spot_Control:
     def __init__(self, cmd_client, s):
         self.command_client = cmd_client
         self.socket_index = s
-        self.KEYBOARD_COMMAND_DURATION = 0.2
-        self.KEYBOARD_COMMAND_VELOCITY = 0.2
-        self.KEYBOARD_TURN_VELOCITY = 0.1
-        self.KEYBOARD_ROTATION_VELOCITY = 0.01
-        self.rotation = {pitch: 0, yaw: 0, roll: 0}
+        self.KEYBOARD_COMMAND_DURATION = 0.5
+        self.KEYBOARD_COMMAND_VELOCITY = 0.5
+        self.KEYBOARD_TURN_VELOCITY = 0.5
+        self.KEYBOARD_ROTATION_VELOCITY = 0.2
+        self.rotation = {"pitch": 0, "yaw": 0, "roll": 0}
         self.collision_avoid_params = spot_command_pb2.ObstacleParams(
             obstacle_avoidance_padding = 1, disable_vision_foot_obstacle_avoidance = False, 
             disable_vision_foot_constraint_avoidance = False, disable_vision_body_obstacle_avoidance = False,
@@ -85,10 +85,14 @@ class Spot_Control:
         self.command_client.robot_command(walk, end_time_secs=time.time() + self.KEYBOARD_COMMAND_DURATION)
 
     def keyboard_rotate(self, d_yaw, d_roll, d_pitch):
+        self.rotation['yaw'] += d_yaw * self.KEYBOARD_ROTATION_VELOCITY
+        self.rotation['yaw']
+        self.rotation['roll'] += d_roll * self.KEYBOARD_ROTATION_VELOCITY
+        self.rotation['pitch'] += d_pitch * self.KEYBOARD_ROTATION_VELOCITY
         rotation = bosdyn.geometry.EulerZXY(
-            yaw = self.yaw + d_yaw * self.KEYBOARD_ROTATION_VELOCITY, 
-            roll = self.roll + d_roll * self.KEYBOARD_ROTATION_VELOCITY, 
-            pitch = self.pitch + d_pitch * self.KEYBOARD_ROTATION_VELOCITY
+            yaw = self.rotation['yaw'],
+            roll = self.rotation['roll'],
+            pitch = self.rotation['pitch']
         )
         cmd = RobotCommandBuilder.synchro_stand_command(footprint_R_body=rotation)
         self.command_client.robot_command(cmd)
@@ -100,4 +104,4 @@ class Spot_Control:
 
     # Entry point to running a program
     def do_function(self):
-        pass
+        self.setup()
