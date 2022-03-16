@@ -44,6 +44,19 @@ def run_program(request):
         "valid": True, 
     }, status = 200)
     
+def estop(request):
+    do_action(request, "estop")
+    
+    return JsonResponse({
+        "valid": True
+    }, status = 200)
+    
+def estop_release(request):
+    do_action(request, "estop_release")
+    
+    return JsonResponse({
+        "valid": True
+    }, status = 200)
 # Handles and relays commands sent from Scratch to be executed by the robot
 def run_command(request):
     if request.method == "POST":

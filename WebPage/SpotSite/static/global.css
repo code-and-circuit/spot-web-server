@@ -171,6 +171,29 @@ red {
     font-size: 12px;
 }
 
+#estop-container {
+    margin-top: 40px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: -60px;
+}
+
+#estop {
+    width: 200px;
+    height: 40px;
+    background: none;
+    border: 1px solid white;
+    transition: 0.2s;
+    cursor: default;
+}
+
+#estop:hover {
+    width: 300px;
+    color: white;
+}
+
 .key-selected {
     cursor: default;
     background: white;
@@ -181,7 +204,6 @@ red {
     margin-top: 30px;
     margin-bottom: 10px;
 }
-
 
 .ctrl {
     position: absolute;
