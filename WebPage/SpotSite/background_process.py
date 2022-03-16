@@ -78,6 +78,7 @@ class Background_Process:
             self.print(0, "estop", all=True, type="estop")
             self.robot_is_estopped = True
             self.estop_keep_alive.stop()
+            self.command_queue = []
             
     def release_estop(self):
         if self.estop_keep_alive and self.robot.is_estopped():
@@ -90,16 +91,12 @@ class Background_Process:
         with open("spot_control.py", "rb") as f:
             newCheckSum = hashlib.md5(f.read()).hexdigest()
         return newCheckSum
-            
-    def start(self, socket_index):
-        # Starts the background process / connects to robot and stays connected
-                
-        self.print(socket_index, "Connecting...")
-        
+    
+    def acquire_lease(self):
+        # Connects to the robot and acquires a lease
+        # TODO: Handle lease acquisition better. Sometimes if the server attempts to connect to quickly after being disconnected,
+        # errors with lease acquisition occur
         try:
-            # Connects to the robot and acquires a lease
-            # TODO: Handle lease acquisition better. Sometimes if the server attempts to connect to quickly after being disconnected,
-            # errors with lease acquisition occur
             sdk = bosdyn.client.create_standard_sdk('server_spot_client')
             
             self.robot = sdk.create_robot('192.168.80.3')
@@ -108,25 +105,65 @@ class Background_Process:
             
             if self.robot.is_estopped():
                 self.print(socket_index, "Robot is estopped. Cannot connect.")
-                return
+                return False
             
-            lease_client = self.robot.ensure_client(bosdyn.client.lease.LeaseClient.default_service_name)
+            self.lease_client = self.robot.ensure_client(bosdyn.client.lease.LeaseClient.default_service_name)
             lease = lease_client.acquire()
+            return True
         except Exception as e:
             self.print_exception(socket_index)
             self.print(socket_index, "<red>Failed to accquire lease</red>")
-            return
-
-        self.robot_is_estopped = False
-
+            self.clear_values()
+            return False
+        
+    def acquire_estop(self):
         try:
             estop_client = self.robot.ensure_client(EstopClient.default_service_name)
             ep = EstopEndpoint(estop_client) 
             ep.force_simple_setup()
             self.estop_keep_alive = EstopKeepAlive(ep)
+            return True
         except Exception as e:  
             self.print_exception(socket_index)
             self.print(socket_index, "<red>Failed to accquire Estop</red>")
+            self.clear_values()
+            return False
+        
+    def clear_values(self):
+            if self.estop_keep_alive:
+                self.estop_keep_alive.shutdown()
+                
+            if self.robot:
+                self.turn_off(socket_index)
+                
+            if self.lease_client:
+                self.lease_client.return_lease(lease)
+                
+            self.estop_keep_alive = None
+            self.robot = None    
+            self.lease_client = None
+            self.command_client = None
+            self.robot_is_estopped = False
+            self.is_running = False
+            self.program_is_running = False
+            self.is_handling_keyboard_commands = False
+            self.is_running_scratch_commands = False
+            self.command_queue = []
+            
+            self.print(socket_index, "end", all=True, type="bg_process")
+
+            
+    def start(self, socket_index):
+        # Starts the background process / connects to robot and stays connected
+                
+        self.print(socket_index, "Connecting...")
+        
+        if not self.acquire_lease():
+            return
+        
+        self.robot_is_estopped = False
+
+        if not self.acquire_estop():
             return
         
         self.print(socket_index, "<green>Connected</green>")
@@ -136,7 +173,7 @@ class Background_Process:
         # TODO: Automatically reconnect to the robot if it powers off by itself
         try:
             with bosdyn.client.lease.LeaseKeepAlive(lease_client):
-                if not self.turn_on(robot, socket_index):
+                if not self.turn_on(socket_index):
                     return
                 # Command client necessary for sending motor commands to the robot
                 self.command_client = robot.ensure_client(RobotCommandClient.default_service_name)
@@ -147,6 +184,15 @@ class Background_Process:
                     if self.robot_is_estopped != self.robot_is_estopped:
                         self.print(socket_index, "Robot Estop status does not match internal Estop status", all=True)
                         self.is_running = False
+                        
+                    if not self.robot.is_powered_on():
+                        self.clear_values()
+                        if not self.acquire_lease():
+                            self.is_running = False
+                        if not self.acquire_estop():
+                            self.is_running = False
+                        if not self.turn_on(socket_index):
+                            self.is_running = False
                     # If the program is not already running and if no instance of spot function exists, run the program.
                     # An instance of a spot function can exist without the program being run if commands are being sent from Scratch
                     if self.program_is_running:
@@ -183,13 +229,7 @@ class Background_Process:
             # IMPORTANT: turn of the robot and return the lease
             # TODO: Do this automatically when the server shuts off or something fails. The robot should do it automatically
             # but it's good practice to do it from the client side
-            if self.estop_keep_alive:
-                self.estop_keep_alive.shutdown()
-                self.estop_keep_alive = None
-            self.turn_off(robot, socket_index)
-            lease_client.return_lease(lease)
-            self.is_running = False
-            self.print(socket_index, "end", all=True, type="bg_process")
+            self.clear_values()
             
     def do_command(self, command):
         # Executes commands from the queue
