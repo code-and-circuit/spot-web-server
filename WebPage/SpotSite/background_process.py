@@ -28,6 +28,7 @@ class Background_Process:
         self.robot_control = None
         # Needed to send commands to the robot
         self.command_client = None
+        self.lease_client = None
         self.command_queue = []
         self.estop_keep_alive = None
         self.robot_is_estopped = False
@@ -42,6 +43,10 @@ class Background_Process:
             print(message)
         else:
             websocket.websocket_list.print(socket_index, message, all=all, type=type)
+            
+        if socket_index == -1 and all:
+            websocket.websocket_list.print(socket_index, message, all=all, type=type)
+
 
     def print_exception(self, socket_index):
         # Copy and pasted from stack overflow. It works
@@ -92,7 +97,7 @@ class Background_Process:
             newCheckSum = hashlib.md5(f.read()).hexdigest()
         return newCheckSum
     
-    def acquire_lease(self):
+    def acquire_lease(self, socket_index):
         # Connects to the robot and acquires a lease
         # TODO: Handle lease acquisition better. Sometimes if the server attempts to connect to quickly after being disconnected,
         # errors with lease acquisition occur
@@ -111,9 +116,10 @@ class Background_Process:
             lease = lease_client.acquire()
             return True
         except Exception as e:
+            self.robot = None
             self.print_exception(socket_index)
             self.print(socket_index, "<red>Failed to accquire lease</red>")
-            self.clear_values()
+            self.clear_values(-1)
             return False
         
     def acquire_estop(self):
@@ -126,10 +132,10 @@ class Background_Process:
         except Exception as e:  
             self.print_exception(socket_index)
             self.print(socket_index, "<red>Failed to accquire Estop</red>")
-            self.clear_values()
+            self.clear_values(-1)
             return False
         
-    def clear_values(self):
+    def clear_values(self, socket_index):
             if self.estop_keep_alive:
                 self.estop_keep_alive.shutdown()
                 
@@ -152,13 +158,12 @@ class Background_Process:
             
             self.print(socket_index, "end", all=True, type="bg_process")
 
-            
     def start(self, socket_index):
         # Starts the background process / connects to robot and stays connected
                 
         self.print(socket_index, "Connecting...")
         
-        if not self.acquire_lease():
+        if not self.acquire_lease(socket_index):
             return
         
         self.robot_is_estopped = False
@@ -174,7 +179,7 @@ class Background_Process:
         try:
             with bosdyn.client.lease.LeaseKeepAlive(lease_client):
                 if not self.turn_on(socket_index):
-                    return
+                    raise Exception("Failed to turn robot back on.")
                 # Command client necessary for sending motor commands to the robot
                 self.command_client = robot.ensure_client(RobotCommandClient.default_service_name)
                 self.robot_control = spot_control.Spot_Control(self.command_client, -1)
@@ -186,13 +191,13 @@ class Background_Process:
                         self.is_running = False
                         
                     if not self.robot.is_powered_on():
-                        self.clear_values()
-                        if not self.acquire_lease():
-                            self.is_running = False
+                        self.clear_values(-1)
+                        if not self.acquire_lease(-1):
+                            raise Exception("Failed to reacquire lease")
                         if not self.acquire_estop():
-                            self.is_running = False
+                            raise Exception("Failed to reacquire estop")
                         if not self.turn_on(socket_index):
-                            self.is_running = False
+                            raise Exception("Failed to turn robot on")
                     # If the program is not already running and if no instance of spot function exists, run the program.
                     # An instance of a spot function can exist without the program being run if commands are being sent from Scratch
                     if self.program_is_running:
@@ -229,7 +234,7 @@ class Background_Process:
             # IMPORTANT: turn of the robot and return the lease
             # TODO: Do this automatically when the server shuts off or something fails. The robot should do it automatically
             # but it's good practice to do it from the client side
-            self.clear_values()
+            self.clear_values(-1)
             
     def do_command(self, command):
         # Executes commands from the queue
@@ -299,7 +304,6 @@ class Background_Process:
             elif self.keyboard_control_mode == "Stand":
                 self.robot_control.keyboard_rotate(d_y, d_x, d_z)
         
-    
     def start_bg_process(self, socket_index):
          # Create a thread so the background process can be run in the background
         from threading import Thread
