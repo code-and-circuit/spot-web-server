@@ -21,7 +21,11 @@
         </h1>
         <div id="estop-container">
             <button id="estop">
-                Robot is not Connected
+                {% if is_running %}
+                ESTOP
+            {% else %}
+                Robot is not connected
+            {% endif %}
             </button>
         </div>
         <div class="container" id="main-container">
@@ -185,6 +189,11 @@
                         sendRequest("{% url 'estop' %}")
                 }
             });
+
+            {% if is_running %}
+                $("#estop").html("Estop")
+                $("#estop").css({"background-color": "rgb(255, 0, 0)", "border": "none", "cursor": "pointer"});
+            {% endif %}
 
             // Runs the program from a file
             $("#runProgram").click(function() {
