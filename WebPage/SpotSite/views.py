@@ -63,10 +63,9 @@ def run_command(request):
         # Obtains data from the json file
         data = json.loads(request.body.decode("utf-8"))
                 
-        if background_process.bg_process.robot_control and not background_process.bg_process.robot.is_estopped():
+        if background_process.bg_process.is_running and not background_process.bg_process.robot.is_estopped():
             # Adds the command to the queue of commands
             background_process.bg_process.command_queue.append(data)
-            print("ADDED COMMAND")
             return JsonResponse({
                 "valid": True,
             }, status = 200)

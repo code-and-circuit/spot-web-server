@@ -19,7 +19,7 @@ class Background_Process:
         # Tells if a program is being run from a file
         self.program_is_running = False
         # Tells if commands from scratch are being run
-        self.is_running_scratch_commands = False
+        self.is_running_commands = False
         # Tells if someone is controlling the robot with the keyboard
         self.is_handling_keyboard_commands = False
         # Tells what mode the keyboard control is in (walk or stand)
@@ -103,7 +103,7 @@ class Background_Process:
         # TODO: Handle lease acquisition better. Sometimes if the server attempts to connect to quickly after being disconnected,
         # errors with lease acquisition occur
         try:
-            sdk = bosdyn.client.create_standard_sdk('server_spot_client')
+            sdk = bosdyn.client.create_standard_sdk('cc-server')
             
             self.robot = sdk.create_robot('192.168.80.3')
             self.robot.authenticate(secrets.username, secrets.password)
@@ -126,11 +126,12 @@ class Background_Process:
     def acquire_estop(self, socket_index):
         try:
             estop_client = self.robot.ensure_client(EstopClient.default_service_name)
-            ep = EstopEndpoint(estop_client, name="will-estop", estop_timeout=20) 
+            ep = EstopEndpoint(estop_client, name="cc-estop", estop_timeout=20) 
             ep.force_simple_setup()
             self.estop_keep_alive = EstopKeepAlive(ep)
+            self.robot_is_estopped = False
             return True
-        except Exception as e:  
+        except Exception:  
             self.print_exception(socket_index)
             self.print(socket_index, "<red>Failed to accquire Estop</red>")
             self.clear_values(-1)
@@ -154,7 +155,7 @@ class Background_Process:
             self.is_running = False
             self.program_is_running = False
             self.is_handling_keyboard_commands = False
-            self.is_running_scratch_commands = False
+            self.is_running_commands = False
             self.command_queue = []
             
             self.print(socket_index, "end", all=True, type="bg_process")
@@ -166,44 +167,38 @@ class Background_Process:
         
         if not self.acquire_lease(socket_index):
             return
-        
-        self.robot_is_estopped = False
-
-        '''
+            
         if not self.acquire_estop(socket_index):
             return
-        '''
-        
+
         self.print(socket_index, "<green>Connected</green>")
-        self.print(socket_index, "Background process started from device " + socket_index, all=True)
         self.print(socket_index, "start", all=True, type="bg_process")
         
         # TODO: Automatically reconnect to the robot if it powers off by itself
         try:
             with bosdyn.client.lease.LeaseKeepAlive(self.lease_client):
                 if not self.turn_on(socket_index):
-                    raise Exception("Failed to turn robot back on.")
+                    raise Exception("Failed to turn robot on.")
                 # Command client necessary for sending motor commands to the robot
                 self.command_client = self.robot.ensure_client(RobotCommandClient.default_service_name)
                 self.robot_control = spot_control.Spot_Control(self.command_client, -1)
-                                                        
+
                 self.is_running = True
                 while self.is_running:
-                    '''
-                    if self.robot_is_estopped != self.robot_is_estopped:
+                    
+                    if self.robot.is_estopped() != self.robot_is_estopped:
                         self.print(socket_index, "Robot Estop status does not match internal Estop status", all=True)
                         self.is_running = False
-                    '''
                         
                     if not self.robot.is_powered_on():
                         self.clear_values(-1)
                         if not self.acquire_lease(-1):
                             raise Exception("Failed to reacquire lease")
-                        '''
-                        if not self.acquire_estop(socket_index):
+                        
+                        if not self.acquire_estop(-1):
                             raise Exception("Failed to reacquire estop")
-                        '''
-                        if not self.turn_on(socket_index):
+                        
+                        if not self.turn_on(-1):
                             raise Exception("Failed to turn robot on")
                     # If the program is not already running and if no instance of spot function exists, run the program.
                     # An instance of a spot function can exist without the program being run if commands are being sent from Scratch
@@ -226,7 +221,7 @@ class Background_Process:
                     # TODO: Allow queued command execution to halt or pause based on user input or a special command type. Maybe a chunk
                     # of code from a single source could be run at a time, and then the next chunk does not run until further user input?
                     elif self.command_queue:
-                        self.is_running_scratch_commands = True
+                        self.is_running_commands = True
                         self.robot_control.socket_index = -1
                         while self.command_queue:
                             command = self.command_queue[0]
@@ -235,7 +230,10 @@ class Background_Process:
                             except:
                                 self.print_exception(socket_index)
                             self.command_queue.pop(0) 
-                        self.is_running_scratch_commands = False
+                        self.is_running_commands = False
+                        
+        except Exception as e:
+            self.print_exception(socket_index)
                         
         finally:
             # IMPORTANT: turn of the robot and return the lease
@@ -273,7 +271,7 @@ class Background_Process:
         if keys_pressed['space']:
             self.keyboard_control_mode = "Walk" if self.keyboard_control_mode == "Stand" else "Stand"
             return
-        if self.program_is_running or self.is_running_scratch_commands or not self.robot_control:
+        if self.program_is_running or self.is_running_commands or not self.robot_control:
             return
         
         self.robot_control.socket_index = -1
