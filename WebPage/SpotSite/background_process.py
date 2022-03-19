@@ -42,13 +42,10 @@ class Background_Process:
         
     def print(self, socket_index, message, all=False, type="output"):
         # If socket index == -1, then the command came from Scratch, so there is no websocket to output to
-        if socket_index == -1: 
-            print(message)
-        else:
-            websocket.websocket_list.print(socket_index, message, all=all, type=type)
+        if socket_index == -1 and not all: return print(message)
+        if socket_index == -1 and all: return websocket.websocket_list.print(socket_index, message, all=all, type=type)
+        websocket.websocket_list.print(socket_index, message, all=all, type=type)
             
-        if socket_index == -1 and all:
-            websocket.websocket_list.print(socket_index, message, all=all, type=type)
 
     def add_program(self, name, program):
         self.programs[name] = program
@@ -162,9 +159,7 @@ class Background_Process:
             self.is_handling_keyboard_commands = False
             self.is_running_commands = False
             self.command_queue = []
-            
-            self.print(socket_index, "end", all=True, type="bg_process")
-
+    
     def start(self, socket_index):
         # Starts the background process / connects to robot and stays connected
                 
@@ -327,8 +322,10 @@ class Background_Process:
         self.is_running = False
         
     def run_program(self, name):
+        if not self.programs[name]: return
+        
         self.program_is_running = True
-        self.program_name = name;
+        self.program_name = name
             
 # Creates an instance of the background_process class used for interacting with the background process connected to the robot
 # Don't like declaring it globally in this way but not sure how else to do it
@@ -356,8 +353,6 @@ def do_action(action, socket_index, args=None):
     elif action == "run_program":
         # Makes sure that the background process is running (robot is connected) before it tries to run a program
         bg_process.program_name = args
-        for command in bg_process.programs[bg_process.program_name]:
-            print(command)
         if not bg_process.is_running:
             bg_process.print(socket_index, 
             "Cannot run program because background process is not running")
@@ -371,7 +366,6 @@ def do_action(action, socket_index, args=None):
             bg_process.print(socket_index, "Running Program")
             
     elif action == "remove_program":
-        print("REMOVING", args)
         bg_process.programs.pop(args, None)      
         bg_process.print(-1, bg_process.programs, all=True, type="programs")  
             
