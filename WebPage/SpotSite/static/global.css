@@ -147,6 +147,11 @@ red {
     border: 1px solid red;
 }
 
+#removeProgram:hover {
+    background:red;
+    color: white;
+}
+
 .key {
     width: 20px;
     height: 20px;
@@ -265,6 +270,7 @@ red {
     border-radius: 0 0 15px 15px;
     z-index: 3;
     transition: 0.5s;
+    box-shadow: 0 2px 5px 1px rgba(0, 0, 0, 0.2);
 }
 
 #ctrl {
