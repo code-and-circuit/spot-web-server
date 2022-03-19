@@ -30,10 +30,12 @@ class Background_Process:
         self.command_client = None
         self.lease_client = None
         self.command_queue = []
+        self.programs = {}
         self.estop_keep_alive = None
         self.robot_is_estopped = False
         self.robot = None
         self.lease = None
+        self.program_name = ""
         # The index of the socket that sent the command to run a program. Used to output
         # any information to the right client
         self.program_socket_index = 0
@@ -48,6 +50,9 @@ class Background_Process:
         if socket_index == -1 and all:
             websocket.websocket_list.print(socket_index, message, all=all, type=type)
 
+    def add_program(self, name, program):
+        self.programs[name] = program
+        self.print(-1, self.programs, all=True, type="programs")
 
     def print_exception(self, socket_index):
         # Copy and pasted from stack overflow. It works
@@ -208,8 +213,8 @@ class Background_Process:
                         reload(spot_control)
                         time.sleep(0.2)
                         try:
-                            self.robot_control.socket_index = self.program_socket_index
-                            self.robot_control.do_function()
+                            for command in self.programs[self.program_name]:
+                                self.do_command(command)
                         except:
                             self.print_exception(self.program_socket_index)
                             
@@ -250,6 +255,9 @@ class Background_Process:
         
         if action == 'sit':
             self.robot_control.sit()
+            
+        if action == 'wait':
+            time.sleep(command['Args']['time'])
             
         if action == 'rotate':
             args = command['Args']
@@ -318,8 +326,9 @@ class Background_Process:
     def end_bg_process(self):
         self.is_running = False
         
-    def run_program(self):
+    def run_program(self, name):
         self.program_is_running = True
+        self.program_name = name;
             
 # Creates an instance of the background_process class used for interacting with the background process connected to the robot
 # Don't like declaring it globally in this way but not sure how else to do it
@@ -346,17 +355,25 @@ def do_action(action, socket_index, args=None):
             
     elif action == "run_program":
         # Makes sure that the background process is running (robot is connected) before it tries to run a program
+        bg_process.program_name = args
+        for command in bg_process.programs[bg_process.program_name]:
+            print(command)
         if not bg_process.is_running:
             bg_process.print(socket_index, 
             "Cannot run program because background process is not running")
         # Makes sure that a program is not already running before it runs one
         elif bg_process.program_is_running:
             bg_process.print(socket_index, 
-            "Cannot run program because program is already running")
+            "Cannot run program because a program is already running")
         else:
             bg_process.program_socket_index = socket_index
-            bg_process.run_program()
+            bg_process.run_program(args)
             bg_process.print(socket_index, "Running Program")
+            
+    elif action == "remove_program":
+        print("REMOVING", args)
+        bg_process.programs.pop(args, None)      
+        bg_process.print(-1, bg_process.programs, all=True, type="programs")  
             
     elif action == "estop":
         bg_process.estop()

@@ -13,13 +13,14 @@ def main_site(request):
     # Reflected in the yellow text output at top of webpage
     context = {
         "is_running": background_process.bg_process.is_running,
+        "programs": background_process.bg_process.programs
     }
     return render(request, 'main_site.html', context)
 
 # Relays action information
 def do_action(request, action):
     if request.method == "GET":
-        background_process.do_action(action, request.GET["socket_index"])
+        background_process.do_action(action, request.GET["socket_index"], request.GET["selected_program"])
 
 # Starts the background process
 def start_process(request):
@@ -42,6 +43,13 @@ def run_program(request):
     
     return JsonResponse({
         "valid": True, 
+    }, status = 200)
+    
+def remove_program(request):
+    do_action(request, "remove_program")
+    
+    return JsonResponse({
+        "valid": True
     }, status = 200)
     
 def estop(request):
@@ -72,6 +80,26 @@ def run_command(request):
     return JsonResponse({
                 "valid": False,
             }, status = 200)
+    
+def add_program(request):
+    if request.method == "POST":
+        # Obtains data from the json file
+        data = json.loads(request.body.decode("utf-8"))
+    
+        background_process.bg_process.add_program(data['name'], data['commands'])
+        # Adds the command to the queue of commands
+        return JsonResponse({
+            "valid": True,
+        }, status = 200)
+    return JsonResponse({
+                "valid": False,
+            }, status = 200)
+    
+def get_programs(request):
+    return JsonResponse({
+        "valid": True,
+        "programs": background_process.bg_process.programs
+    }, status=200)
 
 # Gets information about the state of the server
 # Currently only used to tell if the background process is running

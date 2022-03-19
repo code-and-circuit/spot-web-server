@@ -38,17 +38,35 @@
                         <button id="bgEnd">Disconnect</button>
                     </div>
                 </div>
-                <div class="program-container">
-                    <div class="form">
+            </div>
+            <div class="output">
+                <p id="output"></p>
+            </div>
+        </div>
+        <h1 style="margin-top: 100px; margin-bottom: -80px;">Programs</h1>
+        <div class="container" id="programs-container">
+            <div class="program-list-container">
+                <div class="program-list">
+                    {% for program in programs %}
+                        <br><button id="program" onclick=displayProgram("{{ program }}")>{{ program }}</button>
+                    {% endfor %}
+                </div>
+                <div class="run-program-container">
+                    <p id="program-name"></p>
+                    <div class="program-controls">
                         <button id="runProgram">
                             {% csrf_token %}
-                            Run Program
+                            Run
+                        </button>
+                        <button id="removeProgram">
+                            {% csrf_token %}
+                            Remove
                         </button>
                     </div>
                 </div>
             </div>
-            <div class="output">
-                <p id="output"></p>
+            <div class="program-info">
+                <p id="program-info"></p>
             </div>
         </div>
         <div class="ctrl">
@@ -76,6 +94,49 @@
             socket = new WebSocket(href);
             var socket_index = null;
             var robot_is_estopped = false;
+
+            var selected_program = "";
+
+            var programs = [];
+
+            function getPrograms() {
+                $.ajax({
+                    type: 'GET',
+                    url: "{% url 'get_programs' %}",
+                    data: {
+                        
+                    },
+                    success: function(response) {
+                        programs = response["programs"];
+                    },
+                    error: function(response) {
+                        addOutput("<red>Server error: " + response["status"] + ".</red>");
+                        // A 500 error is generally caused by the socket being closed when output tries to be sent back
+                        if (response["status"] == "500") {
+                            addOutput("Did the socket close? If so, try reloading.", true)
+                        }
+                    }
+                });
+            }
+
+            getPrograms();
+
+            function displayProgram(name) {
+                selected_program = name;
+                $("#program-name").html(selected_program);
+                $("#program-info").html('')
+                for (var c in programs[name]) {
+                    command = programs[name][c];
+                    var line = command['Command'] + '(';
+                    for (var arg in command['Args']) {
+                        line += (command['Args'][arg] + ", ");
+                    }
+                    if (line.substring(line.length-1, line.length) != '(')
+                        line = line.substring(0, line.length-2);
+                    line += ')<br>';
+                    $("#program-info").html($("#program-info").html() + line)
+                }
+            }
 
             // Function to get the cookie for sending some commands
             // Not sure how it works, just copy and pasted it
@@ -129,6 +190,13 @@
                         $("#estop").css({"background-color": "rgb(255, 0, 0)", "border": "none", "cursor": "pointer"});
                     }
                 }
+                else if (data["type"] == "programs") {
+                    $(".program-list").html("");
+                    for (var program in data["output"]) {
+                        $(".program-list").html($(".program-list").html() + "<br><button id='program' onclick=displayProgram('" + program + "')>" + program + "</button>");
+                    }
+                    getPrograms();
+                }
                 // General output
                 else if (data["type"] == "output") {
                     addOutput(data["output"]);
@@ -165,7 +233,8 @@
                     url: url,
                     data: {
                         // Socket index is sent so the server knows which socket to use for output
-                        "socket_index" : socket_index
+                        "socket_index" : socket_index,
+                        "selected_program": selected_program
                     },
                     success: function(response) {
                         ;
@@ -179,6 +248,13 @@
                     }
                 });
             }
+
+            $("#removeProgram").click(function() {
+                sendRequest("{% url 'remove_program' %}")
+                getPrograms();
+                $("#program-info").html('');
+                $("#program-name").html('');
+            })
 
             $("#estop").click(function() {
                 if (robot_is_estopped) {
