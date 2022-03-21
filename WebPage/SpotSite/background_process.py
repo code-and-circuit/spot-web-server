@@ -105,12 +105,6 @@ class Background_Process:
         # TODO: Handle lease acquisition better. Sometimes if the server attempts to connect to quickly after being disconnected,
         # errors with lease acquisition occur
         try:
-            sdk = bosdyn.client.create_standard_sdk('cc-server')
-            
-            self.robot = sdk.create_robot('192.168.80.3')
-            self.robot.authenticate(secrets.username, secrets.password)
-            self.robot.time_sync.wait_for_sync()
-            
             if self.robot.is_estopped():
                 self.print(socket_index, "Robot is estopped. Cannot connect.")
                 return False
@@ -139,6 +133,27 @@ class Background_Process:
             self.clear(-1)
             return False
         
+       
+    def _connect(self, socket_index):
+        self.print(socket_index, "Connecting...")
+        try:
+            sdk = bosdyn.client.create_standard_sdk('cc-server')
+            
+            self.robot = sdk.create_robot('192.168.80.3')
+            self.robot.authenticate(secrets.username, secrets.password)
+            self.robot.time_sync.wait_for_sync()
+        except:
+            self.print_exception(socket_index)
+            return False
+        
+        if not self.acquire_estop(socket_index):
+            return False
+        
+        if not self.acquire_lease(socket_index):
+            return False
+        
+        return True
+        
     def clear(self, socket_index):
             if self.estop_keep_alive:
                 self.estop_keep_alive.shutdown()
@@ -163,12 +178,8 @@ class Background_Process:
     def start(self, socket_index):
         # Starts the background process / connects to robot and stays connected
                 
-        self.print(socket_index, "Connecting...")
-        
-        if not self.acquire_lease(socket_index):
-            return
-            
-        if not self.acquire_estop(socket_index):
+        if not self._connect(socket_index):
+            self.print(socket_index, "Failed to connect")
             return
 
         self.print(socket_index, "<green>Connected</green>")
@@ -185,18 +196,9 @@ class Background_Process:
 
                 self.is_running = True
                 while self.is_running:
-                    
-                    if self.robot.is_estopped() != self.robot_is_estopped:
-                        self.print(socket_index, "Robot Estop status does not match internal Estop status", all=True)
-                        self.is_running = False
+                    if not self.robot.is_powered_on() and not self.robot.is_estopped():
+                        self.turn_on(socket_index)
                         
-                    if not self.robot.is_powered_on():
-                        self.clear(-1)
-                        if not self.acquire_lease(-1):
-                            raise Exception("Failed to reacquire lease")
-                        
-                        if not self.acquire_estop(-1):
-                            raise Exception("Failed to reacquire estop")
                         
                         if not self.turn_on(-1):
                             raise Exception("Failed to turn robot on")

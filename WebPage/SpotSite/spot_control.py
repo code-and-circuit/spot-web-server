@@ -45,6 +45,7 @@ class Spot_Control:
     def stand(self):
         # Stand
         cmd = RobotCommandBuilder.synchro_stand_command()
+        
         self.command_client.robot_command(cmd)
         self.print("Stood up")
         

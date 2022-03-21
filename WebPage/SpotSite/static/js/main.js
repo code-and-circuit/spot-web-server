@@ -172,6 +172,15 @@ $("#estop").click(function() {
     if ($("#isRunning").html() == "Background process is running") sendRequest(urls.estop);
 });
 
+document.onkeypress = function (event) {
+    event = (event || window.event);
+    console.log("PRESS")
+    if (event.keyCode == 123) { 
+        if (robot_is_estopped) return sendRequest(urls.estop_release);
+        if ($("#isRunning").html() == "Background process is running") sendRequest(urls.estop);
+    }
+}
+
 // Runs the program from a file
 $("#runProgram").click(function() {
     sendRequest(urls.run_program);
