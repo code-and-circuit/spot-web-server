@@ -122,7 +122,7 @@ class Background_Process:
             self.robot = None
             self.print_exception(socket_index)
             self.print(socket_index, "<red>Failed to accquire lease</red>")
-            self.clear_values(-1)
+            self.clear(-1)
             return False
         
     def acquire_estop(self, socket_index):
@@ -136,10 +136,10 @@ class Background_Process:
         except Exception:  
             self.print_exception(socket_index)
             self.print(socket_index, "<red>Failed to accquire Estop</red>")
-            self.clear_values(-1)
+            self.clear(-1)
             return False
         
-    def clear_values(self, socket_index):
+    def clear(self, socket_index):
             if self.estop_keep_alive:
                 self.estop_keep_alive.shutdown()
                 
@@ -191,7 +191,7 @@ class Background_Process:
                         self.is_running = False
                         
                     if not self.robot.is_powered_on():
-                        self.clear_values(-1)
+                        self.clear(-1)
                         if not self.acquire_lease(-1):
                             raise Exception("Failed to reacquire lease")
                         
@@ -239,7 +239,7 @@ class Background_Process:
             # IMPORTANT: turn of the robot and return the lease
             # TODO: Do this automatically when the server shuts off or something fails. The robot should do it automatically
             # but it's good practice to do it from the client side
-            self.clear_values(-1)
+            self.clear(-1)
             
     def do_command(self, command):
         # Executes commands from the queue

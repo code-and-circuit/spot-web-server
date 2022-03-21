@@ -42,7 +42,7 @@ class Spot_Control:
         
     def stand(self):
         # Stand
-        blocking_stand(self.command_client, timeout_sec = 20)
+        cmd = RobotCommandBuilder.synchro_stand_command()
         self.print("Stood up")
         
     def sit(self):
@@ -73,6 +73,11 @@ class Spot_Control:
         cmd = RobotCommandBuilder.synchro_stand_command(body_height=height)
         self.command_client.robot_command(cmd)
         self.print(f'Standing at: {height}')
+        
+    def hop(self):
+        params = spot_command_pb2.MobilityParams(locomotion_hint=spot_command_pb2.HINT_HOP, stair_hint=0)
+        cmd = RobotCommandBuilder.synchro_stand_command(params=params)
+        self.command_client.robot_command(cmd)
         
     def keyboard_walk(self, d_x, d_y, d_z):
         walk = RobotCommandBuilder.synchro_velocity_command(
