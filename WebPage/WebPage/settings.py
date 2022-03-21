@@ -13,6 +13,13 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 from pathlib import Path
 import os
 from SpotSite import secrets
+import sys
+import pathlib
+current_dir = os.getcwd()
+parent_dir = os.path.dirname(current_dir)
+dir_to_add = current_dir + "\\SpotSite\\files_to_run\\"
+print(dir_to_add)
+sys.path.append(dir_to_add)
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.

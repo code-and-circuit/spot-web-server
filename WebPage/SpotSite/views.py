@@ -2,8 +2,11 @@ from django.shortcuts import render
 from SpotSite import background_process, websocket
 from django.http import HttpResponseRedirect, JsonResponse
 from django.core import serializers
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+import pathlib
 
-import json
+import json, os
 
 # Renders the main site
 def main_site(request):
@@ -65,6 +68,7 @@ def estop_release(request):
     return JsonResponse({
         "valid": True
     }, status = 200)
+    
 # Handles and relays commands sent from Scratch to be executed by the robot
 def run_command(request):
     if request.method == "POST":
@@ -91,14 +95,45 @@ def add_program(request):
         return JsonResponse({
             "valid": True,
         }, status = 200)
+        
     return JsonResponse({
-                "valid": False,
-            }, status = 200)
+        "valid": False,
+    }, status = 200)
     
 def get_programs(request):
     return JsonResponse({
         "valid": True,
         "programs": background_process.bg_process.programs
+    }, status=200)
+    
+def write_file(file):
+    path = str(pathlib.Path(__file__).parent.resolve()) + "\\files_to_run\\" + file.name
+    if os.path.exists(path):
+        os.remove(path)
+    default_storage.save(path, ContentFile(file.read()))
+    
+def receive_file(request):
+    valid = True
+    main_name = request.POST['main']
+    if request.method == "POST":
+        try:
+            files = request.FILES
+            for file in files:
+                write_file(files[file])
+                
+            import importlib.util
+            path = str(pathlib.Path(__file__).parent.resolve()) + "\\files_to_run\\" + main_name
+            spec=importlib.util.spec_from_file_location("main",path)
+            main_file = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(main_file)
+            main_file.main()
+
+        except Exception as e:
+            print(e)
+            valid = False
+            
+    return JsonResponse({
+        "valid": valid,
     }, status=200)
 
 # Gets information about the state of the server

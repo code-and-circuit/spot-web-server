@@ -15,6 +15,7 @@ urlpatterns = [
     path('command', views.run_command, name='command'),
     path('program', views.add_program, name='add_program'),
     path('get-programs', views.get_programs, name='get_programs'),
-    path('remove-program', views.remove_program, name='remove_program')
+    path('remove-program', views.remove_program, name='remove_program'),
+    path('file', views.receive_file, name='file')
     #path('__debug__/', include('debug_toolbar.urls')),
 ]

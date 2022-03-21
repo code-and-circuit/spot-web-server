@@ -1,3 +1,5 @@
 *.pyc
 *.pyc
 WebPage/SpotSite/secrets.py
+WebPage/SpotSite/file_to_run.py
+WebPage/SpotSite/files_to_run/
