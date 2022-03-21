@@ -17,11 +17,13 @@ class Spot_Control:
     def __init__(self, cmd_client, s):
         self.command_client = cmd_client
         self.socket_index = s
+        
         self.KEYBOARD_COMMAND_DURATION = 0.5
         self.KEYBOARD_COMMAND_VELOCITY = 0.5
         self.KEYBOARD_TURN_VELOCITY = 0.5
         self.KEYBOARD_ROTATION_VELOCITY = 0.2
         self.rotation = {"pitch": 0, "yaw": 0, "roll": 0}
+        
         self.collision_avoid_params = spot_command_pb2.ObstacleParams(
             obstacle_avoidance_padding = 1, disable_vision_foot_obstacle_avoidance = False, 
             disable_vision_foot_constraint_avoidance = False, disable_vision_body_obstacle_avoidance = False,
@@ -43,12 +45,18 @@ class Spot_Control:
     def stand(self):
         # Stand
         cmd = RobotCommandBuilder.synchro_stand_command()
+        self.command_client.robot_command(cmd)
         self.print("Stood up")
         
     def sit(self):
         cmd =  RobotCommandBuilder.synchro_sit_command()
         self.command_client.robot_command(cmd)
         self.print("Sitting Down")
+  
+    def self_right(self):
+        cmd = RobotCommandBuilder.selfright_command()
+        self.command_client.robot_command(cmd)
+        self.print("Self Righting")
         
     def walk(self, x, y, z, t=0, d=0):
         # TODO: Create multiple walk commands if desired walking time exceeds the time allowed by the robot
@@ -78,6 +86,7 @@ class Spot_Control:
         params = spot_command_pb2.MobilityParams(locomotion_hint=spot_command_pb2.HINT_HOP, stair_hint=0)
         cmd = RobotCommandBuilder.synchro_stand_command(params=params)
         self.command_client.robot_command(cmd)
+        self.print("Hopping")
         
     def keyboard_walk(self, d_x, d_y, d_z):
         walk = RobotCommandBuilder.synchro_velocity_command(
