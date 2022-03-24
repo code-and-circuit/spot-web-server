@@ -42,11 +42,12 @@ $("#ctrl").keypress(function (e) {
     var key_pressed = getKey(e);
     if (key_pressed == " ") {
         $("#space").addClass("key-selected");
+        return
     }
     else if (valid_keys.includes(key_pressed)) {
         $("#" + key_pressed).addClass("key-selected");
-        keys_pressed[key_pressed] = true;
     }
+    keys_pressed[key_pressed] = true;
 });
 
 $("#ctrl").keyup(function (e) {

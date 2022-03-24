@@ -4,6 +4,10 @@ import sys
 import math
 import linecache
 import hashlib
+import cv2
+import io
+import pathlib
+import numpy as np
 
 from SpotSite import spot_control, secrets, websocket
 
@@ -11,6 +15,7 @@ import bosdyn.client, bosdyn.client.lease
 from bosdyn.client.robot_command import RobotCommandClient
 from bosdyn.client.estop import EstopEndpoint, EstopKeepAlive, EstopClient
 from bosdyn.client.power import power_off
+from bosdyn.client.image import ImageClient
 
 class Background_Process:
     def __init__(self):
@@ -29,6 +34,7 @@ class Background_Process:
         # Needed to send commands to the robot
         self.command_client = None
         self.lease_client = None
+        self.image_client = None
         self.command_queue = []
         self.programs = {}
         self.estop_keep_alive = None
@@ -45,7 +51,6 @@ class Background_Process:
         if socket_index == -1 and not all: return print(message)
         if socket_index == -1 and all: return websocket.websocket_list.print(socket_index, message, all=all, type=type)
         websocket.websocket_list.print(socket_index, message, all=all, type=type)
-            
 
     def add_program(self, name, program):
         self.programs[name] = program
@@ -127,12 +132,12 @@ class Background_Process:
             self.estop_keep_alive = EstopKeepAlive(ep)
             self.robot_is_estopped = False
             return True
-        except Exception:  
+        except Exception:
             self.print_exception(socket_index)
             self.print(socket_index, "<red>Failed to accquire Estop</red>")
             self.clear(-1)
             return False
-        
+
        
     def _connect(self, socket_index):
         self.print(socket_index, "Connecting...")
@@ -142,6 +147,8 @@ class Background_Process:
             self.robot = sdk.create_robot('192.168.80.3')
             self.robot.authenticate(secrets.username, secrets.password)
             self.robot.time_sync.wait_for_sync()
+            
+            self.image_client = self.robot.ensure_client(ImageClient.default_service_name)
         except:
             self.print_exception(socket_index)
             return False
@@ -151,7 +158,7 @@ class Background_Process:
         
         if not self.acquire_lease(socket_index):
             return False
-        
+                
         return True
         
     def clear(self, socket_index):
@@ -181,10 +188,10 @@ class Background_Process:
         if not self._connect(socket_index):
             self.print(socket_index, "Failed to connect")
             return
+        self.get_image()
 
         self.print(socket_index, "<green>Connected</green>")
         self.print(socket_index, "start", all=True, type="bg_process")
-        
         # TODO: Automatically reconnect to the robot if it powers off by itself
         try:
             with bosdyn.client.lease.LeaseKeepAlive(self.lease_client):
@@ -198,8 +205,7 @@ class Background_Process:
                 while self.is_running:
                     if not self.robot.is_powered_on() and not self.robot.is_estopped():
                         self.turn_on(socket_index)
-                        
-                        
+
                         if not self.turn_on(-1):
                             raise Exception("Failed to turn robot on")
                     # If the program is not already running and if no instance of spot function exists, run the program.
@@ -313,6 +319,17 @@ class Background_Process:
                 self.robot_control.keyboard_walk(d_x, d_y * 0.5, d_z)
             elif self.keyboard_control_mode == "Stand":
                 self.robot_control.keyboard_rotate(d_y, -d_z, d_x)
+                
+    def get_image(self):
+        image_response = self.image_client.get_image_from_sources(["frontleft_fisheye_image"])[0].shot.image.data
+                
+        #image = cv2.imencode('.jpeg', image_response)[1].toBytes()
+        
+        path = str(pathlib.Path(__file__).parent.resolve()) + "\\static\\"
+        with open(path + "test.jpg", 'wb') as f:
+            f.write(image_response)
+
+
         
     def start_bg_process(self, socket_index):
          # Create a thread so the background process can be run in the background
