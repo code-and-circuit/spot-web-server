@@ -184,8 +184,6 @@ class Background_Process:
     def start(self, socket_index):
         # Starts the background process / connects to robot and stays connected
                 
-          
-            
         if not self._connect(socket_index):
             self.print(socket_index, "Failed to connect")
             return
@@ -251,9 +249,11 @@ class Background_Process:
             self.clear(-1)
             
     def video_loop(self):
-        while self.is_running or True:
+        while not self.is_running:
+            pass
+        
+        while self.is_running:   
             self.get_image()
-            time.sleep(0.1)
     
     def do_command(self, command):
         # Executes commands from the queue
@@ -327,18 +327,13 @@ class Background_Process:
                 self.robot_control.keyboard_rotate(d_y, -d_z, d_x)
                 
     def get_image(self):
-        '''
         import base64
         image_response = self.image_client.get_image_from_sources(["frontleft_fisheye_image"])[0].shot.image.data
         
         image_base64 = base64.b64encode(image_response).decode("utf8")
         
         self.print(-1, image_base64, all=True, type="image")
-        '''
-        self.print("0", "TEST")
 
-
-        
     def start_bg_process(self, socket_index):
          # Create a thread so the background process can be run in the background
         from threading import Thread

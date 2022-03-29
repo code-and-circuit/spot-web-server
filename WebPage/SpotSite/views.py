@@ -10,8 +10,6 @@ import json, os
 
 # Renders the main site
 def main_site(request):
-    if not websocket.websocket_list.loop_is_running:
-        websocket.websocket_list.start_loop()
     # Is the background process running or not? 
     # Reflected in the yellow text output at top of webpage
     context = {
