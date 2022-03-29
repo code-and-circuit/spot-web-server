@@ -108,6 +108,11 @@ socket.onmessage = function(message) {
         }
         getPrograms();
     }
+    else if (data["type"] == "image") {
+        var image = data["output"];
+        //var img = URL.createObjectURL(image);
+        $("#front-left").attr('src', 'data:image/jpg;base64,' + image);   
+    }
     // General output
     else if (data["type"] == "output") {
         addOutput(data["output"]);

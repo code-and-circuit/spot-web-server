@@ -1,5 +1,6 @@
 import asyncio
 import json
+import time
 from threading import Thread
 from SpotSite import background_process
 
@@ -122,21 +123,26 @@ class Websocket_List:
             except KeyError:
                 print ("KEY ERORR: ", socket_index)
                 print("MESSAGE: ", message)
-            
+
     # The loop that is always running to be able to handle outputting information
     async def print_loop(self):
-        while True:
+        while self.loop_is_running:
             if self.print_queue:
                 await self.print_out(self.print_queue[0]['socket_index'], self.print_queue[0]["message"], 
-                                     all=self.print_queue[0]['all'], type=self.print_queue[0]['type'])
+                                    all=self.print_queue[0]['all'], type=self.print_queue[0]['type'])
                 self.print_queue.pop(0)
-                
+
     # Used to start the loop using asyncio
     def start_print_loop(self):
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        loop.run_until_complete(self.print_loop())
-        loop.close()
+        try:
+            '''
+            loop = asyncio.new_event_loop()
+            loop.create_task(self.print_loop())
+            loop.run_forever()
+            '''
+            asyncio.run(self.print_loop(), debug=True)
+        except Exception as e:
+            print("ERROR::::", e)
             
     # Used to add an output to the queue of outputs
     def print(self, socket_index, message, all=False, type="output"):

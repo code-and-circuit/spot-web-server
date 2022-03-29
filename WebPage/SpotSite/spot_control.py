@@ -89,6 +89,9 @@ class Spot_Control:
         self.command_client.robot_command(cmd)
         self.print("Hopping")
         
+    def self_right(self):
+        pass
+        
     def keyboard_walk(self, d_x, d_y, d_z):
         walk = RobotCommandBuilder.synchro_velocity_command(
             d_x * self.KEYBOARD_COMMAND_VELOCITY,

@@ -7,8 +7,7 @@ import hashlib
 import cv2
 import io
 import pathlib
-import numpy as np
-
+import asyncio
 from SpotSite import spot_control, secrets, websocket
 
 import bosdyn.client, bosdyn.client.lease
@@ -185,10 +184,11 @@ class Background_Process:
     def start(self, socket_index):
         # Starts the background process / connects to robot and stays connected
                 
+          
+            
         if not self._connect(socket_index):
             self.print(socket_index, "Failed to connect")
             return
-        self.get_image()
 
         self.print(socket_index, "<green>Connected</green>")
         self.print(socket_index, "start", all=True, type="bg_process")
@@ -203,6 +203,7 @@ class Background_Process:
 
                 self.is_running = True
                 while self.is_running:
+                    #self.get_image()
                     if not self.robot.is_powered_on() and not self.robot.is_estopped():
                         self.turn_on(socket_index)
 
@@ -249,6 +250,11 @@ class Background_Process:
             # but it's good practice to do it from the client side
             self.clear(-1)
             
+    def video_loop(self):
+        while self.is_running or True:
+            self.get_image()
+            time.sleep(0.1)
+    
     def do_command(self, command):
         # Executes commands from the queue
         action = command['Command']
@@ -321,13 +327,15 @@ class Background_Process:
                 self.robot_control.keyboard_rotate(d_y, -d_z, d_x)
                 
     def get_image(self):
+        '''
+        import base64
         image_response = self.image_client.get_image_from_sources(["frontleft_fisheye_image"])[0].shot.image.data
-                
-        #image = cv2.imencode('.jpeg', image_response)[1].toBytes()
         
-        path = str(pathlib.Path(__file__).parent.resolve()) + "\\static\\"
-        with open(path + "test.jpg", 'wb') as f:
-            f.write(image_response)
+        image_base64 = base64.b64encode(image_response).decode("utf8")
+        
+        self.print(-1, image_base64, all=True, type="image")
+        '''
+        self.print("0", "TEST")
 
 
         
@@ -335,6 +343,9 @@ class Background_Process:
          # Create a thread so the background process can be run in the background
         from threading import Thread
         thread = Thread(target=self.start, args=(socket_index))
+        thread.start()
+        
+        thread = Thread(target=self.video_loop)
         thread.start()
         
     def end_bg_process(self):

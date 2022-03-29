@@ -18,3 +18,4 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'WebPage.settings')
 django.setup()
 application = get_asgi_application()
 application = websockets(application)
+

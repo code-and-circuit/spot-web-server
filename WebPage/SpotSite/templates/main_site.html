@@ -82,6 +82,9 @@
             <p class="key" id="f">F</p>
             <input type="" id="ctrl">
         </div>
+        <div class="video-feed">
+            <img id="front-left">
+        </div>
 
         <script>
             var urls = {
@@ -96,5 +99,15 @@
         </script>
         <script src="{% static 'js/main.js' %}"></script>
         <script src="{% static 'js/keyboard.js' %}"></script>
+        <script>
+            var video_framerate = 1;
+            function update_image() {
+                var img = $("#front-left");
+                var src = img.attr('src');
+                img.attr('src', src + "?" + new Date().getTime());
+            }
+
+            //var image_loop = setInterval(update_image, 1000/video_framerate);
+        </script>
     </body>
 </html>
