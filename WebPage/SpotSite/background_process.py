@@ -1,4 +1,3 @@
-from importlib import reload
 import time 
 import sys
 import math
@@ -8,52 +7,56 @@ import cv2
 import io
 import pathlib
 import asyncio
-from SpotSite import spot_control, secrets, websocket
+import base64
+from threading import Thread
+from importlib import reload
+from SpotSite import spot_control
+from SpotSite import secrets
+from SpotSite import websocket
 
-import bosdyn.client, bosdyn.client.lease
+import bosdyn.client
+import bosdyn.client.lease
 from bosdyn.client.robot_command import RobotCommandClient
-from bosdyn.client.estop import EstopEndpoint, EstopKeepAlive, EstopClient
+from bosdyn.client.estop import EstopEndpoint
+from bosdyn.client.estop import EstopKeepAlive
+from bosdyn.client.estop import EstopClient
 from bosdyn.client.power import power_off
 from bosdyn.client.image import ImageClient
 
 class Background_Process:
     def __init__(self):
-        # Tells if background program is running (if it's connected to the robot)
-        self.is_running = False
-        # Tells if a program is being run from a file
-        self.program_is_running = False
-        # Tells if commands from scratch are being run
-        self.is_running_commands = False
-        # Tells if someone is controlling the robot with the keyboard
-        self.is_handling_keyboard_commands = False
-        # Tells what mode the keyboard control is in (walk or stand)
-        self.keyboard_control_mode = "Walk"
-        # The class needed to send motor commands to the robot (sit, stand, walk, etc.)
-        self.robot_control = None
-        # Needed to send commands to the robot
-        self.command_client = None
-        self.lease_client = None
-        self.image_client = None
-        self.command_queue = []
-        self.programs = {}
-        self.estop_keep_alive = None
-        self.robot_is_estopped = False
+        self._sdk = None
         self.robot = None
         self.lease = None
+        self._robot_control = None
+        
+        self._command_client = None
+        self._lease_client = None
+        self._lease_keep_alive = None
+        self._image_client = None
+        self._estop_client = None
+        self._estop_keep_alive = None
+        
+        self.is_running = False
+        self.program_is_running = False
+        self.is_running_commands = False
+        self.is_handling_keyboard_commands = False
+        self.robot_is_estopped = False
+        self._video_feed = True
+        
+        self.keyboard_control_mode = "Walk"
         self.program_name = ""
-        # The index of the socket that sent the command to run a program. Used to output
-        # any information to the right client
         self.program_socket_index = 0
+        
+        self.command_queue = []
+        self.programs = {}
+        self.keys = {}
         
     def print(self, socket_index, message, all=False, type="output"):
         # If socket index == -1, then the command came from Scratch, so there is no websocket to output to
         if socket_index == -1 and not all: return print(message)
         if socket_index == -1 and all: return websocket.websocket_list.print(socket_index, message, all=all, type=type)
         websocket.websocket_list.print(socket_index, message, all=all, type=type)
-
-    def add_program(self, name, program):
-        self.programs[name] = program
-        self.print(-1, self.programs, all=True, type="programs")
 
     def print_exception(self, socket_index):
         # Copy and pasted from stack overflow. It works
@@ -84,96 +87,100 @@ class Background_Process:
         else:
             self.print(socket_index, "Powered Off")
             return True
-        
-    def estop(self):
-        if self.estop_keep_alive and not self.robot.is_estopped():
-            self.print(0, "estop", all=True, type="estop")
-            self.robot_is_estopped = True
-            self.estop_keep_alive.stop()
-            self.command_queue = []
-            
-    def release_estop(self):
-        if self.estop_keep_alive and self.robot.is_estopped():
-            self.print(0, "estop_release", all=True, type="estop")
-            self.robot_is_estopped = False
-            self.estop_keep_alive.allow()
-            
-    def get_checksum(self):
-        # Used to detect file changes for hot reload (not currently used)
-        with open("spot_control.py", "rb") as f:
-            newCheckSum = hashlib.md5(f.read()).hexdigest()
-        return newCheckSum
-    
-    def acquire_lease(self, socket_index):
-        # Connects to the robot and acquires a lease
-        # TODO: Handle lease acquisition better. Sometimes if the server attempts to connect to quickly after being disconnected,
-        # errors with lease acquisition occur
+     
+    def _acquire_lease(self, socket_index):
         try:
             if self.robot.is_estopped():
-                self.print(socket_index, "Robot is estopped. Cannot connect.")
+                self.print(socket_index, "Robot is estopped. Cannot Acquire Lease.")
                 return False
             
-            self.lease_client = self.robot.ensure_client(bosdyn.client.lease.LeaseClient.default_service_name)
-            self.lease = self.lease_client.acquire()
-            return True
+            self._lease_client = self.robot.ensure_client(bosdyn.client.lease.LeaseClient.default_service_name)
+            self.lease = self._lease_client.acquire()
+            self._lease_keep_alive = bosdyn.client.lease.LeaseKeepAlive(self._lease_client)
         except Exception as e:
-            self.robot = None
             self.print_exception(socket_index)
             self.print(socket_index, "<red>Failed to accquire lease</red>")
-            self.clear(-1)
+            self._clear(-1)
             return False
         
-    def acquire_estop(self, socket_index):
+        return True
+        
+    def _acquire_estop(self, socket_index):
         try:
-            estop_client = self.robot.ensure_client(EstopClient.default_service_name)
-            ep = EstopEndpoint(estop_client, name="cc-estop", estop_timeout=20) 
+            self._estop_client = self.robot.ensure_client(EstopClient.default_service_name)
+            ep = EstopEndpoint(self._estop_client, name="cc-estop", estop_timeout=20) 
             ep.force_simple_setup()
-            self.estop_keep_alive = EstopKeepAlive(ep)
+            self._estop_keep_alive = EstopKeepAlive(ep)
             self.robot_is_estopped = False
-            return True
         except Exception:
             self.print_exception(socket_index)
             self.print(socket_index, "<red>Failed to accquire Estop</red>")
-            self.clear(-1)
             return False
-
-       
-    def _connect(self, socket_index):
-        self.print(socket_index, "Connecting...")
+        
+        return True
+        
+    def _connect_to_robot(self, socket_index):
         try:
-            sdk = bosdyn.client.create_standard_sdk('cc-server')
+            self._sdk = bosdyn.client.create_standard_sdk('cc-server')
             
-            self.robot = sdk.create_robot('192.168.80.3')
-            self.robot.authenticate(secrets.username, secrets.password)
+            self.robot = self._sdk.create_robot(secrets.ROBOT_IP)
+            self.robot.authenticate(secrets.ROBOT_USERNAME, secrets.ROBOT_PASSWORD)
             self.robot.time_sync.wait_for_sync()
             
-            self.image_client = self.robot.ensure_client(ImageClient.default_service_name)
+            self._image_client = self.robot.ensure_client(ImageClient.default_service_name)
+            
+            self._command_client = self.robot.ensure_client(RobotCommandClient.default_service_name)
+            self._robot_control = spot_control.Spot_Control(self._command_client, -1)
+            
+            self._start_video_loop()
         except:
             self.print_exception(socket_index)
+            self.print(socket_index, "<red>Failed to connect to the robot</red>")
             return False
         
-        if not self.acquire_estop(socket_index):
+        return True
+
+    def _connect_all(self, socket_index):
+        self.print(socket_index, "Connecting...")
+        
+        if not self._connect_to_robot(socket_index):
             return False
         
-        if not self.acquire_lease(socket_index):
+        if not self._acquire_estop(socket_index):
+            return False
+        
+        if not self._acquire_lease(socket_index):
             return False
                 
         return True
         
-    def clear(self, socket_index):
-            if self.estop_keep_alive:
-                self.estop_keep_alive.shutdown()
+    def estop(self):
+        if self._estop_keep_alive and not self.robot.is_estopped():
+            self.print(0, "estop", all=True, type="estop")
+            self.robot_is_estopped = True
+            self._estop_keep_alive.stop()
+            self.command_queue = []
+            
+    def release_estop(self):
+        if self._estop_keep_alive and self.robot.is_estopped():
+            self.print(0, "estop_release", all=True, type="estop")
+            self.robot_is_estopped = False
+            self._estop_keep_alive.allow()
+        
+    def _clear(self, socket_index):
+            if self._estop_keep_alive:
+                self._estop_keep_alive.shutdown()
                 
             if self.robot:
                 self.turn_off(socket_index)
                 
-            if self.lease_client:
-                self.lease_client.return_lease(self.lease)
+            if self._lease_client:
+                self._lease_client.return_lease(self.lease)
                 
-            self.estop_keep_alive = None
+            self._estop_keep_alive = None
             self.robot = None    
-            self.lease_client = None
-            self.command_client = None
+            self._lease_client = None
+            self._command_client = None
             self.robot_is_estopped = False
             self.is_running = False
             self.program_is_running = False
@@ -181,89 +188,78 @@ class Background_Process:
             self.is_running_commands = False
             self.command_queue = []
     
-    def start(self, socket_index):
-        # Starts the background process / connects to robot and stays connected
-                
-        if not self._connect(socket_index):
-            self.print(socket_index, "Failed to connect")
+    def start(self, socket_index):                
+        if not self._connect_all(socket_index):
+            self.print(socket_index, "<red>Failed to start all processes</red>")
             return
 
         self.print(socket_index, "<green>Connected</green>")
         self.print(socket_index, "start", all=True, type="bg_process")
-        # TODO: Automatically reconnect to the robot if it powers off by itself
+        
+        self._background_loop(socket_index)
+        
+        self._clear(socket_index)
+            
+    def _background_loop(self, socket_index):
         try:
-            with bosdyn.client.lease.LeaseKeepAlive(self.lease_client):
-                if not self.turn_on(socket_index):
-                    raise Exception("Failed to turn robot on.")
-                # Command client necessary for sending motor commands to the robot
-                self.command_client = self.robot.ensure_client(RobotCommandClient.default_service_name)
-                self.robot_control = spot_control.Spot_Control(self.command_client, -1)
+            if not self.turn_on(socket_index):
+                raise Exception("<red>Failed to turn robot on.</red>")
 
-                self.is_running = True
-                while self.is_running:
-                    #self.get_image()
-                    if not self.robot.is_powered_on() and not self.robot.is_estopped():
-                        self.turn_on(socket_index)
-
-                        if not self.turn_on(-1):
-                            raise Exception("Failed to turn robot on")
-                    # If the program is not already running and if no instance of spot function exists, run the program.
-                    # An instance of a spot function can exist without the program being run if commands are being sent from Scratch
-                    if self.program_is_running:
-                        # Reload the file to allow for changes
-                        time.sleep(0.2)
-                        reload(spot_control)
-                        time.sleep(0.2)
-                        try:
-                            for command in self.programs[self.program_name]:
-                                self.do_command(command)
-                        except:
-                            self.print_exception(self.program_socket_index)
-                            
-                        self.program_is_running = False
-                    # If there are commands in the queue from Scratch and no program is already running, run the commands
-                    # from the queue. All commands in the queue will be executed before anything else is allowed to happen.
-                    # Currently, all commands from Scratch are executed by the same instance of the Spot_Control class. Since
-                    # feedback cannot be sent back to Scratch, there is no reason to create a new instance every time
-                    # TODO: Allow queued command execution to halt or pause based on user input or a special command type. Maybe a chunk
-                    # of code from a single source could be run at a time, and then the next chunk does not run until further user input?
-                    elif self.command_queue:
-                        self.is_running_commands = True
-                        self.robot_control.socket_index = -1
-                        while self.command_queue:
-                            command = self.command_queue[0]
-                            try:
-                                self.do_command(command)
-                            except:
-                                self.print_exception(socket_index)
-                            self.command_queue.pop(0) 
-                        self.is_running_commands = False
+            self.is_running = True                
+            while self.is_running:
+                self._keep_robot_on(socket_index)
+                self._run_programs(socket_index)
+                self._execute_commands(socket_index)
                         
         except Exception as e:
             self.print_exception(socket_index)
-                        
-        finally:
-            # IMPORTANT: turn of the robot and return the lease
-            # TODO: Do this automatically when the server shuts off or something fails. The robot should do it automatically
-            # but it's good practice to do it from the client side
-            self.clear(-1)
+
+    def _start_video_loop(self):
+        thread = Thread(target=self._video_loop)
+        thread.start()
+
+    def _video_loop(self):
+        while self._video_feed:   
+            self._get_image()
+
+    def _keep_robot_on(self, socket_index):
+        if not self.robot.is_powered_on() and not self.robot.is_estopped():
+            self.turn_on(socket_index)
+
+            if not self.turn_on(-1):
+                raise Exception("Failed to turn robot back on")
             
-    def video_loop(self):
-        while not self.is_running:
-            pass
+    def _execute_commands(self, socket_index):
+        if self.command_queue:
+            self.is_running_commands = True
+            self._robot_control.socket_index = -1
+            while self.command_queue:
+                command = self.command_queue[0]
+                try:
+                    self._do_command(command)
+                except:
+                    self.print_exception(socket_index)
+                self.command_queue.pop(0) 
+            self.is_running_commands = False
         
-        while self.is_running:   
-            self.get_image()
+    def _run_programs(self, socket_index):
+        if self.program_is_running:
+            try:
+                for command in self.programs[self.program_name]:
+                    self._do_command(command)
+            except:
+                self.print_exception(self.program_socket_index)
+            self.program_is_running = False
     
-    def do_command(self, command):
+    def _do_command(self, command):
         # Executes commands from the queue
         action = command['Command']
         
         if action == 'stand':
-            self.robot_control.stand()
+            self._robot_control.stand()
         
         if action == 'sit':
-            self.robot_control.sit()
+            self._robot_control.sit()
             
         if action == 'wait':
             time.sleep(command['Args']['time'])
@@ -274,7 +270,7 @@ class Background_Process:
             yaw = float(args['yaw'])
             roll = float(args['roll'])
             
-            self.robot_control.rotate(math.radians(yaw), math.radians(roll), math.radians(pitch))
+            self._robot_control.rotate(math.radians(yaw), math.radians(roll), math.radians(pitch))
         
         if action == 'move':
             args= command['Args']
@@ -282,19 +278,19 @@ class Background_Process:
             y = float(args['y'])
             z = float(args['z'])
             
-            self.robot_control.walk(x, y, z, d=1)
+            self._robot_control.walk(x, y, z, d=1)
             
     def do_keyboard_commands(self, keys_pressed):
         if keys_pressed['space']:
             self.keyboard_control_mode = "Walk" if self.keyboard_control_mode == "Stand" else "Stand"
             return
-        if self.program_is_running or self.is_running_commands or not self.robot_control:
+        if self.program_is_running or self.is_running_commands or not self._robot_control:
             return
         
-        self.robot_control.socket_index = -1
+        self._robot_control.socket_index = -1
         
         if keys_pressed['space']:
-            self.robot_control.stand()
+            self._robot_control.stand()
             return
         
         d_x = 0
@@ -317,18 +313,17 @@ class Background_Process:
             d_z -= 1
             
         if keys_pressed['r']:
-            self.robot_control.stand()
+            self._robot_control.stand()
         elif keys_pressed['f']:
-            self.robot_control.sit()
+            self._robot_control.sit()
         else:
             if self.keyboard_control_mode == "Walk":
-                self.robot_control.keyboard_walk(d_x, d_y * 0.5, d_z)
+                self._robot_control.keyboard_walk(d_x, d_y * 0.5, d_z)
             elif self.keyboard_control_mode == "Stand":
-                self.robot_control.keyboard_rotate(d_y, -d_z, d_x)
+                self._robot_control.keyboard_rotate(d_y, -d_z, d_x)
                 
-    def get_image(self):
-        import base64
-        image_response = self.image_client.get_image_from_sources(["frontleft_fisheye_image"])[0].shot.image.data
+    def _get_image(self):
+        image_response = self._image_client.get_image_from_sources(["frontleft_fisheye_image"])[0].shot.image.data
         
         image_base64 = base64.b64encode(image_response).decode("utf8")
         
@@ -336,17 +331,17 @@ class Background_Process:
 
     def start_bg_process(self, socket_index):
          # Create a thread so the background process can be run in the background
-        from threading import Thread
         thread = Thread(target=self.start, args=(socket_index))
-        thread.start()
-        
-        thread = Thread(target=self.video_loop)
         thread.start()
         
     def end_bg_process(self):
         self.is_running = False
         
-    def run_program(self, name):
+    def add_program(self, name, program):
+        self.programs[name] = program
+        self.print(-1, self.programs, all=True, type="programs")    
+        
+    def set_program_to_run(self, name):
         if not self.programs[name]: return
         
         self.program_is_running = True
@@ -387,7 +382,7 @@ def do_action(action, socket_index, args=None):
             "Cannot run program because a program is already running")
         else:
             bg_process.program_socket_index = socket_index
-            bg_process.run_program(args)
+            bg_process.set_program_to_run(args)
             bg_process.print(socket_index, "Running Program")
             
     elif action == "remove_program":
