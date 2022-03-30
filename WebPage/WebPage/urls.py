@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.contrib.staticfiles.storage import staticfiles_storage
+from django.views.generic.base import RedirectView
 from django.urls import path, include
 from SpotSite import views
 
@@ -16,6 +18,10 @@ urlpatterns = [
     path('program', views.add_program, name='add_program'),
     path('get-programs', views.get_programs, name='get_programs'),
     path('remove-program', views.remove_program, name='remove_program'),
-    path('file', views.receive_file, name='file')
+    path('file', views.receive_file, name='file'),
+    path(
+        "favicon.ico",
+        RedirectView.as_view(url=staticfiles_storage.url("favicon.ico")),
+    ),
     #path('__debug__/', include('debug_toolbar.urls')),
 ]
