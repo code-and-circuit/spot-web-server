@@ -57,6 +57,7 @@ class Websocket:
             await self.close()
         except RuntimeError:
             print("ERROR CLOSING SOCKET")
+            print(self.socket._client_state)
         # Removes itself from the list of sockets so that the list does not get arbitrarily long if many devices are connecting
         # and disconnecting
         self.list.remove_key(self.index)
@@ -97,22 +98,27 @@ class Websocket_List:
     # the background process is running
     async def print_out(self, socket_index, message, all=False, type="output"):
         # Outputs to every socket
-        if all:
-            for sI in self.sockets:
-                await self.sockets[sI].socket.send_json({
-                    "type" : type,
-                    "output" : message
-                })
-        # Outputs to a single specified socket
-        else:
-            try:
-                await self.sockets[socket_index].socket.send_json({
-                    "type" : type,
-                    "output" : message
-                })
-            except KeyError:
-                print ("KEY ERORR: ", socket_index)
-                print("MESSAGE: ", message)
+        try:
+            if all:
+                for sI in self.sockets:
+                    await self.sockets[sI].socket.send_json({
+                        "type" : type,
+                        "output" : message
+                    })
+            # Outputs to a single specified socket
+            else:
+                try:
+                    await self.sockets[socket_index].socket.send_json({
+                        "type" : type,
+                        "output" : message
+                    })
+                except KeyError:
+                    print ("KEY ERORR: ", socket_index)
+                    print("MESSAGE: ", message)
+        except Exception as e:
+            print(self.sockets)
+            print(e)
+            print("ERROR IN SOCKETS")
                 
     # Used to add an output to the queue of outputs
     def print(self, socket_index, message, all=False, type="output"):

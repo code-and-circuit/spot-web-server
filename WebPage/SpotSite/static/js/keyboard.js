@@ -1,6 +1,6 @@
 var robot_mode = "Walk";
 var toggled = false;
-var valid_keys = ['q', 'e', 'w', 'a', 's', 'd', 'r', 'f', ' '];
+var valid_keys = ['q', 'e', 'w', 'a', 's', 'd', 'r', 'f', 'x', ' '];
 var keys_pressed = {
     w: false,
     a: false,
@@ -10,6 +10,7 @@ var keys_pressed = {
     e: false,
     r: false,
     f: false,
+    x: false,
     space: false
 }
 var refresh_rate = 0.2;
@@ -63,8 +64,8 @@ $("#ctrl").keyup(function (e) {
     }
     else if (valid_keys.includes(key_pressed)) {
         $("#" + key_pressed).removeClass("key-selected");
-        keys_pressed[key_pressed] = false;
     }
+    keys_pressed[key_pressed] = false;
 });
 
 var cmdLoop = null;

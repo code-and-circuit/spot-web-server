@@ -108,10 +108,10 @@ socket.onmessage = function(message) {
         }
         getPrograms();
     }
-    else if (data["type"] == "image") {
+    else if (data["type"][0] == "@") {
         var image = data["output"];
-        //var img = URL.createObjectURL(image);
-        $("#front-left").attr('src', 'data:image/jpg;base64,' + image);   
+        var image_name = data["type"].substring(1, data["type"].length);
+        $("#" + image_name).attr('src', 'data:image/jpg;base64,' + image);   
     }
     // General output
     else if (data["type"] == "output") {
@@ -200,6 +200,18 @@ $('#bgStart').click(function() {
 $('#bgEnd').click(function() {
     sendRequest(urls.end_process);
 });
+
+$("#connectRobot").click(function() {
+    sendRequest(urls.connect)
+})
+
+$("#getEstop").click(function() {
+    sendRequest(urls.get_estop)
+})
+
+$("#getLease").click(function() {
+    sendRequest(urls.lease)
+})
 
 // Sends a message to the server letting it know that the socket is closing. This command is inconsistent
 // and not always sent, requiring extra code in websocket.py

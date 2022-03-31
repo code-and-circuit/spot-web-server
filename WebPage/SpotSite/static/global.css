@@ -117,7 +117,7 @@ red {
 }
 
 .bg-process-container button {
-    width: 30%;
+    width: 80%;
 }
 
 .program-list, .run-program-container {
@@ -240,6 +240,7 @@ red {
     border: 1px solid white;
     transition: 0.2s;
     cursor: default;
+    z-index: 1000;
 }
 
 #estop:hover {
@@ -289,4 +290,16 @@ red {
 #ctrl:focus {
     border: 1px dashed yellow;
     outline: none;
+}
+
+#frontleft_fisheye_image, #frontright_fisheye_image {
+    transform: rotate(90deg)
+}
+
+.front {
+    transform: scale(50%);
+}
+
+.video-feed {
+    margin-top: 20px;
 }

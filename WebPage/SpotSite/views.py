@@ -36,7 +36,25 @@ def end_process(request):
     do_action(request, "end")    
     return JsonResponse({
         "valid": True, 
-    }, status = 200)  
+    }, status = 200) 
+    
+def connect_to_robot(request):
+    do_action(request, "connect")
+    return JsonResponse({
+        "valid": True, 
+    }, status = 200)
+    
+def acquire_lease(request):
+    do_action(request, "acquire_lease")
+    return JsonResponse({
+        "valid": True, 
+    }, status = 200)
+    
+def acquire_estop(request):
+    do_action(request, "acquire_estop")
+    return JsonResponse({
+        "valid": True, 
+    }, status = 200)
 
 # Runs the program in the file
 def run_program(request):

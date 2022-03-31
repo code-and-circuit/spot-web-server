@@ -19,6 +19,9 @@ urlpatterns = [
     path('get-programs', views.get_programs, name='get_programs'),
     path('remove-program', views.remove_program, name='remove_program'),
     path('file', views.receive_file, name='file'),
+    path('connect', views.connect_to_robot, name='connect'),
+    path('lease', views.acquire_lease, name='lease'),
+    path('get_estop', views.acquire_estop, name='get_estop'),
     path(
         "favicon.ico",
         RedirectView.as_view(url=staticfiles_storage.url("favicon.ico")),
