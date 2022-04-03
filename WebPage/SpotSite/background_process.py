@@ -103,8 +103,8 @@ class Background_Process:
         except Exception as e:
             self.print_exception(socket_index)
             self.print(socket_index, "<red>Failed to accquire lease</red>")
-            self._clear(-1)
             success = False
+            self._clear_lease()
             
         finally:
             self._is_connecting = False
@@ -125,6 +125,7 @@ class Background_Process:
             self.print_exception(socket_index)
             self.print(socket_index, "<red>Failed to accquire Estop</red>")
             success = False
+            self._clear_estop()
             
         finally:
             self._is_connecting = False
@@ -153,12 +154,8 @@ class Background_Process:
         except:
             self.print_exception(socket_index)
             self.print(socket_index, "<red>Failed to connect to the robot</red>")
-            self._sdk = None
-            self._robot = None
-            self._image_client = None
-            self._command_client = None
-            self._robot_control = None
             success = False
+            self._disconnect_from_robot()
             
         finally:
             self._is_connecting = False
@@ -185,7 +182,8 @@ class Background_Process:
         if self._estop_keep_alive and not self.robot.is_estopped():
             self.print(0, "estop", all=True, type="estop")
             self.robot_is_estopped = True
-            self._estop_keep_alive.stop()
+            self._estop_keep_alive.settle_then_cut()
+            #self._estop_keep_alive.stop()
             self.command_queue = []
         
     @log_action    
@@ -196,44 +194,57 @@ class Background_Process:
             self._estop_keep_alive.allow()
         
     @log_action
-    def _clear(self, socket_index):
-        if self._estop_keep_alive:
-            self._estop_keep_alive.shutdown()
-            
-        if self.robot:
-            self.turn_off(socket_index)
-            
-        if self._lease_client:
-            self._lease_client.return_lease(self.lease)
-                
-        self._sdk = None
-        self.robot = None
-        self.lease = None
-        self._robot_control = None
+    def _clear(self, socket_index): 
         
-        self._command_client = None
-        self._lease_client = None
-        self._lease_keep_alive = None
-        self._image_client = None
-        self._estop_client = None
-        self._estop_keep_alive = None
+        self._clear_lease()
+        self._clear_estop()
+        self._disconnect_from_robot()
         
         self.is_running = False
         self._is_connecting = False
         self.program_is_running = False
         self.is_running_commands = False
-        self.is_handling_keyboard_commands = False
         self.robot_is_estopped = False
-        self._video_feed = True
         
         self.keyboard_control_mode = "Walk"
-        self.program_name = ""
-        self.program_socket_index = 0
         
         self.command_queue = []
         self.programs = {}
         self.keys = {}
     
+    @log_action
+    def _clear_lease(self):
+        if self.lease_keep_alive and self.robot.is_powered_on():
+            self.turn_off(-1)
+            
+        if self._lease_client and self.lease:
+            self._lease_client.return_lease(self.lease)
+        
+        self._lease_keep_alive = None
+        self.lease = None
+        self._lease_client = None
+        
+    @log_action
+    def _clear_estop(self):
+        if self.lease or self._lease_keep_alive or self._lease_client:
+            self._clear_lease()
+        
+        self._estop_keep_alive.settle_then_cut()
+        self._estop_keep_alive.shutdown()
+        self._estop_keep_alive = None
+        self._estop_client = None
+        
+    @log_action
+    def _disconnect_from_robot(self):
+        if self.lease or self._lease_keep_alive or self._lease_client or self._estop_client or self._estop_keep_alive:
+            self._clear_estop()
+        self._video_feed = False
+        self._image_client = None
+        self._command_client = None
+        self.robot = None
+        self._sdk = None
+        self._robot_control = None
+        
     @log_action
     def start(self, socket_index):                
         if not self._connect_all(socket_index):
