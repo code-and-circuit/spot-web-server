@@ -7,6 +7,8 @@ from django.core.files.base import ContentFile
 
 import background_process
 from SpotSite import websocket
+from spot_logging import log_action
+from spot_logging import log
 
 import pathlib
 import json
@@ -166,8 +168,10 @@ def get_info(request):
         }, status=200)
         
 # Handles new websockets and adds them to a list of active sockets. Then keeps the socket alive forever (until it closes itself)
+@log_action
 async def websocket_view(socket):
     socket_index = websocket.websocket_list.add_socket(socket)
+    log("Socket connection at index " + socket_index)
     await socket.accept()
     await socket.send_json({
         'type' : "socket_create",

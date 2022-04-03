@@ -13,6 +13,7 @@ from importlib import reload
 import spot_control
 from SpotSite import secrets
 from SpotSite import websocket
+from spot_logging import log_action
 
 import bosdyn.client
 import bosdyn.client.lease
@@ -53,10 +54,7 @@ class Background_Process:
         self.programs = {}
         self.keys = {}
         
-    def print(self, socket_index, message, all=False, type="output"):
-        # If socket index == -1, then the command came from Scratch, so there is no websocket to output to
-        if socket_index == -1 and not all: return print(message)
-        if socket_index == -1 and all: return websocket.websocket_list.print(socket_index, message, all=all, type=type)
+    def print(self, socket_index, message, all=False, type="output"):    
         websocket.websocket_list.print(socket_index, message, all=all, type=type)
 
     def print_exception(self, socket_index):
@@ -69,6 +67,7 @@ class Background_Process:
         line = linecache.getline(filename, lineno, f.f_globals)
         self.print(socket_index, f'<red<Exception</red> {exc_obj} <br>in {filename} line {lineno}')
         
+    @log_action
     def turn_on(self, socket_index):
         self.print(socket_index, "Powering On...")
         self.robot.power_on(timeout_sec=20)
@@ -79,6 +78,7 @@ class Background_Process:
             self.print(socket_index, "Powered On")
             return True
         
+    @log_action
     def turn_off(self, socket_index):
         self.print(socket_index, "Powering off...")
         self.robot.power_off(cut_immediately=False, timeout_sec=20)
@@ -89,6 +89,7 @@ class Background_Process:
             self.print(socket_index, "Powered Off")
             return True
      
+    @log_action
     def _acquire_lease(self, socket_index):
         success = True
         self._is_connecting = True
@@ -110,6 +111,7 @@ class Background_Process:
         
         return success
         
+    @log_action
     def _acquire_estop(self, socket_index):
         success = True
         try:
@@ -129,6 +131,7 @@ class Background_Process:
         
         return success
         
+    @log_action
     def _connect_to_robot(self, socket_index):
         self.print(socket_index, "Connecting to robot...")
         success = True
@@ -162,6 +165,7 @@ class Background_Process:
         
         return success
 
+    @log_action
     def _connect_all(self, socket_index):
         self.print(socket_index, "Starting...")
         
@@ -176,19 +180,22 @@ class Background_Process:
                 
         return True
         
+    @log_action
     def estop(self):
         if self._estop_keep_alive and not self.robot.is_estopped():
             self.print(0, "estop", all=True, type="estop")
             self.robot_is_estopped = True
             self._estop_keep_alive.stop()
             self.command_queue = []
-            
+        
+    @log_action    
     def release_estop(self):
         if self._estop_keep_alive and self.robot.is_estopped():
             self.print(0, "estop_release", all=True, type="estop")
             self.robot_is_estopped = False
             self._estop_keep_alive.allow()
         
+    @log_action
     def _clear(self, socket_index):
         if self._estop_keep_alive:
             self._estop_keep_alive.shutdown()
@@ -227,6 +234,7 @@ class Background_Process:
         self.programs = {}
         self.keys = {}
     
+    @log_action
     def start(self, socket_index):                
         if not self._connect_all(socket_index):
             self.print(socket_index, "<red>Failed to start all processes</red>")
@@ -239,6 +247,7 @@ class Background_Process:
         
         self._clear(socket_index)
             
+    @log_action
     def _background_loop(self, socket_index):
         try:
             if not self.turn_on(socket_index):
@@ -253,15 +262,18 @@ class Background_Process:
         except Exception as e:
             self.print_exception(socket_index)
 
+    @log_action
     def _start_video_loop(self):
         self._video_feed = True
         thread = Thread(target=self._video_loop)
         thread.start()
 
+    @log_action
     def _video_loop(self):
         while self._video_feed:   
             self._get_image("frontleft_fisheye_image")
 
+    @log_action
     def _stitch_images(self, image1, image2):
         import cv2
         import numpy as np
@@ -333,6 +345,7 @@ class Background_Process:
                 self.print_exception(self.program_socket_index)
             self.program_is_running = False
     
+    @log_action
     def _do_command(self, command):
         # Executes commands from the queue
         action = command['Command']
@@ -361,7 +374,8 @@ class Background_Process:
             z = float(args['z'])
             
             self._robot_control.walk(x, y, z, d=1)
-            
+    
+    @log_action
     def do_keyboard_commands(self, keys_pressed):
         if keys_pressed['space']:
             self.keyboard_control_mode = "Walk" if self.keyboard_control_mode == "Stand" else "Stand"
@@ -414,7 +428,8 @@ class Background_Process:
             elif self.keyboard_control_mode == "Stand":
                 self._robot_control.keyboard_rotate(d_y, -d_z, d_x)
                 return
-                
+           
+    @log_action     
     def _get_image(self, camera_name):
         image_response = self._image_client.get_image_from_sources(["frontright_fisheye_image"])[0].shot.image.data
         image_response1 = self._image_client.get_image_from_sources(["frontleft_fisheye_image"])[0].shot.image.data
@@ -423,19 +438,23 @@ class Background_Process:
         
         self.print(-1, image_base64, all=True, type=("@" + camera_name))
 
+    @log_action
     def start_bg_process(self, socket_index):
          # Create a thread so the background process can be run in the background
         thread = Thread(target=self.start, args=(socket_index))
         thread.start()
         
+    @log_action
     def end_bg_process(self):
         self.is_running = False
         self._video_feed = False
         
+    @log_action
     def add_program(self, name, program):
         self.programs[name] = program
         self.print(-1, self.programs, all=True, type="programs")    
         
+    @log_action
     def set_program_to_run(self, name):
         if not self.programs[name]: return
         
@@ -447,6 +466,7 @@ class Background_Process:
 bg_process = Background_Process()
     
 # Handles actions from the client
+@log_action
 def do_action(action, socket_index, args=None):
     if action == "start":
         # Makes sure that the background process is not already running before it starts it

@@ -3,6 +3,7 @@ import json
 import time
 from threading import Thread
 import background_process
+import spot_logging as l
 
 # A class to hold a websocket and its information
 # I did not write the class for the python websocket
@@ -14,14 +15,17 @@ class Websocket:
         self.index = i
     
     # Opens the socket
+    @l.log_action
     async def open(self):
         await self.socket.accept()
 
     # Closes the socket
+    @l.log_action
     async def close(self):
         await self.socket.close()
         
     # Keeps the socket alive
+    @l.log_action
     async def keep_alive(self):
         while self.alive:
             # The program relies on a command being sent from the client when
@@ -62,7 +66,8 @@ class Websocket:
         # and disconnecting
         self.list.remove_key(self.index)
 
-    # Sets the socket passed from the client        
+    # Sets the socket passed from the client  
+    @l.log_action      
     def set_socket(self, s):
         self.socket = s
         
@@ -77,11 +82,13 @@ class Websocket_List:
         self.loop_is_running = False
         
     # Removes a socket from the list
+    @l.log_action
     def remove_key(self, key):
         if key in self.sockets:
             self.sockets.pop(key, None)
         
     # Adds a socket to the list
+    @l.log_action
     def add_socket(self, s):
         # Chooses the minimum index needed for the incoming socket. Not technically needed but if it was not used,
         # the socket indices could get large over time. Cleaner and easier to always use the smallest number necessary.
@@ -96,8 +103,11 @@ class Websocket_List:
     # Outputs messages to the client. Almost all messages are just output, but there is one that 
     # is sent when the background process is sucessfully started, so that all clients are updated to show that
     # the background process is running
+    @l.log_action
     async def print_out(self, socket_index, message, all=False, type="output"):
-        # Outputs to every socket
+        if socket_index == -1 and not all:
+            return print(message)
+                
         try:
             if all:
                 for sI in self.sockets:
@@ -124,16 +134,19 @@ class Websocket_List:
     def print(self, socket_index, message, all=False, type="output"):
         asyncio.run(self.print_out(socket_index, message, all=all, type=type))
         
+    @l.log_action
     def start_keyboard_control(self, socket_index):
         if not background_process.bg_process.is_handling_keyboard_commands:
             background_process.bg_process.is_handling_keyboard_commands = True
             self.keyboard_control_socket_index = socket_index
-        
+    
+    @l.log_action    
     def release_keyboard_control(self, socket_index):
         if socket_index == self.keyboard_control_socket_index:
             self.keyboard_control_socket_index = -1
             background_process.bg_process.is_handling_keyboard_commands = False
     
+    @l.log_action
     def key_press(self, keys_pressed, socket_index):
         if socket_index == self.keyboard_control_socket_index:
             background_process.bg_process.do_keyboard_commands(keys_pressed)
