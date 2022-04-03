@@ -2,7 +2,7 @@ import asyncio
 import json
 import time
 from threading import Thread
-from SpotSite import background_process
+import background_process
 
 # A class to hold a websocket and its information
 # I did not write the class for the python websocket

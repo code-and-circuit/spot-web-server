@@ -15,11 +15,15 @@ import os
 from SpotSite import secrets
 import sys
 import pathlib
-current_dir = os.getcwd()
-parent_dir = os.path.dirname(current_dir)
-dir_to_add = current_dir + "\\SpotSite\\files_to_run\\"
-print(dir_to_add)
-sys.path.append(dir_to_add)
+
+def add_dir(path):
+    current_dir = os.getcwd()
+    parent_dir = os.path.dirname(current_dir)
+    dir_to_add = current_dir + path
+    sys.path.append(dir_to_add)
+    
+add_dir("\\SpotSite\\files_to_run\\")
+add_dir("\\SpotSite\\")
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.

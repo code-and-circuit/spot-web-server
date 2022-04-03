@@ -1,8 +1,9 @@
 from django.contrib import admin
 from django.contrib.staticfiles.storage import staticfiles_storage
 from django.views.generic.base import RedirectView
-from django.urls import path, include
-from SpotSite import views
+from django.urls import path
+from django.urls import include
+import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),

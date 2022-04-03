@@ -10,7 +10,7 @@ import asyncio
 import base64
 from threading import Thread
 from importlib import reload
-from SpotSite import spot_control
+import spot_control
 from SpotSite import secrets
 from SpotSite import websocket
 

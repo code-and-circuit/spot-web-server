@@ -1,12 +1,16 @@
 from django.shortcuts import render
-from SpotSite import background_process, websocket
-from django.http import HttpResponseRedirect, JsonResponse
+from django.http import HttpResponseRedirect
+from django.http import JsonResponse
 from django.core import serializers
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
-import pathlib
 
-import json, os
+import background_process
+from SpotSite import websocket
+
+import pathlib
+import json
+import os
 
 # Renders the main site
 def main_site(request):
