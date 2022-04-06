@@ -10,6 +10,8 @@ import asyncio
 import base64
 from threading import Thread
 from importlib import reload
+import numpy as np
+
 import spot_control
 from SpotSite import secrets
 from SpotSite import websocket
@@ -114,6 +116,7 @@ class Background_Process:
     @log_action
     def _acquire_estop(self, socket_index):
         success = True
+        self._is_connecting = True
         try:
             self._estop_client = self.robot.ensure_client(EstopClient.default_service_name)
             ep = EstopEndpoint(self._estop_client, name="cc-estop", estop_timeout=20) 
@@ -150,7 +153,7 @@ class Background_Process:
             self._robot_control = spot_control.Spot_Control(self._command_client, "0")
             
             self._start_video_loop()
-            
+            self.print(socket_index, "<green>Connected to robot</green>")
         except:
             self.print_exception(socket_index)
             self.print(socket_index, "<red>Failed to connect to the robot</red>")
@@ -214,7 +217,7 @@ class Background_Process:
     
     @log_action
     def _clear_lease(self):
-        if self.lease_keep_alive and self.robot.is_powered_on():
+        if self._lease_keep_alive and self.robot.is_powered_on():
             self.turn_off(-1)
             
         if self._lease_client and self.lease:
@@ -253,7 +256,7 @@ class Background_Process:
 
         self.print(socket_index, "<green>Connected</green>")
         self.print(socket_index, "start", all=True, type="bg_process")
-        
+                
         self._background_loop(socket_index)
         
         self._clear(socket_index)
@@ -281,51 +284,24 @@ class Background_Process:
 
     @log_action
     def _video_loop(self):
-        while self._video_feed:   
+        while self._video_feed:
+            break
             self._get_image("frontleft_fisheye_image")
 
     @log_action
     def _stitch_images(self, image1, image2):
-        import cv2
-        import numpy as np
-        import matplotlib.pyplot as plt
-        from random import randrange
-
-        img_ = np.array(image1)
-        img1 = cv2.cvtColor(img_,cv2.COLOR_BGR2GRAY)
-
-        img = np.array(image2)
-        img2 = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
-
-
-        sift = cv2.xfeatures2d.SIFT_create()
-        # find the keypoints and descriptors with SIFT
-        kp1, des1 = sift.detectAndCompute(img1,None)
-        kp2, des2 = sift.detectAndCompute(img2,None)
-        # BFMatcher with default params
-        bf = cv2.BFMatcher()
-        matches = bf.knnMatch(des1,des2, k=2) 
-
-
-
-        #print matches
-        # Apply ratio test
-        good = []
-        for m in matches:
-            if m[0].distance < 0.5*m[1].distance:         
-                good.append(m)
-        matches = np.asarray(good)
-
-        if len(matches[:,0]) >= 4:
-            src = np.float32([ kp1[m.queryIdx].pt for m in matches[:,0] ]).reshape(-1,1,2)
-            dst = np.float32([ kp2[m.trainIdx].pt for m in matches[:,0] ]).reshape(-1,1,2)
-
-            H, masked = cv2.findHomography(src, dst, cv2.RANSAC, 5.0)
-        else:
-            raise AssertionError("Can't find enough keypoints.")  	
+        with open("image1.jpg", 'bw') as f:
+            f.write(image1)
+            f.close()
+        with open("image2.jpg", 'bw') as f:
+            f.write(image2)
+            f.close()
+        image1 = cv2.imread("image1.jpg")
+        image2 = cv2.imread("image2.jpg")
+        stitchy=cv2.createStitcher(False)
+        output=stitchy.stitch((image1,image2))
         
-        dst = cv2.warpPerspective(img_,H,(img.shape[1] + img_.shape[1], img.shape[0]))     	
-        return dst
+        return output
     
     def _keep_robot_on(self, socket_index):
         if not self.robot.is_powered_on() and not self.robot.is_estopped():
@@ -386,7 +362,6 @@ class Background_Process:
             
             self._robot_control.walk(x, y, z, d=1)
     
-    @log_action
     def do_keyboard_commands(self, keys_pressed):
         if keys_pressed['space']:
             self.keyboard_control_mode = "Walk" if self.keyboard_control_mode == "Stand" else "Stand"
@@ -394,7 +369,6 @@ class Background_Process:
         
         if self.program_is_running or self.is_running_commands or not self._robot_control:
             return
-        
         
         self._robot_control.socket_index = -1
         
@@ -426,9 +400,11 @@ class Background_Process:
         if keys_pressed['x']:
             print("SELF RIGHTING")
             self._robot_control.self_right()
+            return
             
         elif keys_pressed['r']:
             self._robot_control.stand()
+            return
             
         elif keys_pressed['f']:
             self._robot_control.sit()

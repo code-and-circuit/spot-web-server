@@ -33,9 +33,9 @@ class Spot_Control:
 
     def print(self, message, all=False, type="output"):
         # If socket index == -1, then the command came from Scratch, so there is no websocket to output to
-        websocket.websocket_list.print(self.socket_index, message, all=all, type=type)
+        #websocket.websocket_list.print(self.socket_index, message, all=all, type=type)
+        print(message)
 
-    @l.log_action
     def rotate(self, yaw, roll, pitch):
         # Create rotation command
         rotation = bosdyn.geometry.EulerZXY(yaw=yaw, roll=roll, pitch=pitch)
@@ -43,7 +43,6 @@ class Spot_Control:
         self.command_client.robot_command(cmd)
         self.print(f'Rotated to yaw: {yaw}, roll: {roll}, pitch: {pitch}')
         
-    @l.log_action   
     def stand(self):
         # Stand
         cmd = RobotCommandBuilder.synchro_stand_command()
@@ -51,19 +50,18 @@ class Spot_Control:
         self.command_client.robot_command(cmd)
         self.print("Stood up")
     
-    @l.log_action    
     def sit(self):
-        cmd =  RobotCommandBuilder.synchro_sit_command()
+        cmd = RobotCommandBuilder.synchro_sit_command()
         self.command_client.robot_command(cmd)
         self.print("Sitting Down")
     
-    @l.log_action
     def self_right(self):
+        self.sit()
+        time.sleep(1)
         cmd = RobotCommandBuilder.selfright_command()
         self.command_client.robot_command(cmd)
         self.print("Self Righting")
     
-    @l.log_action    
     def walk(self, x, y, z, t=0, d=0):
         # TODO: Create multiple walk commands if desired walking time exceeds the time allowed by the robot
         # If the desired time is too high, the robot says that the command is too far in the future
@@ -82,21 +80,18 @@ class Spot_Control:
         # Don't allow any commands until robot is done walking
         time.sleep(t)
     
-    @l.log_action    
     def set_stand_height(self, height):
         # Create stand height command
         cmd = RobotCommandBuilder.synchro_stand_command(body_height=height)
         self.command_client.robot_command(cmd)
         self.print(f'Standing at: {height}')
     
-    @l.log_action    
     def hop(self):
         params = spot_command_pb2.MobilityParams(locomotion_hint=spot_command_pb2.HINT_HOP, stair_hint=0)
         cmd = RobotCommandBuilder.synchro_stand_command(params=params)
         self.command_client.robot_command(cmd)
         self.print("Hopping")
 
-    @l.log_action
     def keyboard_walk(self, d_x, d_y, d_z):
         walk = RobotCommandBuilder.synchro_velocity_command(
             d_x * self.KEYBOARD_COMMAND_VELOCITY,
@@ -107,7 +102,6 @@ class Spot_Control:
                         RobotCommandBuilder._to_any(self.collision_avoid_params))    
         self.command_client.robot_command(walk, end_time_secs=time.time() + self.KEYBOARD_COMMAND_DURATION)
 
-    @l.log_action
     def keyboard_rotate(self, d_yaw, d_roll, d_pitch):
         self.rotation['yaw'] += d_yaw * self.KEYBOARD_ROTATION_VELOCITY
         self.rotation['yaw']
@@ -121,7 +115,6 @@ class Spot_Control:
         cmd = RobotCommandBuilder.synchro_stand_command(footprint_R_body=rotation)
         self.command_client.robot_command(cmd)
 
-    @l.log_action
     def setup(self):
         self.stand()
         self.rotate(0, 0, 0)
