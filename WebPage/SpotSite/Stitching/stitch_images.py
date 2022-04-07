@@ -254,6 +254,13 @@ def draw_routine(display, image_1, image_2, program):
     
 class Stitcher:
     def __init__(self, width, height):
+        glutInit()
+        glutInitDisplayMode(GLUT_RGBA)
+        glutInitWindowSize(width, height)
+        glutInitWindowPosition(0, 0)
+        window = glutCreateWindow("TEST")
+        glutHideWindow()
+        
         with open('shader_vert.glsl', 'r') as file:
             vert_shader = file.read()
         with open('shader_frag.glsl', 'r') as file:
@@ -264,12 +271,6 @@ class Stitcher:
         self.height = height
         self.display = (width, height)
         
-        glutInit()
-        glutInitDisplayMode(GLUT_RGBA)
-        glutInitWindowSize(width, height)
-        glutInitWindowPosition(0, 0)
-        window = glutCreateWindow("TEST")
-        glutHideWindow()
         
     def stitch(self, image_1, image_2):
         """Stitch two front fisheye images together"""
