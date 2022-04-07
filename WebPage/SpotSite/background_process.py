@@ -16,6 +16,7 @@ import spot_control
 from SpotSite import secrets
 from SpotSite import websocket
 from spot_logging import log_action
+from Stitching import stitch_images
 
 import bosdyn.client
 import bosdyn.client.lease
@@ -55,6 +56,8 @@ class Background_Process:
         self.command_queue = []
         self.programs = {}
         self.keys = {}
+        
+        self.image_stitcher = None
         
     def print(self, socket_index, message, all=False, type="output"):    
         websocket.websocket_list.print(socket_index, message, all=all, type=type)
@@ -279,29 +282,30 @@ class Background_Process:
     @log_action
     def _start_video_loop(self):
         self._video_feed = True
+        self.image_stitcher = stitch_images.Stitcher(1080, 720)
+        
         thread = Thread(target=self._video_loop)
         thread.start()
 
     @log_action
     def _video_loop(self):
         while self._video_feed:
-            break
             self._get_image("frontleft_fisheye_image")
 
     @log_action
     def _stitch_images(self, image1, image2):
-        with open("image1.jpg", 'bw') as f:
-            f.write(image1)
-            f.close()
-        with open("image2.jpg", 'bw') as f:
-            f.write(image2)
-            f.close()
-        image1 = cv2.imread("image1.jpg")
-        image2 = cv2.imread("image2.jpg")
-        stitchy=cv2.createStitcher(False)
-        output=stitchy.stitch((image1,image2))
-        
+        self.image_stitcher.stitch(image1, image2)
         return output
+         
+    @log_action     
+    def _get_image(self, camera_name):
+        front_right = self._image_client.get_image_from_sources(["frontright_fisheye_image"])[0]
+        front_left = self._image_client.get_image_from_sources(["frontleft_fisheye_image"])[0]
+        
+        image_base64 = base64.b64encode(self._stitch_images(front_right, front_left)).decode("utf8")
+        
+        self.print(-1, image_base64, all=True, type=("@" + camera_name))
+
     
     def _keep_robot_on(self, socket_index):
         if not self.robot.is_powered_on() and not self.robot.is_estopped():
@@ -415,16 +419,7 @@ class Background_Process:
             elif self.keyboard_control_mode == "Stand":
                 self._robot_control.keyboard_rotate(d_y, -d_z, d_x)
                 return
-           
-    @log_action     
-    def _get_image(self, camera_name):
-        image_response = self._image_client.get_image_from_sources(["frontright_fisheye_image"])[0].shot.image.data
-        image_response1 = self._image_client.get_image_from_sources(["frontleft_fisheye_image"])[0].shot.image.data
-        
-        image_base64 = base64.b64encode(self._stitch_images(image_response, image_response1)).decode("utf8")
-        
-        self.print(-1, image_base64, all=True, type=("@" + camera_name))
-
+            
     @log_action
     def start_bg_process(self, socket_index):
          # Create a thread so the background process can be run in the background
