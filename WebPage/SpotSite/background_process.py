@@ -11,6 +11,7 @@ import base64
 from threading import Thread
 from importlib import reload
 import numpy as np
+import nest_asyncio
 
 import spot_control
 from SpotSite import secrets
@@ -26,6 +27,8 @@ from bosdyn.client.estop import EstopKeepAlive
 from bosdyn.client.estop import EstopClient
 from bosdyn.client.power import power_off
 from bosdyn.client.image import ImageClient
+
+nest_asyncio.apply()
 
 class Background_Process:
     def __init__(self):
@@ -55,7 +58,8 @@ class Background_Process:
         
         self.command_queue = []
         self.programs = {}
-        self.keys = {}
+        self._keys_up = []
+        self._keys_down = []
         
         self.image_stitcher = None
         
@@ -276,7 +280,7 @@ class Background_Process:
                 self._run_programs(socket_index)
                 self._execute_commands(socket_index)
                         
-        except Exception as e:
+        except:
             self.print_exception(socket_index)
 
     @log_action
@@ -302,11 +306,12 @@ class Background_Process:
         front_right = self._image_client.get_image_from_sources(["frontright_fisheye_image"])[0]
         front_left = self._image_client.get_image_from_sources(["frontleft_fisheye_image"])[0]
         
-        image_base64 = base64.b64encode(self._stitch_images(front_right, front_left)).decode("utf8")
+        image = self._stitch_images(front_right, front_left)
+        
+        image_base64 = base64.b64encode(image).decode("utf8")
         
         self.print(-1, image_base64, all=True, type=("@" + camera_name))
 
-    
     def _keep_robot_on(self, socket_index):
         if not self.robot.is_powered_on() and not self.robot.is_estopped():
             self.turn_on(socket_index)
@@ -366,8 +371,18 @@ class Background_Process:
             
             self._robot_control.walk(x, y, z, d=1)
     
-    def do_keyboard_commands(self, keys_pressed):
-        if keys_pressed['space']:
+    def key_up(self, key):
+        return key in self._keys_up
+    
+    def key_down(self, key):
+        return key in self._keys_down
+    
+    def do_keyboard_commands(self, keys_changed):
+        
+        self._keys_down = keys_changed[0]
+        self._keys_up = keys_changed[1]
+            
+        if self.key_up('space'):
             self.keyboard_control_mode = "Walk" if self.keyboard_control_mode == "Stand" else "Stand"
             return
         
@@ -376,49 +391,42 @@ class Background_Process:
         
         self._robot_control.socket_index = -1
         
-        if keys_pressed['space']:
-            self._robot_control.stand()
-            return
-        
-        print("KEY PRESS")
-        
+        if self.key_up('space'):
+            return self._robot_control.stand()
+                
         d_x = 0
         d_y = 0
         d_z = 0
                 
-        if keys_pressed['w']:
+        if self.key_down('w'):
             d_x += 1
-        if keys_pressed['s']:
+        if self.key_down('s'):
             d_x -= 1
             
-        if keys_pressed['a']:
+        if self.key_down('a'):
             d_y += 1
-        if keys_pressed['d']:
+        if self.key_down('d'):
             d_y -= 1
             
-        if keys_pressed['q']:
+        if self.key_down('q'):
             d_z += 1
-        if keys_pressed['e']:
+        if self.key_down('e'):
             d_z -= 1
         
-        if keys_pressed['x']:
+        if self.key_down('x'):
             print("SELF RIGHTING")
-            self._robot_control.self_right()
-            return
+            return self._robot_control.self_right()
             
-        elif keys_pressed['r']:
-            self._robot_control.stand()
-            return
+        if self.key_down('r'):
+            return self._robot_control.stand()
             
-        elif keys_pressed['f']:
-            self._robot_control.sit()
-            return
-        else:
-            if self.keyboard_control_mode == "Walk":
-                self._robot_control.keyboard_walk(d_x, d_y * 0.5, d_z)
-            elif self.keyboard_control_mode == "Stand":
-                self._robot_control.keyboard_rotate(d_y, -d_z, d_x)
-                return
+        if self.key_down('f'):
+            return self._robot_control.sit()
+        
+        if self.keyboard_control_mode == "Walk":
+            self._robot_control.keyboard_walk(d_x, d_y * 0.5, d_z)
+        elif self.keyboard_control_mode == "Stand":
+            self._robot_control.keyboard_rotate(d_y, -d_z, d_x)
             
     @log_action
     def start_bg_process(self, socket_index):

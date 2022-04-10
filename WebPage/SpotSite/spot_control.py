@@ -32,9 +32,7 @@ class Spot_Control:
         )
 
     def print(self, message, all=False, type="output"):
-        # If socket index == -1, then the command came from Scratch, so there is no websocket to output to
-        #websocket.websocket_list.print(self.socket_index, message, all=all, type=type)
-        print(message)
+        websocket.websocket_list.print(self.socket_index, message, all=all, type=type)
 
     def rotate(self, yaw, roll, pitch):
         # Create rotation command
@@ -61,6 +59,9 @@ class Spot_Control:
         cmd = RobotCommandBuilder.selfright_command()
         self.command_client.robot_command(cmd)
         self.print("Self Righting")
+        
+    def roll_over(self):
+        pass
     
     def walk(self, x, y, z, t=0, d=0):
         # TODO: Create multiple walk commands if desired walking time exceeds the time allowed by the robot
@@ -104,9 +105,9 @@ class Spot_Control:
 
     def keyboard_rotate(self, d_yaw, d_roll, d_pitch):
         self.rotation['yaw'] += d_yaw * self.KEYBOARD_ROTATION_VELOCITY
-        self.rotation['yaw']
         self.rotation['roll'] += d_roll * self.KEYBOARD_ROTATION_VELOCITY
         self.rotation['pitch'] += d_pitch * self.KEYBOARD_ROTATION_VELOCITY
+        
         rotation = bosdyn.geometry.EulerZXY(
             yaw = self.rotation['yaw'],
             roll = self.rotation['roll'],
