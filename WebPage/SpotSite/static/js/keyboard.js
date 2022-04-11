@@ -48,6 +48,8 @@ $("#ctrl").keyup(function (e) {
     $("#ctrl").val("");
 
     var key_up = getKey(e);
+    if (keys_up.includes(key_up) || keys_down.includes(key_up))
+        return
     if (key_up == " ") {
         $("#space").removeClass("key-selected");
         robot_mode = robot_mode == "Walk" ? "Stand" : "Walk";

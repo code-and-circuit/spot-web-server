@@ -61,7 +61,10 @@ class Spot_Control:
         self.print("Self Righting")
         
     def roll_over(self):
-        pass
+        # Direction(?) d = basic_command_pb2.BatteryChangePoseCommand.Request.HINT_RIGHT
+        cmd = RobotCommandBuilder.battery_change_pose_command()
+        self.command_client.robot_command(cmd)
+        self.print("Rolling OVer")
     
     def walk(self, x, y, z, t=0, d=0):
         # TODO: Create multiple walk commands if desired walking time exceeds the time allowed by the robot

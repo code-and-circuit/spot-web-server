@@ -428,14 +428,13 @@ class Background_Process:
     def _do_keyboard_commands(self):
         if self.key_up('space'):
             self.keyboard_control_mode = "Walk" if self.keyboard_control_mode == "Stand" else "Stand"
-            self._robot_control.stand()
+            return self._robot_control.stand()
  
-        d_x = self.key_down('w') - self.key_down('s')
-        d_y = self.key_down('a') - self.key_down('d')
-        d_z = self.key_down('q') - self.key_down('e')
-        
         if self.key_down('x'):
             return self._robot_control.self_right()
+        
+        if self.key_down('z'):
+            return self._robot_control.roll_over()
             
         if self.key_down('r'):
             return self._robot_control.stand()
@@ -443,18 +442,27 @@ class Background_Process:
         if self.key_down('f'):
             return self._robot_control.sit()
         
+        # Takes advantage of fact that True == 1 and False == 0. 
+        # True - True = 0; True - False = 1; False - True = 0
+        dx = self.key_down('w') - self.key_down('s')
+        dy = self.key_down('a') - self.key_down('d')
+        dz = self.key_down('q') - self.key_down('e')
+        
         if self.keyboard_control_mode == "Walk":
-            self._robot_control.keyboard_walk(d_x, d_y * 0.5, d_z)
+            self._robot_control.keyboard_walk(dx, dy * 0.5,dz)
         elif self.keyboard_control_mode == "Stand":
-            self._robot_control.keyboard_rotate(d_y, -d_z, d_x)
+            self._robot_control.keyboard_rotate(dy, -dz, dx)
+            
+        
             
     def keyboard(self, keys_changed):
-        self._set_keys(self, keys_changed)
+        self._set_keys(keys_changed)
         
         if self.program_is_running or self.is_running_commands or not self._robot_control:
            return
     
         self._do_keyboard_commands()
+        self.print(-1, self.keyboard_control_mode, all=True, type="control_mode")
             
     @log_action
     def start_bg_process(self, socket_index):

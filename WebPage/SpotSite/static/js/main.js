@@ -113,6 +113,12 @@ socket.onmessage = function(message) {
         var image_name = data["type"].substring(1, data["type"].length);
         $("#" + image_name).attr('src', 'data:image/jpg;base64,' + image);   
     }
+
+    else if (data["type"] == "control_mode") {
+        var mode = data["output"];
+        $("#space").html(mode + " Mode")
+    }
+
     // General output
     else if (data["type"] == "output") {
         addOutput(data["output"]);
