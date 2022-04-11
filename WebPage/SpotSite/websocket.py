@@ -137,7 +137,7 @@ class Websocket_List:
     
     def keys(self, keys_changed, socket_index):
         if socket_index == self.keyboard_control_socket_index:
-            background_process.bg_process.do_keyboard_commands(keys_changed)
+            background_process.bg_process.keyboard(keys_changed)
     
 # Creates an instance of the Websocket_list() class. I don't like declaring it globally like this
 # but I don't know of any other way.

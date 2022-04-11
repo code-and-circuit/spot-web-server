@@ -25,10 +25,14 @@ from bosdyn.client.robot_command import RobotCommandClient
 from bosdyn.client.estop import EstopEndpoint
 from bosdyn.client.estop import EstopKeepAlive
 from bosdyn.client.estop import EstopClient
+from bosdyn.client.time_sync import TimeSyncClient
+from bosdyn.client.time_sync import TimeSyncThread
 from bosdyn.client.power import power_off
 from bosdyn.client.image import ImageClient
 
 nest_asyncio.apply()
+
+#TODO: Comments/Documentation
 
 class Background_Process:
     def __init__(self):
@@ -37,12 +41,18 @@ class Background_Process:
         self.lease = None
         self._robot_control = None
         
+        
+        # Clients
         self._command_client = None
         self._lease_client = None
-        self._lease_keep_alive = None
         self._image_client = None
         self._estop_client = None
+        self._time_sync_client = None
+        
+        self._lease_keep_alive = None
         self._estop_keep_alive = None
+        self._time_sync_thread = None
+
         
         self.is_running = False
         self._is_connecting = False
@@ -143,6 +153,27 @@ class Background_Process:
         return success
         
     @log_action
+    def _acquire_time_sync(self, socket_index):
+        success = True
+        self._is_connecting = True
+        
+        try:
+            self._time_sync_client = self.robot.ensure_client(TimeSyncClient.default_service_name)
+            self._time_sync_thread = TimeSyncThread(self._time_sync_client)
+            self._time_sync_thread.start()
+            
+        except:
+            self.print_exception(socket_index)
+            self.print(socket_index, "Failed to accquire Time Sync")
+            success = False
+            self._clear_time_sync()
+            
+        finally:
+            self._is_connecting = False
+                
+        return success
+    
+    @log_action
     def _connect_to_robot(self, socket_index):
         self.print(socket_index, "Connecting to robot...")
         success = True
@@ -152,12 +183,13 @@ class Background_Process:
             
             self.robot = self._sdk.create_robot(secrets.ROBOT_IP)
             self.robot.authenticate(secrets.ROBOT_USERNAME, secrets.ROBOT_PASSWORD)
-            self.robot.time_sync.wait_for_sync()
+            
+            self._acquire_time_sync(socket_index)
             
             self._image_client = self.robot.ensure_client(ImageClient.default_service_name)
             
             self._command_client = self.robot.ensure_client(RobotCommandClient.default_service_name)
-            self._robot_control = spot_control.Spot_Control(self._command_client, "0")
+            self._robot_control = spot_control.Spot_Control(self._command_client, socket_index)
             
             self._start_video_loop()
             self.print(socket_index, "<green>Connected to robot</green>")
@@ -208,6 +240,7 @@ class Background_Process:
         
         self._clear_lease()
         self._clear_estop()
+        self._clear_time_sync()
         self._disconnect_from_robot()
         
         self.is_running = False
@@ -243,6 +276,17 @@ class Background_Process:
         self._estop_keep_alive.shutdown()
         self._estop_keep_alive = None
         self._estop_client = None
+        
+    @log_action
+    def _clear_time_sync(self):
+        if not self.robot:
+            return
+        
+        if self._time_sync_thread:
+            self._time_sync_thread.stop()
+        
+        self._time_sync_client = None
+        self._time_sync_thread = None    
         
     @log_action
     def _disconnect_from_robot(self):
@@ -377,44 +421,20 @@ class Background_Process:
     def key_down(self, key):
         return key in self._keys_down
     
-    def do_keyboard_commands(self, keys_changed):
-        
+    def _set_keys(self, keys_changed):
         self._keys_down = keys_changed[0]
         self._keys_up = keys_changed[1]
-            
+    
+    def _do_keyboard_commands(self):
         if self.key_up('space'):
             self.keyboard_control_mode = "Walk" if self.keyboard_control_mode == "Stand" else "Stand"
-            return
-        
-        if self.program_is_running or self.is_running_commands or not self._robot_control:
-            return
-        
-        self._robot_control.socket_index = -1
-        
-        if self.key_up('space'):
-            return self._robot_control.stand()
-                
-        d_x = 0
-        d_y = 0
-        d_z = 0
-                
-        if self.key_down('w'):
-            d_x += 1
-        if self.key_down('s'):
-            d_x -= 1
-            
-        if self.key_down('a'):
-            d_y += 1
-        if self.key_down('d'):
-            d_y -= 1
-            
-        if self.key_down('q'):
-            d_z += 1
-        if self.key_down('e'):
-            d_z -= 1
+            self._robot_control.stand()
+ 
+        d_x = self.key_down('w') - self.key_down('s')
+        d_y = self.key_down('a') - self.key_down('d')
+        d_z = self.key_down('q') - self.key_down('e')
         
         if self.key_down('x'):
-            print("SELF RIGHTING")
             return self._robot_control.self_right()
             
         if self.key_down('r'):
@@ -427,6 +447,14 @@ class Background_Process:
             self._robot_control.keyboard_walk(d_x, d_y * 0.5, d_z)
         elif self.keyboard_control_mode == "Stand":
             self._robot_control.keyboard_rotate(d_y, -d_z, d_x)
+            
+    def keyboard(self, keys_changed):
+        self._set_keys(self, keys_changed)
+        
+        if self.program_is_running or self.is_running_commands or not self._robot_control:
+           return
+    
+        self._do_keyboard_commands()
             
     @log_action
     def start_bg_process(self, socket_index):
