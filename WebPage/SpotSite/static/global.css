@@ -16,8 +16,6 @@ I just want it to function well, be easy on the eyes and feel sleek
 body {
     background: rgb(40, 40, 42);
     color: white;
-
-
 }
 
 button {
@@ -185,31 +183,45 @@ red {
     }
 
     #q {
-        right: 40px;
+        right: 110px;
         top: 10px;
     }
 
     #e {
-        right: 10px;
+        right: 80px;
         top: 10px;
     }
 
     #r {
-        right: 10px;
+        right: 80px;
         top: 40px;
         width: 50px;
     }
 
     #f {
-        right: 10px;
+        right: 80px;
         top: 70px;
         width: 50px;
+    }
+
+    #z {
+        right: 6px;
+        top: 20px;
+        width: 60px;
+        height: 40px;
+    }
+
+    #x {
+        right: 6px;
+        top: 70px;
+        width: 60px;
+        height: 40px;
     }
         
     #space {
         left: 11px;
         top: 100px;
-        width: calc(100% - 27px);
+        width: calc(100% - 27px - 70px);
     }
 #toggle {
     width: 100%;
@@ -262,7 +274,7 @@ red {
     position: fixed;
     left: 30px;
     top: 0;
-    width: 200px;
+    width: 250px;
     height: 135px;
     top: -140px;
     padding-top: 25px;
@@ -290,10 +302,6 @@ red {
 #ctrl:focus {
     border: 1px dashed yellow;
     outline: none;
-}
-
-#frontleft_fisheye_image, #frontright_fisheye_image {
-    transform: rotate(90deg)
 }
 
 .front {

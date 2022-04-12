@@ -24,6 +24,7 @@ def add_dir(path):
     
 add_dir("\\SpotSite\\files_to_run\\")
 add_dir("\\SpotSite\\")
+add_dir("\\SpotSite\\Stitching")
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.

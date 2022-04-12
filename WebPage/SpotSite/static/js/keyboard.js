@@ -1,6 +1,6 @@
 var robot_mode = "Walk";
 var toggled = false;
-var valid_keys = ['q', 'e', 'w', 'a', 's', 'd', 'r', 'f', ' '];
+var valid_keys = ['q', 'e', 'w', 'a', 's', 'd', 'r', 'f', ' ', 'z', 'x'];
 var keys_up = []
 var keys_down = []
 var refresh_rate = 0.2;
@@ -48,7 +48,7 @@ $("#ctrl").keyup(function (e) {
     $("#ctrl").val("");
 
     var key_up = getKey(e);
-    if (keys_up.includes(key_up) || keys_down.includes(key_up))
+    if (keys_up.includes(key_up))
         return
     if (key_up == " ") {
         $("#space").removeClass("key-selected");

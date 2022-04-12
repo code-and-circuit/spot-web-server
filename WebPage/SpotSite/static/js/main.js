@@ -111,7 +111,7 @@ socket.onmessage = function(message) {
     else if (data["type"][0] == "@") {
         var image = data["output"];
         var image_name = data["type"].substring(1, data["type"].length);
-        $("#" + image_name).attr('src', 'data:image/jpg;base64,' + image);   
+        $("#" + image_name).attr('src', 'data:image/png;base64,' + image);   
     }
 
     else if (data["type"] == "control_mode") {

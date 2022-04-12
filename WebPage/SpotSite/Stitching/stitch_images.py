@@ -150,19 +150,6 @@ class CompiledShader():
         self.set_texture(self.image2.pointer, self.image2_texture, 1)
 
 
-def load_get_image_response_from_binary_file(file_path):
-    """Read in image from image response"""
-    if not os.path.exists(file_path):
-        raise IOError("File not found at: %s" % file_path)
-
-    _images = image_pb2.GetImageResponse()
-    with open(file_path, "rb") as f:
-        data = f.read()
-        _images.ParseFromString(data)
-
-    return _images
-
-
 def proto_vec_T_numpy(vec):
     return numpy.array([vec.x, vec.y, vec.z])
 
@@ -253,35 +240,61 @@ def draw_routine(display, image_1, image_2, program):
     glutSwapBuffers()
     
 class Stitcher:
-    def __init__(self, width, height):
+    def __init__(self, width, height):        
+        self._width = width
+        self._height = height
+        self._display = (width, height)
+        
+        self._program = None
+        self._image_1 = None
+        self._image_2 = None
+        
+        self._init_glut()
+        self._load_shaders()
+        self._start_glut()
+        
+    def _init_glut(self):
         glutInit()
         glutInitDisplayMode(GLUT_RGBA)
-        glutInitWindowSize(width, height)
+        glutInitWindowSize(self._width, self._height)
         glutInitWindowPosition(0, 0)
-        window = glutCreateWindow("TEST")
+        window = glutCreateWindow("Image Stitching")
         glutHideWindow()
         
-        with open('shader_vert.glsl', 'r') as file:
+    def _load_shaders(self):
+        with open('SpotSite\\Stitching\\shader_vert.glsl', 'r') as file:
             vert_shader = file.read()
-        with open('shader_frag.glsl', 'r') as file:
+        with open('SpotSite\\Stitching\\shader_frag.glsl', 'r') as file:
             frag_shader = file.read()
             
-        self.program = CompiledShader(vert_shader, frag_shader)
-        self.width = width
-        self.height = height
-        self.display = (width, height)
+        self._program = CompiledShader(vert_shader, frag_shader)
         
+    def _start_glut(self):
+        glutDisplayFunc(self._update_image)
+        glutIdleFunc(glutPostRedisplay)
+        glutMainLoop()
         
+    def _update_image(self):
+        if self._image_1 is None or self._image_2 is None:
+            return
+        
+        image_1 = ImagePreppedForOpenGL(self._image_1)
+        image_2 = ImagePreppedForOpenGL(self._image_2)
+        
+        glClear(GL_COLOR_BUFFER_BIT)
+        
+        draw_routine(self._display, image_1, image_2, self._program)
+        draw_routine(self._display, image_1, image_2, self._program)
+        
+                
     def stitch(self, image_1, image_2):
         """Stitch two front fisheye images together"""
-        image_1 = ImagePreppedForOpenGL(image_1)
-        image_2 = ImagePreppedForOpenGL(image_2)
-        
-        draw_routine(self.display, image_1, image_2, self.program)
-        draw_routine(self.display, image_1, image_2, self.program)
+
+        self._image_1 = image_1
+        self._image_2 = image_2
 
         glPixelStorei(GL_PACK_ALIGNMENT, 1)
-        data = glReadPixels(0, 0, self.width, self.height, GL_RGBA, GL_UNSIGNED_BYTE)
-        image = Image.frombytes("RGBA", self.display, data)
+        data = glReadPixels(0, 0, self._width, self._height, GL_RGBA, GL_UNSIGNED_BYTE)
+        image = Image.frombytes("RGBA", self._display, data)
         image = ImageOps.flip(image)
         return image

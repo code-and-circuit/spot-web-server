@@ -12,6 +12,8 @@ from threading import Thread
 from importlib import reload
 import numpy as np
 import nest_asyncio
+from pil import Image
+nest_asyncio.apply()
 
 import spot_control
 from SpotSite import secrets
@@ -30,17 +32,15 @@ from bosdyn.client.time_sync import TimeSyncThread
 from bosdyn.client.power import power_off
 from bosdyn.client.image import ImageClient
 
-nest_asyncio.apply()
 
 #TODO: Comments/Documentation
 
 class Background_Process:
     def __init__(self):
+        # Boilerplate
         self._sdk = None
         self.robot = None
-        self.lease = None
         self._robot_control = None
-        
         
         # Clients
         self._command_client = None
@@ -49,11 +49,13 @@ class Background_Process:
         self._estop_client = None
         self._time_sync_client = None
         
+        # Robot control
+        self.lease = None
         self._lease_keep_alive = None
         self._estop_keep_alive = None
         self._time_sync_thread = None
 
-        
+        # Server state
         self.is_running = False
         self._is_connecting = False
         self.program_is_running = False
@@ -300,7 +302,7 @@ class Background_Process:
         self._robot_control = None
         
     @log_action
-    def start(self, socket_index):                
+    def start(self, socket_index):
         if not self._connect_all(socket_index):
             self.print(socket_index, "<red>Failed to start all processes</red>")
             return
@@ -330,31 +332,34 @@ class Background_Process:
     @log_action
     def _start_video_loop(self):
         self._video_feed = True
-        self.image_stitcher = stitch_images.Stitcher(1080, 720)
-        
+
         thread = Thread(target=self._video_loop)
         thread.start()
 
-    @log_action
     def _video_loop(self):
+        self.image_stitcher = stitch_images.Stitcher(1080, 720)
         while self._video_feed:
             self._get_image("frontleft_fisheye_image")
+            time.sleep(0.03)
 
-    @log_action
     def _stitch_images(self, image1, image2):
-        self.image_stitcher.stitch(image1, image2)
-        return output
-         
-    @log_action     
+        return self.image_stitcher.stitch(image1, image2)
+    
+    def _encode_base64(self, image):
+        buf = io.BytesIO()
+        image.save(buf, format='PNG')
+        
+        bytes_image = buf.getvalue()
+        
+        return base64.b64encode(bytes_image).decode("utf8")
+        
     def _get_image(self, camera_name):
         front_right = self._image_client.get_image_from_sources(["frontright_fisheye_image"])[0]
         front_left = self._image_client.get_image_from_sources(["frontleft_fisheye_image"])[0]
         
         image = self._stitch_images(front_right, front_left)
         
-        image_base64 = base64.b64encode(image).decode("utf8")
-        
-        self.print(-1, image_base64, all=True, type=("@" + camera_name))
+        self.print(-1, self._encode_base64(image), all=True, type=("@" + camera_name))
 
     def _keep_robot_on(self, socket_index):
         if not self.robot.is_powered_on() and not self.robot.is_estopped():
@@ -453,8 +458,6 @@ class Background_Process:
         elif self.keyboard_control_mode == "Stand":
             self._robot_control.keyboard_rotate(dy, -dz, dx)
             
-        
-            
     def keyboard(self, keys_changed):
         self._set_keys(keys_changed)
         
@@ -490,7 +493,7 @@ class Background_Process:
 # Creates an instance of the background_process class used for interacting with the background process connected to the robot
 # Don't like declaring it globally in this way but not sure how else to do it
 bg_process = Background_Process()
-    
+
 # Handles actions from the client
 @log_action
 def do_action(action, socket_index, args=None):
