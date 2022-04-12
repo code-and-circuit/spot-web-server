@@ -357,7 +357,7 @@ class Background_Process:
     def _video_loop(self):
         self.image_stitcher = stitch_images.Stitcher(1080, 720)
         while self._video_feed:
-            self._get_image("frontleft_fisheye_image")
+            self._get_images
             time.sleep(0.03)
 
     def _stitch_images(self, image1, image2):
@@ -371,11 +371,15 @@ class Background_Process:
         
         return base64.b64encode(bytes_image).decode("utf8")
         
-    def _get_image(self, camera_name):
-        front_right = self._image_client.get_image_from_sources(["frontright_fisheye_image"])[0]
-        front_left = self._image_client.get_image_from_sources(["frontleft_fisheye_image"])[0]
+    def _get_images(self):
+        self._get_image("front")
         
-        image = self._stitch_images(front_right, front_left)
+    def _get_image(self, camera_name):
+        if camera_name == "front":
+            front_right = self._image_client.get_image_from_sources(["frontright_fisheye_image"])[0]
+            front_left = self._image_client.get_image_from_sources(["frontleft_fisheye_image"])[0]
+            
+            image = self._stitch_images(front_right, front_left)
         
         self.print(-1, self._encode_base64(image), all=True, type=("@" + camera_name))
 

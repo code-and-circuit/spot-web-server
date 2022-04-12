@@ -243,6 +243,7 @@ red {
     margin-bottom: -60px;
     position: sticky;
     top: 10px;
+    background: none;
 }
 
 #estop {
