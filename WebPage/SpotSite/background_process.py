@@ -112,6 +112,10 @@ class Background_Process:
      
     @log_action
     def _acquire_lease(self, socket_index):
+        if self._lease_client is not None:
+            self.print(socket_index, "Lease already acquired")
+            return True
+        
         success = True
         self._is_connecting = True
         try:
@@ -134,8 +138,13 @@ class Background_Process:
         
     @log_action
     def _acquire_estop(self, socket_index):
+        if self._estop_client is not None:
+            self.print(socket_index, "Estop already acquired")
+            return True
+        
         success = True
         self._is_connecting = True
+        
         try:
             self._estop_client = self.robot.ensure_client(EstopClient.default_service_name)
             ep = EstopEndpoint(self._estop_client, name="cc-estop", estop_timeout=20) 
@@ -156,6 +165,9 @@ class Background_Process:
         
     @log_action
     def _acquire_time_sync(self, socket_index):
+        if self._time_sync_client is not None:
+            return True
+        
         success = True
         self._is_connecting = True
         
@@ -177,16 +189,22 @@ class Background_Process:
     
     @log_action
     def _connect_to_robot(self, socket_index):
+        if self.robot is not None:
+            self.print(socket_index, "Robot is already connected")
+            return True
+        
         self.print(socket_index, "Connecting to robot...")
         success = True
         self._is_connecting = True
+        
         try:
             self._sdk = bosdyn.client.create_standard_sdk('cc-server')
             
             self.robot = self._sdk.create_robot(secrets.ROBOT_IP)
             self.robot.authenticate(secrets.ROBOT_USERNAME, secrets.ROBOT_PASSWORD)
             
-            self._acquire_time_sync(socket_index)
+            if not self._acquire_time_sync(socket_index):
+                raise Exception("Could not acquire time sync!")
             
             self._image_client = self.robot.ensure_client(ImageClient.default_service_name)
             
