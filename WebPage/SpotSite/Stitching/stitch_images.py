@@ -237,18 +237,21 @@ def draw_routine(display, image_1, image_2, program):
     program.set_image2_texture(image_2.image)
 
     draw_geometry(plane_wrt_vo, plane_norm_wrt_vo, rect_sz_meters)
-    glutSwapBuffers()
     
 class Stitcher:
-    def __init__(self, width, height):        
-        self._width = width
-        self._height = height
-        self._display = (width, height)
+    def __init__(self):        
+        self._width = 1080
+        self._height = 720
+        self._display = (self._width, self._height)
         
         self._program = None
         self._image_1 = None
         self._image_2 = None
         
+        self._stitched_image = None
+        self.frame_num = 0
+        
+    def start_glut_loop(self):
         self._init_glut()
         self._load_shaders()
         self._start_glut()
@@ -259,7 +262,7 @@ class Stitcher:
         glutInitWindowSize(self._width, self._height)
         glutInitWindowPosition(0, 0)
         window = glutCreateWindow("Image Stitching")
-        glutHideWindow()
+        #glutHideWindow()
         
     def _load_shaders(self):
         with open('SpotSite\\Stitching\\shader_vert.glsl', 'r') as file:
@@ -274,6 +277,21 @@ class Stitcher:
         glutIdleFunc(glutPostRedisplay)
         glutMainLoop()
         
+    def _draw_string(self, string, x, y, color):
+        glMatrixMode(GL_PROJECTION)
+        glLoadIdentity()
+        glColor3f(color[0], color[1], color[2])
+        glRasterPos2f(x / self._width, y / self._height)
+        for char in string:
+            glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, ord(char))
+            
+            
+    def _save_image(self):
+        glPixelStorei(GL_PACK_ALIGNMENT, 1)
+        data = glReadPixels(0, 0, self._width, self._height, GL_RGBA, GL_UNSIGNED_BYTE)
+        image = Image.frombytes("RGBA", self._display, data)
+        self._stitched_image = ImageOps.flip(image)
+        
     def _update_image(self):
         if self._image_1 is None or self._image_2 is None:
             return
@@ -281,20 +299,22 @@ class Stitcher:
         image_1 = ImagePreppedForOpenGL(self._image_1)
         image_2 = ImagePreppedForOpenGL(self._image_2)
         
-        glClear(GL_COLOR_BUFFER_BIT)
-        
+        glutSwapBuffers()
+        glClearColor(0, 0, 0)
+        glClear(GL_BUFFER_BIT)
         draw_routine(self._display, image_1, image_2, self._program)
-        draw_routine(self._display, image_1, image_2, self._program)
         
+        self._draw_string("Frame number: " + str(self.frame_num), 0, 0, (1, 0, 0))
+        
+        self._save_image
+        self._image_1 = None
+        self._image_2 = None
+        self.frame_num += 1
                 
     def stitch(self, image_1, image_2):
         """Stitch two front fisheye images together"""
-
+         
         self._image_1 = image_1
         self._image_2 = image_2
-
-        glPixelStorei(GL_PACK_ALIGNMENT, 1)
-        data = glReadPixels(0, 0, self._width, self._height, GL_RGBA, GL_UNSIGNED_BYTE)
-        image = Image.frombytes("RGBA", self._display, data)
-        image = ImageOps.flip(image)
-        return image
+        
+        return self._stitched_image

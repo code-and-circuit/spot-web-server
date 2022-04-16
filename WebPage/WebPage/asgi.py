@@ -8,6 +8,9 @@ https://docs.djangoproject.com/en/4.0/howto/deployment/asgi/
 """
 
 import os
+import signal
+
+
 
 import django
 from django.core.asgi import get_asgi_application
@@ -26,3 +29,4 @@ django.setup()
 application = get_asgi_application()
 application = websockets(application)
 
+print("TEST!")

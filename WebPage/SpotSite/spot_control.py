@@ -30,9 +30,13 @@ class Spot_Control:
             disable_vision_foot_constraint_avoidance = False, disable_vision_body_obstacle_avoidance = False,
             disable_vision_foot_obstacle_body_assist = True, disable_vision_negative_obstacles = False
         )
+        
+        self._is_rolled_over = False
+        self.is_running_command = False
 
     def print(self, message, all=False, type="output"):
-        websocket.websocket_list.print(self.socket_index, message, all=all, type=type)
+        print(message)
+        #websocket.websocket_list.print(self.socket_index, message, all=all, type=type)
 
     def rotate(self, yaw, roll, pitch):
         # Create rotation command
@@ -65,6 +69,7 @@ class Spot_Control:
         cmd = RobotCommandBuilder.battery_change_pose_command()
         self.command_client.robot_command(cmd)
         self.print("Rolling OVer")
+        self._is_rolled_over = True
     
     def walk(self, x, y, z, t=0, d=0):
         # TODO: Create multiple walk commands if desired walking time exceeds the time allowed by the robot
