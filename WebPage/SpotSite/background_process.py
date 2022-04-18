@@ -300,6 +300,7 @@ class Background_Process:
         if self._lease_client and self._lease:
             self._lease_client.return_lease(self._lease)
         
+        self._lease_keep_alive.shutdown()
         self._lease_keep_alive = None
         self._lease = None
         self._lease_client = None

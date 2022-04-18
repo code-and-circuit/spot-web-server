@@ -9,6 +9,9 @@ import bosdyn.geometry
 from bosdyn.client.robot_command import RobotCommandBuilder, blocking_stand
 
 
+def clamp(num, min_num, max_num):
+    return max(min_num, min(num, max_num))
+
 # TODO: Make many commands part of a module so they don't need to be declared here. Would make creating 
 # commands less messy. Maybe make the commands work the same as the Scratch commands do so they send a request
 # to the server? This would allow for very clean code and a file would only need to import the module and have a single
@@ -23,6 +26,11 @@ class Spot_Control:
         self.KEYBOARD_COMMAND_VELOCITY = 0.5
         self.KEYBOARD_TURN_VELOCITY = 0.5
         self.KEYBOARD_ROTATION_VELOCITY = 0.2
+        
+        # Constants taken from 'xbox_controller.py' python example in spot-sdk
+        self.ROLL_OFFSET_MAX = 0.4
+        self.YAW_OFFSET_MAX = 0.7805
+        self.PITCH_OFFSET_MAX = 0.7805
         self.rotation = {"pitch": 0, "yaw": 0, "roll": 0}
         
         self.collision_avoid_params = spot_command_pb2.ObstacleParams(
@@ -94,12 +102,6 @@ class Spot_Control:
         cmd = RobotCommandBuilder.synchro_stand_command(body_height=height)
         self.command_client.robot_command(cmd)
         self.print(f'Standing at: {height}')
-    
-    def hop(self):
-        params = spot_command_pb2.MobilityParams(locomotion_hint=spot_command_pb2.HINT_HOP, stair_hint=0)
-        cmd = RobotCommandBuilder.synchro_stand_command(params=params)
-        self.command_client.robot_command(cmd)
-        self.print("Hopping")
 
     def keyboard_walk(self, d_x, d_y, d_z):
         walk = RobotCommandBuilder.synchro_velocity_command(
@@ -108,13 +110,18 @@ class Spot_Control:
             d_z * self.KEYBOARD_TURN_VELOCITY
         )
         walk.synchronized_command.mobility_command.params.CopyFrom(
-                        RobotCommandBuilder._to_any(self.collision_avoid_params))    
+                        RobotCommandBuilder._to_any(self.collision_avoid_params))
         self.command_client.robot_command(walk, end_time_secs=time.time() + self.KEYBOARD_COMMAND_DURATION)
 
     def keyboard_rotate(self, d_yaw, d_roll, d_pitch):
         self.rotation['yaw'] += d_yaw * self.KEYBOARD_ROTATION_VELOCITY
+        self.rotation['yaw'] = clamp(self.rotation['yaw'], -self.YAW_OFFSET_MAX, self.YAW_OFFSET_MAX)
+        
         self.rotation['roll'] += d_roll * self.KEYBOARD_ROTATION_VELOCITY
+        self.rotation['roll'] = clamp(self.rotation['roll'], -self.ROLL_OFFSET_MAX, self.ROLL_OFFSET_MAX)
+
         self.rotation['pitch'] += d_pitch * self.KEYBOARD_ROTATION_VELOCITY
+        self.rotation['pitch'] = clamp(self.rotation['pitch'], -self.PITCH_OFFSET_MAX, self.PITCH_OFFSET_MAX)
         
         rotation = bosdyn.geometry.EulerZXY(
             yaw = self.rotation['yaw'],
