@@ -227,7 +227,7 @@ class Background_Process:
             self._start_video_loop()
             
             self._command_client = self.robot.ensure_client(RobotCommandClient.default_service_name)
-            self._robot_control = spot_control.Spot_Control(self._command_client, socket_index)
+            self._robot_control = spot_control.Spot_Control(self._command_client, socket_index, self.robot)
                         
         except:
             self.print_exception(socket_index)

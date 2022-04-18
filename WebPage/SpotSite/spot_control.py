@@ -1,12 +1,14 @@
 import time, math
 from SpotSite import websocket
 import spot_logging as l
+from pprint import pprint
 
 from bosdyn.api import robot_command_pb2, mobility_command_pb2
 from bosdyn.api.spot import robot_command_pb2 as spot_command_pb2
 import bosdyn.client.util
 import bosdyn.geometry
 from bosdyn.client.robot_command import RobotCommandBuilder, blocking_stand
+from bosdyn.client.robot_state import RobotStateClient
 
 
 def clamp(num, min_num, max_num):
@@ -18,9 +20,10 @@ def clamp(num, min_num, max_num):
 # line of code for a command
 
 class Spot_Control:
-    def __init__(self, cmd_client, s):
+    def __init__(self, cmd_client, s, robot):
         self.command_client = cmd_client
         self.socket_index = s
+        self.robot = robot
         
         self.KEYBOARD_COMMAND_DURATION = 0.5
         self.KEYBOARD_COMMAND_VELOCITY = 0.5
@@ -41,6 +44,23 @@ class Spot_Control:
         
         self._is_rolled_over = False
         self.is_running_command = False
+        
+        self.robot_state_client = robot.ensure_client(RobotStateClient.default_service_name)
+        
+        
+        
+    def dispatch(self, func):
+        def dispatch_wrapper(*args, **kwargs):
+            robot_state = self.robot_state_client.get_robot_state()
+            
+            pprint(vars(robot_state))
+            
+            if self._is_idle:
+                return func(*args, **kwargs)
+            print(f"Could not execute {func.__name__} because robot is not idle!")
+            return False
+        
+        return dispatch_wrapper
 
     def print(self, message, all=False, type="output"):
         print(message)
@@ -53,6 +73,7 @@ class Spot_Control:
         self.command_client.robot_command(cmd)
         self.print(f'Rotated to yaw: {yaw}, roll: {roll}, pitch: {pitch}')
         
+    @self.dispatch
     def stand(self):
         # Stand
         cmd = RobotCommandBuilder.synchro_stand_command()
