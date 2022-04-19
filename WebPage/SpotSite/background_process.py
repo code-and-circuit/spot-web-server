@@ -15,7 +15,6 @@ from importlib import reload
 import numpy as np
 import nest_asyncio
 from pil import Image
-nest_asyncio.apply()
 
 # Interproject imports
 import spot_control
@@ -36,9 +35,16 @@ from bosdyn.client.time_sync import TimeSyncThread
 from bosdyn.client.power import power_off
 from bosdyn.client.image import ImageClient
 
+nest_asyncio.apply()
+
 def start_thread(func, args=None):
     thread = Thread(target=func, args=args)
     thread.start()
+    
+def close():
+    bg_process._clear(-1)
+    time.sleep(0.5)
+    print("\033[92m" + "    Background" + "\033[0m" + ": Disconnecting from robot")
 
 class Background_Process:
     def __init__(self):
@@ -299,8 +305,10 @@ class Background_Process:
             
         if self._lease_client and self._lease:
             self._lease_client.return_lease(self._lease)
-        
-        self._lease_keep_alive.shutdown()
+            
+        if self._lease_keep_alive:
+            self._lease_keep_alive.shutdown()
+            
         self._lease_keep_alive = None
         self._lease = None
         self._lease_client = None
@@ -311,8 +319,10 @@ class Background_Process:
         if self._has_lease:
             self._clear_lease()
         
-        self._estop_keep_alive.settle_then_cut()
-        self._estop_keep_alive.shutdown()
+        if self._estop_keep_alive:
+            self._estop_keep_alive.settle_then_cut()
+            self._estop_keep_alive.shutdown()
+            
         self._estop_keep_alive = None
         self._estop_client = None
         self._has_estop = False

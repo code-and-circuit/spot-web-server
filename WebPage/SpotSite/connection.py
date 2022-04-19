@@ -148,10 +148,14 @@ class WebSocket:
         await self._send(message)
 
     async def receive(self):
+        
         if self._client_state == State.DISCONNECTED:
             raise RuntimeError("WebSocket is disconnected.")
 
         message = await self._receive()
+        
+        if message["type"] == ReceiveEvent.DISCONNECT:
+            return "Disconnected"
 
         if self._client_state == State.CONNECTING:
             assert message["type"] == ReceiveEvent.CONNECT, (
@@ -183,7 +187,7 @@ class WebSocket:
     async def receive_text(self) -> str:
         message = await self.receive()
         self._test_if_can_receive(message)
-        return message["text"]
+        return "Disconnected" if message == "Disconnected" else message["text"]
 
     async def receive_bytes(self) -> bytes:
         message = await self.receive()
@@ -207,6 +211,8 @@ class WebSocket:
         await self.send({"type": SendEvent.SEND, "bytes": text})
 
     def _test_if_can_receive(self, message: t.Mapping):
+        if message == "Disconnected":
+            return
         assert message["type"] == ReceiveEvent.RECEIVE, (
             'Invalid message type "%s". Was connection accepted?' % message["type"]
         )

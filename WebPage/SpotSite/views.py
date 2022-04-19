@@ -177,8 +177,12 @@ async def websocket_view(socket):
         'type' : "socket_create",
         'socket_index' : socket_index
     })
+    await websocket.websocket_list.sockets[socket_index].keep_alive()
+
+    
     try:
-        await websocket.websocket_list.sockets[socket_index].keep_alive()
+        #await websocket.websocket_list.sockets[socket_index].keep_alive()
+        pass
     except Exception as e:
         print("ERROR: ", e)
         websocket.websocket_list.remove_key(socket_index)

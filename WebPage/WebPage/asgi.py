@@ -9,8 +9,7 @@ https://docs.djangoproject.com/en/4.0/howto/deployment/asgi/
 
 import os
 import signal
-
-
+from uvicorn.main import Server
 
 import django
 from django.core.asgi import get_asgi_application
@@ -29,4 +28,21 @@ django.setup()
 application = get_asgi_application()
 application = websockets(application)
 
-print("TEST!")
+import background_process
+from SpotSite import websocket as ws
+original_handler = Server.handle_exit
+
+class AppStatus:
+    should_exit = False
+
+    @staticmethod
+    def handle_exit(*args, **kwargs):
+        AppStatus.should_exit = True
+        ws.close_all_sockets()
+        background_process.close()
+        original_handler(*args, **kwargs)
+
+Server.handle_exit = AppStatus.handle_exit
+
+
+

@@ -14,6 +14,19 @@ from bosdyn.client.robot_state import RobotStateClient
 def clamp(num, min_num, max_num):
     return max(min_num, min(num, max_num))
 
+def dispatch(func, robot_state_client):
+        def dispatch_wrapper(*args, **kwargs):
+            robot_state = robot_state_client.get_robot_state()
+            
+            pprint(vars(robot_state))
+            
+            if self._is_idle:
+                return func(*args, **kwargs)
+            print(f"Could not execute {func.__name__} because robot is not idle!")
+            return False
+        
+        return dispatch_wrapper
+
 # TODO: Make many commands part of a module so they don't need to be declared here. Would make creating 
 # commands less messy. Maybe make the commands work the same as the Scratch commands do so they send a request
 # to the server? This would allow for very clean code and a file would only need to import the module and have a single
@@ -46,21 +59,6 @@ class Spot_Control:
         self.is_running_command = False
         
         self.robot_state_client = robot.ensure_client(RobotStateClient.default_service_name)
-        
-        
-        
-    def dispatch(self, func):
-        def dispatch_wrapper(*args, **kwargs):
-            robot_state = self.robot_state_client.get_robot_state()
-            
-            pprint(vars(robot_state))
-            
-            if self._is_idle:
-                return func(*args, **kwargs)
-            print(f"Could not execute {func.__name__} because robot is not idle!")
-            return False
-        
-        return dispatch_wrapper
 
     def print(self, message, all=False, type="output"):
         print(message)
@@ -73,7 +71,6 @@ class Spot_Control:
         self.command_client.robot_command(cmd)
         self.print(f'Rotated to yaw: {yaw}, roll: {roll}, pitch: {pitch}')
         
-    @self.dispatch
     def stand(self):
         # Stand
         cmd = RobotCommandBuilder.synchro_stand_command()
