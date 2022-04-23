@@ -14,18 +14,19 @@ from bosdyn.client.robot_state import RobotStateClient
 def clamp(num, min_num, max_num):
     return max(min_num, min(num, max_num))
 
-def dispatch(func, robot_state_client):
+def dispatch(robot_state_client, *args, **kwargs):
+    def dispatch_func(func):
         def dispatch_wrapper(*args, **kwargs):
             robot_state = robot_state_client.get_robot_state()
             
             pprint(vars(robot_state))
             
-            if self._is_idle:
+            if True:
                 return func(*args, **kwargs)
             print(f"Could not execute {func.__name__} because robot is not idle!")
             return False
-        
         return dispatch_wrapper
+    return dispatch_func
 
 # TODO: Make many commands part of a module so they don't need to be declared here. Would make creating 
 # commands less messy. Maybe make the commands work the same as the Scratch commands do so they send a request
