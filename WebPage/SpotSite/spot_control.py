@@ -28,10 +28,6 @@ def dispatch(robot_state_client, *args, **kwargs):
         return dispatch_wrapper
     return dispatch_func
 
-# TODO: Make many commands part of a module so they don't need to be declared here. Would make creating 
-# commands less messy. Maybe make the commands work the same as the Scratch commands do so they send a request
-# to the server? This would allow for very clean code and a file would only need to import the module and have a single
-# line of code for a command
 
 class Spot_Control:
     def __init__(self, cmd_client, s, robot):
@@ -72,6 +68,7 @@ class Spot_Control:
         self.command_client.robot_command(cmd)
         self.print(f'Rotated to yaw: {yaw}, roll: {roll}, pitch: {pitch}')
         
+    #@dispatch
     def stand(self):
         # Stand
         cmd = RobotCommandBuilder.synchro_stand_command()

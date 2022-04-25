@@ -81,6 +81,7 @@ class ImageInsideOpenGL():
     def __init__(self, numpy_array):
         glEnable(GL_TEXTURE_2D)
         self.pointer = glGenTextures(1)
+        glActiveTexture(GL_TEXTURE0 + self.pointer)
         glBindTexture(GL_TEXTURE_2D, self.pointer)
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, numpy_array.shape[1], numpy_array.shape[0], 0, \
             GL_LUMINANCE, GL_UNSIGNED_BYTE, numpy_array)
@@ -89,6 +90,10 @@ class ImageInsideOpenGL():
 
     def update(self, numpy_array):
         """Update texture (no-op)"""
+        glActiveTexture(GL_TEXTURE0 + self.pointer)
+        glBindTexture(GL_TEXTURE_2D, self.pointer)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, numpy_array.shape[1], numpy_array.shape[0], 0, \
+            GL_LUMINANCE, GL_UNSIGNED_BYTE, numpy_array)
 
 
 class CompiledShader():
@@ -139,6 +144,7 @@ class CompiledShader():
             self.image1 = ImageInsideOpenGL(image)
         else:
             self.image1.update(image)
+        
         self.set_texture(self.image1.pointer, self.image1_texture, 0)
 
     def set_image2_texture(self, image):
@@ -147,6 +153,7 @@ class CompiledShader():
             self.image2 = ImageInsideOpenGL(image)
         else:
             self.image2.update(image)
+            
         self.set_texture(self.image2.pointer, self.image2_texture, 1)
 
 
@@ -247,6 +254,7 @@ class Stitcher:
         self._program = None
         self._image_1 = None
         self._image_2 = None
+        self._images_should_exist = True
         
         self._stitched_image = None
         self.frame_num = 0
@@ -285,36 +293,36 @@ class Stitcher:
         for char in string:
             glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, ord(char))
             
-            
     def _save_image(self):
         glPixelStorei(GL_PACK_ALIGNMENT, 1)
-        data = glReadPixels(0, 0, self._width, self._height, GL_RGBA, GL_UNSIGNED_BYTE)
-        image = Image.frombytes("RGBA", self._display, data)
+        data = glReadPixels(0, 0, self._width, self._height, GL_RGB, GL_UNSIGNED_BYTE)
+        image = Image.frombytes("RGB", self._display, data)
         self._stitched_image = ImageOps.flip(image)
         
-    def _update_image(self):
+    def _do_stitching(self):
+        if not self._images_should_exist:
+            return
+        
         if self._image_1 is None or self._image_2 is None:
             return
         
         image_1 = ImagePreppedForOpenGL(self._image_1)
         image_2 = ImagePreppedForOpenGL(self._image_2)
-        
-        glutSwapBuffers()
-        glClearColor(0, 0, 0)
-        glClear(GL_BUFFER_BIT)
         draw_routine(self._display, image_1, image_2, self._program)
         
-        self._draw_string("Frame number: " + str(self.frame_num), 0, 0, (1, 0, 0))
+    def _update_image(self):
+        glutSwapBuffers()
+        glClearColor(1, 1, 1, 0)
+        glClear(GL_COLOR_BUFFER_BIT)
         
-        self._save_image
-        self._image_1 = None
-        self._image_2 = None
-        self.frame_num += 1
+        self._do_stitching()        
+        self._save_image()
                 
-    def stitch(self, image_1, image_2):
-        """Stitch two front fisheye images together"""
+    def stitch(self, image_1, image_2):        
+        self._images_should_exist = False
          
         self._image_1 = image_1
         self._image_2 = image_2
         
+        self._images_should_exist = True
         return self._stitched_image
