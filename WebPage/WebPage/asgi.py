@@ -7,8 +7,9 @@ For more information on this file, see
 https://docs.djangoproject.com/en/4.0/howto/deployment/asgi/
 """
 
-from SpotSite import websocket as ws
-import background_process
+
+
+
 import os
 import signal
 from uvicorn.main import Server
@@ -23,12 +24,15 @@ nest_asyncio.apply()
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'WebPage.settings')
 
-'''
-l.create_log()
-l.log("Server Started")
-'''
-
 django.setup()
+
+from SpotSite import websocket as ws
+import background_process
+
+
+
+
+
 application = get_asgi_application()
 application = websockets(application)
 

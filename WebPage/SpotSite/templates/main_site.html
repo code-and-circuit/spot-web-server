@@ -11,7 +11,7 @@
     </head>
     <body>
         <h1>Spot Control Panel</h1>
-        <h1 id="isRunning" style="font-size: 20px; color: yellow">
+        <h1 id="isRunning" style="font-size: 20px; color: var(--yellow);">
             <!-- Reflects whether or not the background process is running when the page loads -->
             {% if is_running %}
                 Background process is running
@@ -100,6 +100,17 @@
             <div class="front">
                 <img id="front">
             </div>
+            <div class="sides">
+                <div class="left">
+                    <img id="left">
+                </div>
+                <div class="right">
+                    <img id="right">
+                </div>
+            </div>
+            <div class="back">
+                <img id="back">
+            </div>
             
         </div>
 
@@ -119,5 +130,6 @@
         </script>
         <script src="{% static 'js/main.js' %}"></script>
         <script src="{% static 'js/keyboard.js' %}"></script>
+        <script src="{% static 'js/style.js' %}"></script>
     </body>
 </html>

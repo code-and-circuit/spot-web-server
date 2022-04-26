@@ -6,23 +6,40 @@ I just want it to function well, be easy on the eyes and feel sleek
 
 */
 
+:root {
+  --main-hue: 230;
+  --brightness-mult: 1;
+  --saturation-mult: 1;
+
+  --green: hsl(calc(var(--main-hue) - 100 ), calc(var(--saturation-mult) * 80%), calc(var(--brightness-mult) * 60%));
+  --yellow: hsl(calc(var(--main-hue) - 170), calc(var(--saturation-mult) * 80%), calc(var(--brightness-mult) * 60%));
+  --purple: hsl(calc(var(--main-hue) + 40), calc(var(--saturation-mult) * 80%), calc(var(--brightness-mult) * 60%));
+  --red: hsl(calc(var(--main-hue) - 230), calc(var(--saturation-mult) * 80%), calc(var(--brightness-mult) * 60%));
+  --white: hsl(0, 0%, calc(var(--brightness-mult) * 100%));
+
+  --body-bg: hsl(var(--main-hue), calc(var(--saturation-mult) * 25%), calc(var(--brightness-mult) * 20%));
+  --container-bg: hsl(var(--main-hue), calc(var(--saturation-mult) * 25%), calc(var(--brightness-mult) * 14%));
+  --selected-container: var(--green);
+  --selected-text: hsl(var(--main-hue), calc(var(--saturation-mult) * 25%), calc(var(--brightness-mult) * 10%));
+
+}
+
 * {
   padding: 0;
   margin: 0;
   font-family: "Roboto", sans-serif;
-  scrollbar-color: red;
 }
 
 body {
-  background: rgb(40, 40, 42);
-  color: white;
+  background: var(--body-bg);
+  color: var(--white);
 }
 
 button {
   font-size: 1em;
   border: none;
-  color: white;
-  border: 0.01px solid white;
+  color: var(--white);
+  border: 0.01px solid var(--white);
   background: none;
   height: 200%;
   width: 70%;
@@ -33,8 +50,9 @@ button {
 }
 
 button:hover {
-  background: white;
-  color: black;
+  background: var(--selected-container);
+  color: var(--selected-text);
+  border-color: var(--selected-text);
 }
 
 form,
@@ -66,11 +84,11 @@ h1 {
 }
 
 green {
-  color: rgb(0, 255, 0);
+  color: var(--green);
 }
 
 red {
-  color: rgb(255, 0, 0);
+  color: var(--red);
 }
 
 .container > div {
@@ -80,7 +98,7 @@ red {
   display: flex;
   flex-direction: row;
   border-radius: 20px;
-  background: rgb(30, 30, 30);
+  background: var(--container-bg);
   margin-bottom: 20px;
 }
 
@@ -110,7 +128,7 @@ red {
   width: 100%;
   height: 20px;
   border-radius: 0;
-  border: 1px solid white;
+  border: 1px solid var(--white);
   margin-bottom: 3px;
 }
 
@@ -147,13 +165,13 @@ red {
 }
 
 #removeProgram {
-  color: red;
-  border: 1px solid red;
+  color: var(--red);
+  border: 1px solid var(--red);
 }
 
 #removeProgram:hover {
-  background: red;
-  color: white;
+  background: var(--red);
+  color: var(--white);
 }
 
 .key {
@@ -255,21 +273,21 @@ red {
 #estop {
   width: 200px;
   height: 40px;
-  background: rgb(40, 40, 42);
-  border: 1px solid white;
+  background: var(--purple);
+  border: 1px solid var(--purple);
   transition: 0.2s;
   cursor: default;
   z-index: 1000;
 }
 
 #estop:hover {
-  color: white;
+  color: var(--white);
 }
 
 .key-selected {
   cursor: default;
-  background: white;
-  color: rgb(40, 40, 42);
+  background: var(--selected-container);
+  color: var(--selected-text);
 }
 
 #file {
@@ -285,12 +303,11 @@ red {
   height: 135px;
   top: -140px;
   padding-top: 25px;
-  background: rgb(30, 30, 30);
+  background: var(--container-bg);
   cursor: pointer;
   border-radius: 0 0 15px 15px;
   z-index: 3;
   transition: 0.5s;
-  box-shadow: 0 2px 5px 1px rgba(0, 0, 0, 0.2);
 }
 
 #ctrl {
@@ -307,26 +324,23 @@ red {
 }
 
 #ctrl:focus {
-  border: 1px dashed yellow;
+  border: 1px dashed var(--yellow);
   outline: none;
 }
 
-.front {
-  transform: scale(50%);
-}
-
 .video-feed {
-  margin-top: 20px;
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 250%;
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  flex-direction: column;
 }
 
-.front {
-  width: inherit;
-  height: inherit;
-}
+.front, .back {
+  width: 90%;
+  max-width: 720px;
 
-#front {
-  width: inherit;
-  height: inherit;
+  border: 1px dashed var(--white);
+  background-color: rgb(30, 30, 36);
 }
