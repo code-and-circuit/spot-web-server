@@ -23,8 +23,10 @@ nest_asyncio.apply()
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'WebPage.settings')
 
+'''
 l.create_log()
 l.log("Server Started")
+'''
 
 django.setup()
 application = get_asgi_application()

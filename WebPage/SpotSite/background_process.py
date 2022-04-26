@@ -108,7 +108,6 @@ class Background_Process:
         #self.print(socket_index, str(exc_type) + "; " + str(fname) + "; "  + str(exc_tb.tb_lineno))
         #self.print(socket_index, f'<red<Exception</red> {exc_type} <br>in {fname} line {exc_tb.tb_lineno} <br> {line}')
 
-    @log_action
     def turn_on(self, socket_index):
         self.print(socket_index, "Powering On...")
         self.robot.power_on(timeout_sec=20)
@@ -120,7 +119,6 @@ class Background_Process:
             self.print(socket_index, "Powered On")
             return True
 
-    @log_action
     def turn_off(self, socket_index):
         self.print(socket_index, "Powering off...")
         self.robot.power_off(cut_immediately=False, timeout_sec=20)
@@ -132,7 +130,6 @@ class Background_Process:
             self.print(socket_index, "Powered Off")
             return True
 
-    @log_action
     def _acquire_lease(self, socket_index):
         if self._lease_client is not None:
             self.print(socket_index, "Lease already acquired")
@@ -314,7 +311,6 @@ class Background_Process:
         self.programs = {}
         self.keys = {}
 
-    @log_action
     def _clear_lease(self):
         if self._lease_keep_alive and self.robot.is_powered_on():
             self.turn_off(-1)
@@ -330,7 +326,6 @@ class Background_Process:
         self._lease_client = None
         self._has_lease = False
 
-    @log_action
     def _clear_estop(self):
         if self._has_lease:
             self._clear_lease()
@@ -343,7 +338,6 @@ class Background_Process:
         self._estop_client = None
         self._has_estop = False
 
-    @log_action
     def _clear_time_sync(self):
         if not self.robot:
             return
@@ -355,7 +349,6 @@ class Background_Process:
         self._time_sync_thread = None
         self._has_time_sync = False
 
-    @log_action
     def _disconnect_from_robot(self):
         if self._has_lease or self._has_estop:
             self._clear_estop()
@@ -370,7 +363,6 @@ class Background_Process:
         self.robot = None
         self._sdk = None
 
-    @log_action
     def start(self, socket_index):
         self.print(socket_index, 'Connecting...')
         if not self._connect_all(socket_index):
@@ -384,7 +376,6 @@ class Background_Process:
 
         self._clear(socket_index)
 
-    @log_action
     def _background_loop(self, socket_index):
         try:
             if not self.turn_on(socket_index):
@@ -426,7 +417,6 @@ class Background_Process:
                 self.print_exception(self.program_socket_index)
             self.program_is_running = False
 
-    @log_action
     def _start_video_loop(self):
         self._show_video_feed = True
 
@@ -466,7 +456,6 @@ class Background_Process:
         self.print(-1, self._encode_base64(image),
                    all=True, type=("@" + camera_name))
 
-    @log_action
     def _do_command(self, command):
         # Executes commands from the queue
         action = command['Command']
@@ -545,17 +534,14 @@ class Background_Process:
         self.print(-1, self.keyboard_control_mode,
                    all=True, type="control_mode")
 
-    @log_action
     def start_bg_process(self, socket_index):
         # Create a thread so the background process can be run in the background
         start_thread(self.start, args=(socket_index))
 
-    @log_action
     def end_bg_process(self):
         self.is_running = False
         self._show_video_feed = False
 
-    @log_action
     def add_program(self, name, program):
         self.programs[name] = program
         self.print(-1, self.programs, all=True, type="programs")
@@ -576,7 +562,6 @@ bg_process = Background_Process()
 # Handles actions from the client
 
 
-@log_action
 def do_action(action, socket_index, args=None):
     if action == "start":
         # Makes sure that the background process is not already running before it starts it

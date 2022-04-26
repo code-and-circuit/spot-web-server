@@ -198,10 +198,8 @@ def get_info(request):
 # Handles new websockets and adds them to a list of active sockets. Then keeps the socket alive forever (until it closes itself)
 
 
-@log_action
 async def websocket_view(socket):
     socket_index = websocket.websocket_list.add_socket(socket)
-    log("Socket connection at index " + socket_index)
     await socket.accept()
     await socket.send_json({
         'type': "socket_create",

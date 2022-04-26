@@ -70,7 +70,6 @@ class Websocket:
         self.list.remove_key(self.index)
 
     # Sets the socket passed from the client
-    @l.log_action
     def set_socket(self, s):
         self.socket = s
 
@@ -95,7 +94,6 @@ class Websocket_List:
                 return str(i)
     # Adds a socket to the list
 
-    @l.log_action
     def add_socket(self, s):
         # Chooses the minimum index needed for the incoming socket. Not technically needed but if it was not used,
         # the socket indices could get large over time. Cleaner and easier to always use the smallest number necessary.
