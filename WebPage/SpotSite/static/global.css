@@ -311,4 +311,16 @@ red {
 
 .video-feed {
     margin-top: 20px;
+    width: 100vw;
+    height: 100vh;
+}
+
+.front {
+    width: inherit;
+    height: inherit;
+}
+
+#front {
+    width: inherit;
+    height: inherit;
 }

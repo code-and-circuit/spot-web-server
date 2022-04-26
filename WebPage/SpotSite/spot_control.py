@@ -68,10 +68,13 @@ class Spot_Control:
         self.command_client.robot_command(cmd)
         self.print(f'Rotated to yaw: {yaw}, roll: {roll}, pitch: {pitch}')
         
-    #@dispatch
     def stand(self):
         # Stand
         cmd = RobotCommandBuilder.synchro_stand_command()
+        
+        robot_state = self.robot_state_client.get_robot_state()
+            
+        pprint(dir(robot_state))
         
         self.command_client.robot_command(cmd)
         self.print("Stood up")
