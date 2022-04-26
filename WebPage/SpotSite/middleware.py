@@ -1,6 +1,7 @@
 from django.urls import resolve
 from .connection import WebSocket
 
+
 def websockets(app):
     async def asgi(scope, receive, send):
         if scope["type"] == "websocket":

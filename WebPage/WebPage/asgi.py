@@ -7,6 +7,8 @@ For more information on this file, see
 https://docs.djangoproject.com/en/4.0/howto/deployment/asgi/
 """
 
+from SpotSite import websocket as ws
+import background_process
 import os
 import signal
 from uvicorn.main import Server
@@ -28,9 +30,8 @@ django.setup()
 application = get_asgi_application()
 application = websockets(application)
 
-import background_process
-from SpotSite import websocket as ws
 original_handler = Server.handle_exit
+
 
 class AppStatus:
     should_exit = False
@@ -42,7 +43,5 @@ class AppStatus:
         background_process.close()
         original_handler(*args, **kwargs)
 
+
 Server.handle_exit = AppStatus.handle_exit
-
-
-

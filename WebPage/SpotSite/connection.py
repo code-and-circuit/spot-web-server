@@ -148,12 +148,12 @@ class WebSocket:
         await self._send(message)
 
     async def receive(self):
-        
+
         if self._client_state == State.DISCONNECTED:
             raise RuntimeError("WebSocket is disconnected.")
 
         message = await self._receive()
-        
+
         if message["type"] == ReceiveEvent.DISCONNECT:
             return "Disconnected"
 

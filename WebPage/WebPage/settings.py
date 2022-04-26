@@ -16,12 +16,14 @@ from SpotSite import secrets
 import sys
 import pathlib
 
+
 def add_dir(path):
     current_dir = os.getcwd()
     parent_dir = os.path.dirname(current_dir)
     dir_to_add = current_dir + path
     sys.path.append(dir_to_add)
-    
+
+
 add_dir("\\SpotSite\\files_to_run\\")
 add_dir("\\SpotSite\\")
 add_dir("\\SpotSite\\Stitching")
@@ -53,7 +55,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    #'debug_toolbar',
+    # 'debug_toolbar',
     'SpotSite'
 ]
 
@@ -61,12 +63,12 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    #'django.middleware.csrf.CsrfViewMiddleware',
+    # 'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     "whitenoise.middleware.WhiteNoiseMiddleware",
-    #"debug_toolbar.middleware.DebugToolbarMiddleware"
+    # "debug_toolbar.middleware.DebugToolbarMiddleware"
 ]
 
 ROOT_URLCONF = 'WebPage.urls'

@@ -7,320 +7,326 @@ I just want it to function well, be easy on the eyes and feel sleek
 */
 
 * {
-    padding: 0;
-    margin: 0;
-    font-family: 'Roboto', sans-serif;
-    scrollbar-color: red;
+  padding: 0;
+  margin: 0;
+  font-family: "Roboto", sans-serif;
+  scrollbar-color: red;
 }
 
 body {
-    background: rgb(40, 40, 42);
-    color: white;
+  background: rgb(40, 40, 42);
+  color: white;
 }
 
 button {
-    font-size: 1em;
-    border: none;
-    color: white;
-    border: 0.01px solid white;
-    background: none;
-    height: 200%;
-    width: 70%;
-    cursor: pointer;
-    transition: 0.2s;
-    border-radius: 100px;
-    overflow: wrap;
+  font-size: 1em;
+  border: none;
+  color: white;
+  border: 0.01px solid white;
+  background: none;
+  height: 200%;
+  width: 70%;
+  cursor: pointer;
+  transition: 0.2s;
+  border-radius: 100px;
+  overflow: wrap;
 }
-    
-    button:hover {
-        background: white;
-        color: black;
-    }
 
-form, .form {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+button:hover {
+  background: white;
+  color: black;
+}
+
+form,
+.form {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 h1 {
-    padding-top: 30px;
-    font-size: 40px;
-    text-align: center;
+  padding-top: 30px;
+  font-size: 40px;
+  text-align: center;
 }
 
-.container, h1 {
-    min-width: 500px;
+.container,
+h1 {
+  min-width: 500px;
 }
 
 .container {
-    margin-top: 100px;
-    width: 100%;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-evenly;
-    align-items: center;
+  margin-top: 100px;
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-evenly;
+  align-items: center;
 }
 
 green {
-    color: rgb(0, 255, 0);
+  color: rgb(0, 255, 0);
 }
 
 red {
-    color: rgb(255, 0, 0);
+  color: rgb(255, 0, 0);
 }
 
 .container > div {
-    width: 40%;
-    min-width: 400px;
-    height: 30vh;
-    display: flex;
-    flex-direction: row;
-    border-radius: 20px;
-    background: rgb(30, 30, 30);
-    margin-bottom: 20px;
+  width: 40%;
+  min-width: 400px;
+  height: 30vh;
+  display: flex;
+  flex-direction: row;
+  border-radius: 20px;
+  background: rgb(30, 30, 30);
+  margin-bottom: 20px;
 }
 
-
-.output p, .program-info p {
-    overflow-y: scroll;
-    padding: 10px 20px 10px 20px;
-    line-height: 25px;
-    width: 100%;
+.output p,
+.program-info p {
+  overflow-y: scroll;
+  padding: 10px 20px 10px 20px;
+  line-height: 25px;
+  width: 100%;
 }
 
-.bg-process-container, .program-list-container, .run-program-container {
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-evenly;
-    flex-direction: column;
+.bg-process-container,
+.program-list-container,
+.run-program-container {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  flex-direction: column;
 }
 
 .program-list {
-    height: 100%;
+  height: 100%;
 }
 
 #program {
-    width: 100%;
-    height: 20px;
-    border-radius: 0;
-    border: 1px solid white;
-    margin-bottom: 3px;
+  width: 100%;
+  height: 20px;
+  border-radius: 0;
+  border: 1px solid white;
+  margin-bottom: 3px;
 }
 
 .bg-process-container {
-    width: 100%;
+  width: 100%;
 }
 
 .bg-process-container button {
-    width: 80%;
+  width: 80%;
 }
 
-.program-list, .run-program-container {
-    width: 40%;
+.program-list,
+.run-program-container {
+  width: 40%;
 }
 
 .program-controls {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 #program-name {
-    text-decoration: underline;
+  text-decoration: underline;
 }
 
-#runProgram, #removeProgram {
-    font-size: 16px;
-    width: 80%;
-    height: 30px;
-    margin-bottom: 3px;
+#runProgram,
+#removeProgram {
+  font-size: 16px;
+  width: 80%;
+  height: 30px;
+  margin-bottom: 3px;
 }
 
 #removeProgram {
-    color: red;
-    border: 1px solid red;
+  color: red;
+  border: 1px solid red;
 }
 
 #removeProgram:hover {
-    background:red;
-    color: white;
+  background: red;
+  color: white;
 }
 
 .key {
-    width: 20px;
-    height: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    position: absolute;
-    text-align: center;
-    border-radius: 5px;
-    padding: 2px;
-    transition: 0.1s;
-    z-index: 1;
+  width: 20px;
+  height: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  position: absolute;
+  text-align: center;
+  border-radius: 5px;
+  padding: 2px;
+  transition: 0.1s;
+  z-index: 1;
 }
 
-    #w {
-        left: 40px;
-        top: 25px;
-    }
+#w {
+  left: 40px;
+  top: 25px;
+}
 
-    #a {
-        left: 10px;
-        top: 55px;
-    }
+#a {
+  left: 10px;
+  top: 55px;
+}
 
-    #s {
-        left: 40px;
-        top: 55px;
-    }
+#s {
+  left: 40px;
+  top: 55px;
+}
 
-    #d {
-        left: 70px;
-        top: 55px;
-    }
+#d {
+  left: 70px;
+  top: 55px;
+}
 
-    #q {
-        right: 110px;
-        top: 10px;
-    }
+#q {
+  right: 110px;
+  top: 10px;
+}
 
-    #e {
-        right: 80px;
-        top: 10px;
-    }
+#e {
+  right: 80px;
+  top: 10px;
+}
 
-    #r {
-        right: 80px;
-        top: 40px;
-        width: 50px;
-    }
+#r {
+  right: 80px;
+  top: 40px;
+  width: 50px;
+}
 
-    #f {
-        right: 80px;
-        top: 70px;
-        width: 50px;
-    }
+#f {
+  right: 80px;
+  top: 70px;
+  width: 50px;
+}
 
-    #z {
-        right: 6px;
-        top: 20px;
-        width: 60px;
-        height: 40px;
-    }
+#z {
+  right: 6px;
+  top: 20px;
+  width: 60px;
+  height: 40px;
+}
 
-    #x {
-        right: 6px;
-        top: 70px;
-        width: 60px;
-        height: 40px;
-    }
-        
-    #space {
-        left: 11px;
-        top: 100px;
-        width: calc(100% - 27px - 70px);
-    }
+#x {
+  right: 6px;
+  top: 70px;
+  width: 60px;
+  height: 40px;
+}
+
+#space {
+  left: 11px;
+  top: 100px;
+  width: calc(100% - 27px - 70px);
+}
 #toggle {
-    width: 100%;
-    height: 25px;
-    text-align:center;
-    position: absolute;
-    bottom: 0;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 0 0 15px 15px;
-    font-size: 12px;
+  width: 100%;
+  height: 25px;
+  text-align: center;
+  position: absolute;
+  bottom: 0;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 0 0 15px 15px;
+  font-size: 12px;
 }
 
 #estop-container {
-    margin-top: 40px;
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: -60px;
-    position: sticky;
-    top: 10px;
-    background: none;
+  margin-top: 40px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: -60px;
+  position: sticky;
+  top: 10px;
+  background: none;
 }
 
 #estop {
-    width: 200px;
-    height: 40px;
-    background: rgb(40, 40, 42);
-    border: 1px solid white;
-    transition: 0.2s;
-    cursor: default;
-    z-index: 1000;
+  width: 200px;
+  height: 40px;
+  background: rgb(40, 40, 42);
+  border: 1px solid white;
+  transition: 0.2s;
+  cursor: default;
+  z-index: 1000;
 }
 
 #estop:hover {
-    color: white;
+  color: white;
 }
 
 .key-selected {
-    cursor: default;
-    background: white;
-    color: rgb(40, 40, 42);
+  cursor: default;
+  background: white;
+  color: rgb(40, 40, 42);
 }
 
 #file {
-    margin-top: 30px;
-    margin-bottom: 10px;
+  margin-top: 30px;
+  margin-bottom: 10px;
 }
 
 .ctrl {
-    position: fixed;
-    left: 30px;
-    top: 0;
-    width: 250px;
-    height: 135px;
-    top: -140px;
-    padding-top: 25px;
-    background: rgb(30, 30, 30);
-    cursor: pointer;
-    border-radius: 0 0 15px 15px;
-    z-index: 3;
-    transition: 0.5s;
-    box-shadow: 0 2px 5px 1px rgba(0, 0, 0, 0.2);
+  position: fixed;
+  left: 30px;
+  top: 0;
+  width: 250px;
+  height: 135px;
+  top: -140px;
+  padding-top: 25px;
+  background: rgb(30, 30, 30);
+  cursor: pointer;
+  border-radius: 0 0 15px 15px;
+  z-index: 3;
+  transition: 0.5s;
+  box-shadow: 0 2px 5px 1px rgba(0, 0, 0, 0.2);
 }
 
 #ctrl {
-    width: inherit;
-    height: inherit;
-    background-color: transparent;
-    cursor: pointer;
-    z-index: 5;
-    color: transparent;
-    outline: none;
-    border: none;
-    position: absolute;
-    top: 0;
+  width: inherit;
+  height: inherit;
+  background-color: transparent;
+  cursor: pointer;
+  z-index: 5;
+  color: transparent;
+  outline: none;
+  border: none;
+  position: absolute;
+  top: 0;
 }
 
 #ctrl:focus {
-    border: 1px dashed yellow;
-    outline: none;
+  border: 1px dashed yellow;
+  outline: none;
 }
 
 .front {
-    transform: scale(50%);
+  transform: scale(50%);
 }
 
 .video-feed {
-    margin-top: 20px;
-    width: 100vw;
-    height: 100vh;
+  margin-top: 20px;
+  width: 100vw;
+  height: 100vh;
 }
 
 .front {
-    width: inherit;
-    height: inherit;
+  width: inherit;
+  height: inherit;
 }
 
 #front {
-    width: inherit;
-    height: inherit;
+  width: inherit;
+  height: inherit;
 }

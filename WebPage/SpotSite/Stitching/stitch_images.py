@@ -25,6 +25,7 @@ from bosdyn.api import image_pb2
 from bosdyn.client.frame_helpers import BODY_FRAME_NAME, get_vision_tform_body, get_a_tform_b
 from ctypes import *
 
+
 class ImagePreppedForOpenGL():
     """Prep image for OpenGL from Spot image_response."""
 
@@ -35,7 +36,8 @@ class ImagePreppedForOpenGL():
         if image_format == image_pb2.Image.FORMAT_RAW:
             raise Exception("Won't work.  Yet.")
         elif image_format == image_pb2.Image.FORMAT_JPEG:
-            numpy_array = numpy.asarray(Image.open(io.BytesIO(image_response.shot.image.data)))
+            numpy_array = numpy.asarray(Image.open(
+                io.BytesIO(image_response.shot.image.data)))
         else:
             raise Exception("Won't work.")
 
@@ -43,23 +45,24 @@ class ImagePreppedForOpenGL():
 
     def __init__(self, image_response):
         self.image = self.extract_image(image_response)
-        self.body_T_image_sensor = get_a_tform_b(image_response.shot.transforms_snapshot, \
-             BODY_FRAME_NAME, image_response.shot.frame_name_image_sensor)
-        self.vision_T_body = get_vision_tform_body(image_response.shot.transforms_snapshot)
+        self.body_T_image_sensor = get_a_tform_b(image_response.shot.transforms_snapshot,
+                                                 BODY_FRAME_NAME, image_response.shot.frame_name_image_sensor)
+        self.vision_T_body = get_vision_tform_body(
+            image_response.shot.transforms_snapshot)
         if not self.body_T_image_sensor:
             raise Exception("Won't work.")
 
         if image_response.source.pinhole:
-            resolution = numpy.asarray([ \
-                image_response.source.cols, \
+            resolution = numpy.asarray([
+                image_response.source.cols,
                 image_response.source.rows])
 
-            focal_length = numpy.asarray([ \
-                image_response.source.pinhole.intrinsics.focal_length.x, \
+            focal_length = numpy.asarray([
+                image_response.source.pinhole.intrinsics.focal_length.x,
                 image_response.source.pinhole.intrinsics.focal_length.y])
 
-            principal_point = numpy.asarray([ \
-                image_response.source.pinhole.intrinsics.principal_point.x, \
+            principal_point = numpy.asarray([
+                image_response.source.pinhole.intrinsics.principal_point.x,
                 image_response.source.pinhole.intrinsics.principal_point.y])
         else:
             raise Exception("Won't work.")
@@ -83,8 +86,8 @@ class ImageInsideOpenGL():
         self.pointer = glGenTextures(1)
         glActiveTexture(GL_TEXTURE0 + self.pointer)
         glBindTexture(GL_TEXTURE_2D, self.pointer)
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, numpy_array.shape[1], numpy_array.shape[0], 0, \
-            GL_LUMINANCE, GL_UNSIGNED_BYTE, numpy_array)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, numpy_array.shape[1], numpy_array.shape[0], 0,
+                     GL_LUMINANCE, GL_UNSIGNED_BYTE, numpy_array)
         glTexParameter(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
         glTexParameter(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
 
@@ -92,17 +95,17 @@ class ImageInsideOpenGL():
         """Update texture (no-op)"""
         glActiveTexture(GL_TEXTURE0 + self.pointer)
         glBindTexture(GL_TEXTURE_2D, self.pointer)
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, numpy_array.shape[1], numpy_array.shape[0], 0, \
-            GL_LUMINANCE, GL_UNSIGNED_BYTE, numpy_array)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, numpy_array.shape[1], numpy_array.shape[0], 0,
+                     GL_LUMINANCE, GL_UNSIGNED_BYTE, numpy_array)
 
 
 class CompiledShader():
     """OpenGL shader compile"""
 
     def __init__(self, vert_shader, frag_shader):
-        self.program = shaders.compileProgram( \
-            shaders.compileShader(vert_shader, GL_VERTEX_SHADER), \
-            shaders.compileShader(frag_shader, GL_FRAGMENT_SHADER) \
+        self.program = shaders.compileProgram(
+            shaders.compileShader(vert_shader, GL_VERTEX_SHADER),
+            shaders.compileShader(frag_shader, GL_FRAGMENT_SHADER)
         )
         self.camera1_MVP = glGetUniformLocation(self.program, 'camera1_MVP')
         self.camera2_MVP = glGetUniformLocation(self.program, 'camera2_MVP')
@@ -144,7 +147,7 @@ class CompiledShader():
             self.image1 = ImageInsideOpenGL(image)
         else:
             self.image1.update(image)
-        
+
         self.set_texture(self.image1.pointer, self.image1_texture, 0)
 
     def set_image2_texture(self, image):
@@ -153,7 +156,7 @@ class CompiledShader():
             self.image2 = ImageInsideOpenGL(image)
         else:
             self.image2.update(image)
-            
+
         self.set_texture(self.image2.pointer, self.image2_texture, 1)
 
 
@@ -172,12 +175,15 @@ def normalize(vec):
         raise ValueError("norm function returned 0.")
     return vec / norm
 
+
 def draw_geometry(plane_wrt_vo, plane_norm_wrt_vo, sz_meters):
     """Draw as GL_TRIANGLES."""
-    plane_left_wrt_vo = normalize(numpy.cross(numpy.array([0, 0, 1]), plane_norm_wrt_vo))
+    plane_left_wrt_vo = normalize(numpy.cross(
+        numpy.array([0, 0, 1]), plane_norm_wrt_vo))
     if plane_left_wrt_vo is None:
         return
-    plane_up_wrt_vo = normalize(numpy.cross(plane_norm_wrt_vo, plane_left_wrt_vo))
+    plane_up_wrt_vo = normalize(numpy.cross(
+        plane_norm_wrt_vo, plane_left_wrt_vo))
     if plane_up_wrt_vo is None:
         return
 
@@ -192,11 +198,12 @@ def draw_geometry(plane_wrt_vo, plane_norm_wrt_vo, sz_meters):
     )
 
     indices = (0, 1, 2, 0, 2, 3)
-    
+
     glBegin(GL_TRIANGLES)
     for index in indices:
         glVertex3fv(vertices[index])
     glEnd()
+
 
 def draw_routine(display, image_1, image_2, program):
     """OpenGL Draw"""
@@ -206,11 +213,11 @@ def draw_routine(display, image_1, image_2, program):
     vo_T_body = image_1.vision_T_body.to_matrix()
 
     eye_wrt_body = proto_vec_T_numpy(image_1.body_T_image_sensor.position) \
-                 + proto_vec_T_numpy(image_2.body_T_image_sensor.position)
+        + proto_vec_T_numpy(image_2.body_T_image_sensor.position)
 
     # Add the two real camera norms together to get the fake camera norm.
     eye_norm_wrt_body = numpy.array(image_1.body_T_image_sensor.rot.transform_point(0, 0, 1)) \
-                      + numpy.array(image_2.body_T_image_sensor.rot.transform_point(0, 0, 1))
+        + numpy.array(image_2.body_T_image_sensor.rot.transform_point(0, 0, 1))
 
     # Make the virtual camera centered.
     eye_wrt_body[1] = 0
@@ -233,8 +240,8 @@ def draw_routine(display, image_1, image_2, program):
 
     glMatrixMode(GL_MODELVIEW)
     glLoadIdentity()
-    gluLookAt(eye_wrt_vo[0], eye_wrt_vo[1], eye_wrt_vo[2], \
-              plane_wrt_vo[0], plane_wrt_vo[1], plane_wrt_vo[2], \
+    gluLookAt(eye_wrt_vo[0], eye_wrt_vo[1], eye_wrt_vo[2],
+              plane_wrt_vo[0], plane_wrt_vo[1], plane_wrt_vo[2],
               up_wrt_vo[0], up_wrt_vo[1], up_wrt_vo[2])
 
     program.use()
@@ -244,47 +251,48 @@ def draw_routine(display, image_1, image_2, program):
     program.set_image2_texture(image_2.image)
 
     draw_geometry(plane_wrt_vo, plane_norm_wrt_vo, rect_sz_meters)
-    
+
+
 class Stitcher:
-    def __init__(self):        
+    def __init__(self):
         self._width = 1080
         self._height = 720
         self._display = (self._width, self._height)
-        
+
         self._program = None
         self._image_1 = None
         self._image_2 = None
         self._images_should_exist = True
-        
+
         self._stitched_image = None
         self.frame_num = 0
-        
+
     def start_glut_loop(self):
         self._init_glut()
         self._load_shaders()
         self._start_glut()
-        
+
     def _init_glut(self):
         glutInit()
         glutInitDisplayMode(GLUT_RGBA)
         glutInitWindowSize(self._width, self._height)
         glutInitWindowPosition(0, 0)
         window = glutCreateWindow("Image Stitching")
-        #glutHideWindow()
-        
+        # glutHideWindow()
+
     def _load_shaders(self):
         with open('SpotSite\\Stitching\\shader_vert.glsl', 'r') as file:
             vert_shader = file.read()
         with open('SpotSite\\Stitching\\shader_frag.glsl', 'r') as file:
             frag_shader = file.read()
-            
+
         self._program = CompiledShader(vert_shader, frag_shader)
-        
+
     def _start_glut(self):
         glutDisplayFunc(self._update_image)
         glutIdleFunc(glutPostRedisplay)
         glutMainLoop()
-        
+
     def _draw_string(self, string, x, y, color):
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
@@ -292,37 +300,38 @@ class Stitcher:
         glRasterPos2f(x / self._width, y / self._height)
         for char in string:
             glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, ord(char))
-            
+
     def _save_image(self):
         glPixelStorei(GL_PACK_ALIGNMENT, 1)
-        data = glReadPixels(0, 0, self._width, self._height, GL_RGB, GL_UNSIGNED_BYTE)
+        data = glReadPixels(0, 0, self._width, self._height,
+                            GL_RGB, GL_UNSIGNED_BYTE)
         image = Image.frombytes("RGB", self._display, data)
         self._stitched_image = ImageOps.flip(image)
-        
+
     def _do_stitching(self):
         if not self._images_should_exist:
             return
-        
+
         if self._image_1 is None or self._image_2 is None:
             return
-        
+
         image_1 = ImagePreppedForOpenGL(self._image_1)
         image_2 = ImagePreppedForOpenGL(self._image_2)
         draw_routine(self._display, image_1, image_2, self._program)
-        
+
     def _update_image(self):
         glutSwapBuffers()
         glClearColor(1, 1, 1, 0)
         glClear(GL_COLOR_BUFFER_BIT)
-        
-        self._do_stitching()        
+
+        self._do_stitching()
         self._save_image()
-                
-    def stitch(self, image_1, image_2):        
+
+    def stitch(self, image_1, image_2):
         self._images_should_exist = False
-         
+
         self._image_1 = image_1
         self._image_2 = image_2
-        
+
         self._images_should_exist = True
         return self._stitched_image
