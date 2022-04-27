@@ -160,7 +160,6 @@ class Background_Process:
 
         return success
 
-    @log_action
     def _acquire_estop(self, socket_index):
         if self._estop_client is not None:
             socket_print(socket_index, "Estop already acquired")
@@ -191,7 +190,6 @@ class Background_Process:
 
         return success
 
-    @log_action
     def _acquire_time_sync(self, socket_index):
         if self._time_sync_client is not None:
             return True
@@ -218,7 +216,6 @@ class Background_Process:
 
         return success
 
-    @log_action
     def _connect_to_robot(self, socket_index):
         if self.robot is not None:
             socket_print(socket_index, "Robot is already connected")
@@ -258,7 +255,6 @@ class Background_Process:
 
         return success
 
-    @log_action
     def _connect_all(self, socket_index):
         socket_print(socket_index, "Starting...")
 
@@ -273,7 +269,6 @@ class Background_Process:
 
         return True
 
-    @log_action
     def estop(self):
         if self._estop_keep_alive and not self.robot.is_estopped():
             socket_print(0, "estop", all=True, type="estop")
@@ -283,14 +278,12 @@ class Background_Process:
             # the estop is released
             self.command_queue = []
 
-    @log_action
     def release_estop(self):
         if self._estop_keep_alive and self.robot.is_estopped():
             socket_print(0, "estop_release", all=True, type="estop")
             self.robot_is_estopped = False
             self._estop_keep_alive.allow()
 
-    @log_action
     def _clear(self, socket_index):
 
         self._clear_lease()
@@ -548,14 +541,12 @@ class Background_Process:
         self.programs[name] = program
         socket_print(-1, self.programs, all=True, type="programs")
 
-    @log_action
     def set_program_to_run(self, name):
         if not self.programs[name]:
             return
 
         self.program_is_running = True
         self.program_name = name
-
 
 # Creates an instance of the background_process class used for interacting with the background process connected to the robot
 # Don't like declaring it globally in this way but not sure how else to do it
