@@ -15,6 +15,7 @@ urlpatterns = [
     path('estop', views.estop, name='estop'),
     path('estop_release', views.estop_release, name='estop_release'),
     path('getInfo', views.get_info, name='getInfo'),
+    path('get-state', views.get_state, name='get_state'),
     path('command', views.run_command, name='command'),
     path('program', views.add_program, name='add_program'),
     path('get-programs', views.get_programs, name='get_programs'),

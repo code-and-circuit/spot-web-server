@@ -21,7 +21,7 @@
         </h1>
         <div id="estop-container">
             {% if is_running %}
-                <button id="estop" style="background-color: rgb(255, 0, 0); border: none; cursor: pointer">ESTOP</button>
+                <button id="estop" style="background-color: var(--red); border: none; cursor: pointer">ESTOP</button>
             {% else %}
                 <button id="estop">Robot is not connected</button>
             {% endif %}
@@ -125,7 +125,8 @@
                 end_process: "{% url 'endProcess' %}",
                 connect: "{% url 'connect' %}",
                 get_estop: "{% url 'get_estop' %}",
-                lease: "{% url 'lease' %}"
+                lease: "{% url 'lease' %}",
+                get_state: "{% url 'get_state' %}"
             }
         </script>
         <script src="{% static 'js/main.js' %}"></script>

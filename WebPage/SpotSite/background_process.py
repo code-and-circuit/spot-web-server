@@ -12,8 +12,10 @@ import asyncio
 import base64
 from threading import Thread
 from importlib import reload
+import inspect
 import numpy as np
 import nest_asyncio
+import keyboard
 from pil import Image
 
 # Interproject imports
@@ -37,6 +39,16 @@ from bosdyn.client.image import ImageClient
 
 nest_asyncio.apply()
 
+invalid_keywords = [
+    'bosdyn',
+    'logger',
+    'service_client_factories_by_type',
+    'cert',
+    'service_type_by_name'
+]
+
+max_recursion_depth = 5
+
 
 def start_thread(func, args=()):
     thread = Thread(target=func, args=args)
@@ -48,20 +60,66 @@ def close():
     time.sleep(0.5)
     print("\033[92m" + "    Background" +
           "\033[0m" + ": Disconnecting from robot")
-    
+
+
 def socket_print(socket_index, message, all=False, type="output"):
     websocket.websocket_list.print(
-            socket_index, message, all=all, type=type)
-    
+        socket_index, message, all=all, type=type)
+
+
 def print_exception(socket_index):
-        exc_type, exc_obj, exc_tb = sys.exc_info()
-        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-        print("Type: " + exc_type.__name__)
-        print("File: ", fname)
-        print("Object: ", exc_obj)
-        print("Line number: " + str(exc_tb.tb_lineno))
-        #socket_print(socket_index, str(exc_type) + "; " + str(fname) + "; "  + str(exc_tb.tb_lineno))
-        #socket_print(socket_index, f'<red<Exception</red> {exc_type} <br>in {fname} line {exc_tb.tb_lineno} <br> {line}')
+    exc_type, exc_obj, exc_tb = sys.exc_info()
+    fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+    print("Type: " + exc_type.__name__)
+    print("File: ", fname)
+    print("Object: ", exc_obj)
+    print("Line number: " + str(exc_tb.tb_lineno))
+    #socket_print(socket_index, str(exc_type) + "; " + str(fname) + "; "  + str(exc_tb.tb_lineno))
+    #socket_print(socket_index, f'<red<Exception</red> {exc_type} <br>in {fname} line {exc_tb.tb_lineno} <br> {line}')
+
+
+def is_primitive(obj):
+    return not hasattr(obj, '__dict__')
+
+
+def is_not_special_function(obj):
+    return not(obj[0].startswith("__") and obj[0].endswith("__"))
+
+
+def get_members(obj, depth=0):
+    members = inspect.getmembers(obj, lambda x: not(inspect.isroutine(x)))
+    members = {x[0]: x[1] for x in members if is_not_special_function(x)}
+
+    if depth > max_recursion_depth:
+        for member, value in members.items():
+            if not is_primitive(value):
+                members[member] == type(value).__name__
+        return members
+
+    for member, value in members.items():
+        if type(value).__name__ == 'list':
+            l = []
+            for item in value:
+                l.append(get_members(item, depth=depth+1))
+            members[member] = l
+            continue
+
+        cont = False
+        for substr in invalid_keywords:
+            if substr.lower() in type(value).__name__.lower() or substr.lower() in member.lower():
+                members[member] = type(value).__name__
+                cont = True
+                break
+        if cont:
+            continue
+
+        if is_primitive(value):
+            continue
+
+        members[member] = get_members(value, depth=depth+1)
+
+    return members
+
 
 class Background_Process:
     def __init__(self):
@@ -106,6 +164,8 @@ class Background_Process:
         self._keys_down = []
 
         self.image_stitcher = None
+
+        self._sdk = bosdyn.client.create_standard_sdk('cc-server')
 
     def turn_on(self, socket_index):
         socket_print(socket_index, "Powering On...")
@@ -270,6 +330,8 @@ class Background_Process:
         return True
 
     def estop(self):
+        if not self._has_estop:
+            return
         if self._estop_keep_alive and not self.robot.is_estopped():
             socket_print(0, "estop", all=True, type="estop")
             self.robot_is_estopped = True
@@ -279,10 +341,21 @@ class Background_Process:
             self.command_queue = []
 
     def release_estop(self):
+        if not self._has_estop:
+            return
         if self._estop_keep_alive and self.robot.is_estopped():
             socket_print(0, "estop_release", all=True, type="estop")
             self.robot_is_estopped = False
             self._estop_keep_alive.allow()
+
+    def toggle_estop(self):
+        if not self._has_estop:
+            return
+
+        if self.robot.is_estopped():
+            self.release_estop()
+        else:
+            self.estop()
 
     def _clear(self, socket_index):
 
@@ -449,7 +522,7 @@ class Background_Process:
             image = self._stitch_images(front_right, front_left)
 
         socket_print(-1, self._encode_base64(image),
-                   all=True, type=("@" + camera_name))
+                     all=True, type=("@" + camera_name))
 
     def _do_command(self, command):
         # Executes commands from the queue
@@ -527,7 +600,7 @@ class Background_Process:
 
         self._do_keyboard_commands()
         socket_print(-1, self.keyboard_control_mode,
-                   all=True, type="control_mode")
+                     all=True, type="control_mode")
 
     def start_bg_process(self, socket_index):
         # Create a thread so the background process can be run in the background
@@ -548,8 +621,11 @@ class Background_Process:
         self.program_is_running = True
         self.program_name = name
 
+    def get_state(self):
+        return get_members(self)
+
+
 # Creates an instance of the background_process class used for interacting with the background process connected to the robot
-# Don't like declaring it globally in this way but not sure how else to do it
 bg_process = Background_Process()
 
 # Handles actions from the client
@@ -560,7 +636,7 @@ def do_action(action, socket_index, args=None):
         # Makes sure that the background process is not already running before it starts it
         if bg_process.is_running:
             socket_print(socket_index,
-                             "Cannot start background process because background process is already running")
+                         "Cannot start background process because background process is already running")
             return
 
         if bg_process._is_connecting:
@@ -573,7 +649,7 @@ def do_action(action, socket_index, args=None):
         # Makes sure that the background process is running before it ends it
         if not bg_process.is_running:
             socket_print(socket_index,
-                             "Cannot end background process because background process is not running")
+                         "Cannot end background process because background process is not running")
             return
 
         bg_process.end_bg_process()
@@ -584,12 +660,12 @@ def do_action(action, socket_index, args=None):
         bg_process.program_name = args
         if not bg_process.is_running:
             socket_print(socket_index,
-                             "Cannot run program because background process is not running")
+                         "Cannot run program because background process is not running")
             return
         # Makes sure that a program is not already running before it runs one
         if bg_process.program_is_running:
             socket_print(socket_index,
-                             "Cannot run program because a program is already running")
+                         "Cannot run program because a program is already running")
             return
 
         bg_process.program_socket_index = socket_index
@@ -642,3 +718,6 @@ def do_action(action, socket_index, args=None):
 
     else:
         socket_print(socket_index, f"Command not recognized: {action}")
+
+
+keyboard.add_hotkey('F4', bg_process.toggle_estop)

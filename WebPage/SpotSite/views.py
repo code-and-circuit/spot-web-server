@@ -195,6 +195,17 @@ def get_info(request):
             "is_running": background_process.bg_process.is_running,
         }, status=200)
 
+
+def get_state(request):
+    if request.method == "GET":
+        state = background_process.bg_process.get_state()
+        try:
+            return JsonResponse(state, status=200)
+        except Exception as e:
+            from pprint import pprint
+            print(e)
+            pprint(state)
+
 # Handles new websockets and adds them to a list of active sockets. Then keeps the socket alive forever (until it closes itself)
 
 
