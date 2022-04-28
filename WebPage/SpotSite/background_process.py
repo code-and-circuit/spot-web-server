@@ -10,9 +10,11 @@ import io
 import pathlib
 import asyncio
 import base64
+import json
 from threading import Thread
 from importlib import reload
 import inspect
+import types
 import numpy as np
 import nest_asyncio
 import keyboard
@@ -40,14 +42,18 @@ from bosdyn.client.image import ImageClient
 nest_asyncio.apply()
 
 invalid_keywords = [
+    'cert',
+    'logger'
+]
+[
     'bosdyn',
     'logger',
-    'service_client_factories_by_type',
+    # 'service_client_factories_by_type',
     'cert',
-    'service_type_by_name'
+    'service_type_by_name',
 ]
 
-max_recursion_depth = 5
+max_depth = 5
 
 
 def start_thread(func, args=()):
@@ -86,39 +92,83 @@ def is_not_special_function(obj):
     return not(obj[0].startswith("__") and obj[0].endswith("__"))
 
 
+def get_name(obj, lower=True):
+    name = obj.__name__ if hasattr(obj, '__name__') else type(obj).__name__
+
+    return name.lower() if lower else name
+
+
+def is_jsonable(x):
+    try:
+        json.dumps(x)
+        return True
+    except (TypeError, OverflowError):
+        return False
+
+
 def get_members(obj, depth=0):
-    members = inspect.getmembers(obj, lambda x: not(inspect.isroutine(x)))
-    members = {x[0]: x[1] for x in members if is_not_special_function(x)}
-
-    if depth > max_recursion_depth:
-        for member, value in members.items():
-            if not is_primitive(value):
-                members[member] == type(value).__name__
-        return members
-
-    for member, value in members.items():
-        if type(value).__name__ == 'list':
-            l = []
-            for item in value:
-                l.append(get_members(item, depth=depth+1))
-            members[member] = l
-            continue
-
-        cont = False
-        for substr in invalid_keywords:
-            if substr.lower() in type(value).__name__.lower() or substr.lower() in member.lower():
-                members[member] = type(value).__name__
-                cont = True
-                break
-        if cont:
-            continue
-
-        if is_primitive(value):
-            continue
-
-        members[member] = get_members(value, depth=depth+1)
-
-    return members
+    # This is all a single-line return statement. 
+    # Did it just for fun, it was boring with multiple lines
+    
+    return ({
+        ((key.__name__ if 
+          hasattr(key, '__name__') else 
+            type(key).__name__).lower() if hasattr(key, '__dict__') else key):
+        get_members(value, depth=depth+1) if (
+            hasattr(value, '__dict__') and
+            True not in [s.lower() in (value.__name__ if 
+                                       hasattr(value, '__name__') else 
+                                       type(value).__name__).lower() or 
+                         s.lower() in str(key).lower() for s in invalid_keywords]
+        ) else (
+            [get_members(item) for item in value] if isinstance(value, list) else (
+                "function" if type(value) == types.LambdaType else (
+                    (value.__name__ if 
+                     hasattr(value, '__name__') else 
+                        type(value).__name__) if hasattr(value, '__dict__') else (
+                        get_members(value, depth=depth+1) if isinstance(value, dict) else (
+                            value if (is_jsonable(value)) else (
+                                'Not JSONable'
+                            )
+                        )
+                    )
+                )
+            )
+        ) if True not in [s.lower() in (value.__name__ if 
+                                        hasattr(value, '__name__') else 
+                                        type(value).__name__).lower() or 
+                          s.lower() in str(key).lower() for s in invalid_keywords] else (
+            (value.__name__ if 
+                hasattr(value, '__name__') 
+                    else type(value).__name__)
+        )
+        for key, value in (obj.__dict__.items() if hasattr(obj, '__dict__') else obj.items())
+    } if hasattr(obj, '__dict__') or isinstance(obj, dict) else obj) if depth < max_depth else "MAX RECURSION"
+    
+    
+    return ({
+        (get_name(key, lower=False) if hasattr(key, '__dict__') else key):
+        get_members(value, depth=depth+1) if (
+            hasattr(value, '__dict__') and
+            True not in [s.lower() in get_name(value) or s.lower()
+                         in str(key).lower() for s in invalid_keywords]
+        ) else (
+            [get_members(item) for item in value] if isinstance(value, list) else (
+                "function" if type(value) == types.LambdaType else (
+                    get_name(value, lower=False) if hasattr(value, '__dict__') else (
+                        get_members(value, depth=depth+1) if isinstance(value, dict) else (
+                            value if (is_jsonable(value)) else (
+                                'Not JSONable'
+                            )
+                        )
+                    )
+                )
+            )
+        ) if True not in [s.lower() in get_name(value) or s.lower() in str(key).lower() for s in invalid_keywords] else (
+            get_name(value)
+        )
+        for key, value in (obj.__dict__.items() if hasattr(obj, '__dict__') else obj.items())
+    } if hasattr(obj, '__dict__') or isinstance(obj, dict) else obj) if depth < max_depth else "MAX RECURSION"
 
 
 class Background_Process:

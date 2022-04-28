@@ -202,9 +202,8 @@ def get_state(request):
         try:
             return JsonResponse(state, status=200)
         except Exception as e:
-            from pprint import pprint
-            print(e)
-            pprint(state)
+            return JsonResponse({}, status=500)
+        
 
 # Handles new websockets and adds them to a list of active sockets. Then keeps the socket alive forever (until it closes itself)
 
