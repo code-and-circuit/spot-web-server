@@ -12,12 +12,15 @@ import asyncio
 import base64
 import json
 from threading import Thread
+import threading
 from importlib import reload
+from pprint import pprint
 import inspect
 import types
 import numpy as np
 import nest_asyncio
 import keyboard
+import sqlite3
 from pil import Image
 
 # Interproject imports
@@ -48,12 +51,14 @@ invalid_keywords = [
 [
     'bosdyn',
     'logger',
-    # 'service_client_factories_by_type',
+    'service_client_factories_by_type',
     'cert',
     'service_type_by_name',
 ]
 
 max_depth = 5
+
+lock = threading.Lock()
 
 
 def start_thread(func, args=()):
@@ -106,7 +111,7 @@ def is_jsonable(x):
         return False
 
 
-def get_members(obj, depth=0):
+def get_members(obj, depth=0):  
     # This is all a single-line return statement. 
     # Did it just for fun, it was boring with multiple lines
     
@@ -170,6 +175,55 @@ def get_members(obj, depth=0):
         for key, value in (obj.__dict__.items() if hasattr(obj, '__dict__') else obj.items())
     } if hasattr(obj, '__dict__') or isinstance(obj, dict) else obj) if depth < max_depth else "MAX RECURSION"
 
+def lock_until_finished(func):
+    def wrapper(*args, **kwargs):
+        lock.acquire(True)
+        val = func(*args, **kwargs)
+        lock.release()
+        return val
+    return wrapper
+
+class SqliteConnection:
+    @lock_until_finished
+    def __init__(self, path="C:\\Users\\willf\\OneDrive\\Documents\\GitHub\\spot-web-server\\WebPage\\db.sqlite3"):
+        self._connection = sqlite3.connect(path, check_same_thread = False)
+        self._cursor = self._connection.cursor()
+        
+        self._cursor.execute('CREATE TABLE IF NOT EXISTS Programs (name TEXT, program TEXT)')
+    
+    @lock_until_finished
+    def _name_exists(self, name):
+        query = self._cursor.execute("SELECT EXISTS (SELECT 1 FROM Programs WHERE name=? COLLATE NOCASE) LIMIT 1", (name,))
+        return query.fetchone()[0]
+    
+    @lock_until_finished
+    def write_program(self, name, program):
+        if self._name_exists(name):
+            self._cursor.execute('UPDATE Programs SET program = ? WHERE name = ?', (program, name))
+        else:
+            self._cursor.execute('INSERT INTO Programs VALUES (?, ?)', (name, program))
+            pprint(f"Inserting {program}")
+        self._connection.commit()
+    
+    @lock_until_finished  
+    def delete_program(self, name):
+        self._cursor.execute("DELETE FROM Programs WHERE name=?", (name,))
+        self._connection.commit()
+        
+    @lock_until_finished
+    def get_program(self, name):
+        query = self._cursor.execute("SELECT program FROM Programs WHERE name = ?", (name,))
+        return query.fetchone()[0]
+    
+    @lock_until_finished
+    def get_all_programs(self):
+        query = self._cursor.execute("SELECT name, program FROM Programs").fetchall()
+        return query
+
+    @lock_until_finished
+    def close(self):
+        self._cursor.close()
+        self._connection.close()
 
 class Background_Process:
     def __init__(self):
@@ -214,8 +268,8 @@ class Background_Process:
         self._keys_down = []
 
         self.image_stitcher = None
-
-        self._sdk = bosdyn.client.create_standard_sdk('cc-server')
+        self._program_database = SqliteConnection()
+        
 
     def turn_on(self, socket_index):
         socket_print(socket_index, "Powering On...")
@@ -425,6 +479,8 @@ class Background_Process:
         self.command_queue = []
         self.programs = {}
         self.keys = {}
+        
+        self._program_database.close()
 
     def _clear_lease(self):
         if self.robot:
@@ -660,9 +716,20 @@ class Background_Process:
         self.is_running = False
         self._show_video_feed = False
 
+    def get_programs(self):
+        programs = self._program_database.get_all_programs()
+        programs = {p[0]: eval(p[1]) for p in programs}
+        
+        return programs
+
     def add_program(self, name, program):
-        self.programs[name] = program
-        socket_print(-1, self.programs, all=True, type="programs")
+        self._program_database.write_program(name, json.dumps(program))
+        socket_print(-1, self.get_programs(), all=True, type="programs")
+        
+    def remove_program(self, name):
+        self._program_database.delete_program(name)
+        socket_print(-1, self.get_programs(), all=True, type="programs")
+
 
     def set_program_to_run(self, name):
         if not self.programs[name]:
@@ -723,8 +790,7 @@ def do_action(action, socket_index, args=None):
         socket_print(socket_index, "Running Program")
 
     elif action == "remove_program":
-        bg_process.programs.pop(args, None)
-        socket_print(-1, bg_process.programs, all=True, type="programs")
+        bg_process.remove_program(args)
 
     elif action == "estop":
         bg_process.estop()

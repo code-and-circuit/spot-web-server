@@ -134,7 +134,7 @@ def add_program(request):
 
         background_process.bg_process.add_program(
             data['name'], data['commands'])
-        # Adds the command to the queue of commands
+
         return JsonResponse({
             "valid": True,
         }, status=200)
@@ -147,7 +147,7 @@ def add_program(request):
 def get_programs(request):
     return JsonResponse({
         "valid": True,
-        "programs": background_process.bg_process.programs
+        "programs": background_process.bg_process.get_programs()
     }, status=200)
 
 

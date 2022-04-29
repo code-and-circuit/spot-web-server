@@ -13,6 +13,20 @@ var selected_program = "";
 
 var programs = [];
 
+function showPrograms() {
+    $(".program-list").html("");
+        for (var program in programs) {
+            $(".program-list").html(
+                $(".program-list").html() +
+                "<br><button id='program' onclick=displayProgram('" +
+                program +
+                "')>" +
+                program +
+                "</button>"
+            );
+        }
+}
+
 function getPrograms() {
     $.ajax({
         type: "GET",
@@ -20,6 +34,7 @@ function getPrograms() {
         data: {},
         success: function (response) {
             programs = response["programs"];
+            showPrograms();
         },
         error: function (response) {
             addOutput("<red>Server error: " + response["status"] + ".</red>");
@@ -30,8 +45,6 @@ function getPrograms() {
         },
     });
 }
-
-getPrograms();
 
 function displayProgram(name) {
     selected_program = name;
@@ -82,6 +95,7 @@ socket.onmessage = function (message) {
             socket_index +
             "</green>"
         );
+
     }
     // Updates the yellow text that tells whether or not the background process is running
     else if (data["type"] == "bg_process") {
@@ -115,17 +129,8 @@ socket.onmessage = function (message) {
         }
     } else if (data["type"] == "programs") {
         $(".program-list").html("");
-        for (var program in data["output"]) {
-            $(".program-list").html(
-                $(".program-list").html() +
-                "<br><button id='program' onclick=displayProgram('" +
-                program +
-                "')>" +
-                program +
-                "</button>"
-            );
-        }
-        getPrograms();
+        programs = data["output"];
+        showPrograms();
     } else if (data["type"][0] == "@") {
         var image = data["output"];
         var image_name = data["type"].substring(1, data["type"].length);
@@ -245,3 +250,5 @@ $(window).on("beforeunload", function () {
         })
     );
 });
+
+getPrograms();
