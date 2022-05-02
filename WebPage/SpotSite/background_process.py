@@ -18,10 +18,11 @@ from pprint import pprint
 import inspect
 import types
 import numpy as np
-import nest_asyncio
 import keyboard
 import sqlite3
 from pil import Image
+import nest_asyncio
+nest_asyncio.apply()
 
 # Interproject imports
 import spot_control
@@ -41,8 +42,6 @@ from bosdyn.client.time_sync import TimeSyncClient
 from bosdyn.client.time_sync import TimeSyncThread
 from bosdyn.client.power import power_off
 from bosdyn.client.image import ImageClient
-
-nest_asyncio.apply()
 
 invalid_keywords = [
     'cert',
@@ -67,8 +66,10 @@ def start_thread(func, args=()):
 
 
 def close():
-    bg_process._clear(-1)
+    bg_process.is_running = False
     time.sleep(0.5)
+    while bg_process._is_shutting_down:
+        pass
     print("\033[92m" + "    Background" +
           "\033[0m" + ": Disconnecting from robot")
 
@@ -109,7 +110,6 @@ def is_jsonable(x):
         return True
     except (TypeError, OverflowError):
         return False
-
 
 def get_members(obj, depth=0):  
     # This is all a single-line return statement. 
@@ -253,17 +253,17 @@ class Background_Process:
         self.is_handling_keyboard_commands = False
         self.robot_is_estopped = False
         self._show_video_feed = True
+        self._is_shutting_down = False
 
         self._has_lease = False
         self._has_estop = False
         self._has_time_sync = False
 
         self.keyboard_control_mode = "Walk"
-        self.program_name = ""
+        self.active_program_name = ""
         self.program_socket_index = 0
 
         self.command_queue = []
-        self.programs = {}
         self._keys_up = []
         self._keys_down = []
 
@@ -462,7 +462,8 @@ class Background_Process:
             self.estop()
 
     def _clear(self, socket_index):
-
+        self._is_shutting_down = True
+        self._show_video_feed = False
         self._clear_lease()
         self._clear_estop()
         self._clear_time_sync()
@@ -481,11 +482,14 @@ class Background_Process:
         self.keys = {}
         
         self._program_database.close()
+        self._is_shutting_down = False
 
     def _clear_lease(self):
         if self.robot:
             if self._lease_keep_alive and self.robot.is_powered_on():
                 self.turn_off(-1)
+                while self.robot.is_powered_on():
+                    pass
 
         if self._lease_client and self._lease:
             self._lease_client.return_lease(self._lease)
@@ -537,8 +541,7 @@ class Background_Process:
 
     def start(self, socket_index):
         socket_print(socket_index, 'Connecting...')
-        while True:
-            socket_print(socket_index, 'Test!')
+
         if not self._connect_all(socket_index):
             socket_print(socket_index, "<red>Failed to start processes</red>")
             return
@@ -584,8 +587,9 @@ class Background_Process:
 
     def _run_programs(self, socket_index):
         if self.program_is_running:
+            program = self._program_database.get_program(self.active_program_name)
             try:
-                for command in self.programs[self.program_name]:
+                for command in program:
                     self._do_command(command)
             except:
                 print_exception(self.program_socket_index)
@@ -607,7 +611,7 @@ class Background_Process:
 
     def _encode_base64(self, image):
         if image is None:
-            print("Image is none")
+            #print("Image is none")
             return
         buf = io.BytesIO()
         image.save(buf, format='JPEG')
@@ -626,9 +630,16 @@ class Background_Process:
             front_left = self._image_client.get_image_from_sources(
                 ["frontleft_fisheye_image"])[0]
             image = self._stitch_images(front_right, front_left)
+        
+        if camera_name == "back":
+            back_right = self._image_client.get_image_from_sources(
+                ["backright_fisheye_image"])[0]
+            back_left = self._image_client.get_image_from_sources(
+                ["backleft_fisheye_image"])[0]
+            image = self._stitch_images(back_right, back_left)
 
         socket_print(-1, self._encode_base64(image),
-                     all=True, type=("@" + camera_name))
+                    all=True, type=("@" + camera_name))
 
     def _do_command(self, command):
         # Executes commands from the queue
@@ -736,10 +747,35 @@ class Background_Process:
             return
 
         self.program_is_running = True
-        self.program_name = name
+        self.active_program_name = name
 
-    def get_state(self):
+    def get_state_of_everything(self):
+        return
         return get_members(self)
+    
+    def get_keyboard_control_state(self):
+        return {
+            'is_handling_keyboard_commands': self.is_handling_keyboard_commands,
+            'keyboard_control_name': self.keyboard_control_mode,
+            'keys_up': self._keys_up,
+            'keys_down': self._keys_down,
+        }
+        
+    def get_internal_state(self):
+        return {
+            'robot_is_connected': self._has_time_sync,
+            'server_has_estop': self._has_estop,
+            'server_has_lease': self._has_lease,
+            'background_is_running': self.is_running,
+            'is_connecting_service': self.is_connecting,
+            'is_running_commands': self.is_running_commands,
+            'active_program_name': self.active_program_name,
+            'program_socket_index': self.program_socket_index,
+            'command_queue': self.command_queue,
+        }
+        
+    def get_server_state(self):
+        return self.get_internal_state() + self.get_keyboard_control_state()
 
 
 # Creates an instance of the background_process class used for interacting with the background process connected to the robot
@@ -774,7 +810,7 @@ def do_action(action, socket_index, args=None):
 
     elif action == "run_program":
         # Makes sure that the background process is running (robot is connected) before it tries to run a program
-        bg_process.program_name = args
+        bg_process.active_program_name = args
         if not bg_process.is_running:
             socket_print(socket_index,
                          "Cannot run program because background process is not running")

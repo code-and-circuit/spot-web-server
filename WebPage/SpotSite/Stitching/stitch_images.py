@@ -266,6 +266,7 @@ class Stitcher:
 
         self._stitched_image = None
         self.frame_num = 0
+        self._is_running = False
 
     def start_glut_loop(self):
         self._init_glut()
@@ -278,7 +279,7 @@ class Stitcher:
         glutInitWindowSize(self._width, self._height)
         glutInitWindowPosition(0, 0)
         window = glutCreateWindow("Image Stitching")
-        # glutHideWindow()
+        #glutHideWindow()
 
     def _load_shaders(self):
         with open('SpotSite\\Stitching\\shader_vert.glsl', 'r') as file:
@@ -289,8 +290,10 @@ class Stitcher:
         self._program = CompiledShader(vert_shader, frag_shader)
 
     def _start_glut(self):
+        print("Starting")
         glutDisplayFunc(self._update_image)
         glutIdleFunc(glutPostRedisplay)
+        print("About to start main loop")
         glutMainLoop()
 
     def _draw_string(self, string, x, y, color):
@@ -320,6 +323,7 @@ class Stitcher:
         draw_routine(self._display, image_1, image_2, self._program)
 
     def _update_image(self):
+        self._is_running = True
         glutSwapBuffers()
         glClearColor(1, 1, 1, 0)
         glClear(GL_COLOR_BUFFER_BIT)
@@ -328,6 +332,8 @@ class Stitcher:
         self._save_image()
 
     def stitch(self, image_1, image_2):
+        if not self._is_running:
+            return  
         self._images_should_exist = False
 
         self._image_1 = image_1

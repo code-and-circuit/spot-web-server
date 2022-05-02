@@ -82,6 +82,7 @@ class Websocket_List:
         # A list of queued outputs
         self.keyboard_control_socket_index = -1
         self.loop_is_running = False
+        self.loop = asyncio.get_event_loop()
 
     # Removes a socket from the list
     def remove_key(self, key):
@@ -135,7 +136,8 @@ class Websocket_List:
 
     # Used to add an output to the queue of outputs
     def print(self, socket_index, message, all=False, type="output"):
-        asyncio.run(self.print_out(socket_index, message, all=all, type=type))
+        
+        asyncio.ensure_future(self.print_out(socket_index, message, all=all, type=type), loop=self.loop)
 
     def start_keyboard_control(self, socket_index):
         if not background_process.bg_process.is_handling_keyboard_commands:

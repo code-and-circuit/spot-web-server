@@ -22,7 +22,7 @@ def main_site(request):
     # Reflected in the yellow text output at top of webpage
     context = {
         "is_running": background_process.bg_process.is_running,
-        "programs": background_process.bg_process.programs
+        "programs": background_process.bg_process.get_programs,
     }
     return render(request, 'main_site.html', context)
 
@@ -196,13 +196,39 @@ def get_info(request):
         }, status=200)
 
 
-def get_state(request):
+def get_state_of_everything(request):
     if request.method == "GET":
-        state = background_process.bg_process.get_state()
+        state = background_process.bg_process.get_state_of_everything()
         try:
             return JsonResponse(state, status=200)
         except Exception as e:
             return JsonResponse({}, status=500)
+        
+def get_server_state(request):
+    if request.method == "GET":
+        state = background_process.bg_process.get_server_state()
+        try:
+            return JsonResponse(state, status=200)
+        except Exception:
+            return JsonResponse({}, status=500)
+        
+def get_internal_state(request):
+    if request.method == "GET":
+        state = background_process.bg_process.get_internal_state()
+        try:
+            return JsonResponse(state, status=200)
+        except Exception:
+            return JsonResponse({}, status=500)
+        
+def get_keyboard_control_state(request):
+    if request.method == "GET":
+        state = background_process.bg_process.get_keyboard_control_state()
+        try:
+            return JsonResponse(state, status=200)
+        except Exception:
+            return JsonResponse({}, status=500)
+        
+
         
 
 # Handles new websockets and adds them to a list of active sockets. Then keeps the socket alive forever (until it closes itself)
