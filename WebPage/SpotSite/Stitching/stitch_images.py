@@ -290,10 +290,8 @@ class Stitcher:
         self._program = CompiledShader(vert_shader, frag_shader)
 
     def _start_glut(self):
-        print("Starting")
         glutDisplayFunc(self._update_image)
         glutIdleFunc(glutPostRedisplay)
-        print("About to start main loop")
         glutMainLoop()
 
     def _draw_string(self, string, x, y, color):

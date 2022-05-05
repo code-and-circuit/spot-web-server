@@ -62,8 +62,11 @@ class Spot_Control:
             RobotStateClient.default_service_name)
 
     def print(self, message, all=False, type="output"):
-        print(message)
-        #websocket.websocket_list.print(self.socket_index, message, all=all, type=type)
+        #print(message)
+        websocket.websocket_list.print(self.socket_index, message, all=all, type=type)
+        
+    def get_robot_state(self):
+        return self.robot_state_client.get_robot_state()
 
     def rotate(self, yaw, roll, pitch):
         # Create rotation command
@@ -76,10 +79,6 @@ class Spot_Control:
     def stand(self):
         # Stand
         cmd = RobotCommandBuilder.synchro_stand_command()
-
-        #robot_state = self.robot_state_client.get_robot_state()
-
-        pprint(robot_state)
 
         self.command_client.robot_command(cmd)
         self.print("Stood up")

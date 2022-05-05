@@ -130,9 +130,11 @@ class Websocket_List:
                     print("KEY ERORR: ", socket_index)
                     print("MESSAGE: ", message)
         except Exception as e:
-            print(self.sockets)
-            print(e)
-            print("ERROR IN SOCKETS")
+            if str(e) == "Unexpected ASGI message 'websocket.send', after sending 'websocket.close'.":
+                pass
+            else:
+                print(e)
+                print("ERROR IN SOCKETS")
 
     # Used to add an output to the queue of outputs
     def print(self, socket_index, message, all=False, type="output"):

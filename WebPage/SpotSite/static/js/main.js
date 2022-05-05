@@ -139,6 +139,19 @@ socket.onmessage = function (message) {
         var mode = data["output"];
         $("#space").html(mode + " Mode");
     }
+    else if (data["type"] == "battery-percentage") {
+        var percentage = data["output"];
+        $("#b_p").html(percentage + "%")
+        var c = percentage > 60 ? 'var(--green)' : percentage > 20 ? 'orange' : 'var(--red)'
+        $(".bar").css({
+            'width': (percentage + "%"),
+            'background-color': c
+        })
+    }
+    else if (data["type"] == "battery-runtime") {
+        var runtime = data["output"];
+        $("#b_r").html(Math.round(runtime / 60) + " minutes")
+    }
 
     // General output
     else if (data["type"] == "output") {

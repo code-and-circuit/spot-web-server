@@ -548,7 +548,7 @@ class Background_Process:
 
         socket_print(socket_index, "<green>Connected</green>")
         socket_print(socket_index, "start", all=True, type="bg_process")
-
+        self.update_robot_state()
         self._background_loop(socket_index)
 
         self._clear(socket_index)
@@ -605,6 +605,19 @@ class Background_Process:
         start_thread(self.image_stitcher.start_glut_loop)
         while self._show_video_feed:
             self._get_images()
+            self.update_robot_state()
+            
+            
+    def get_robot_state(self):
+        return self._robot_control.get_robot_state()
+    
+    def update_robot_state(self):
+        state = self.get_robot_state()
+        power_state = state.power_state
+        battery_percentage = power_state.locomotion_charge_percentage.value
+        battery_runtime = power_state.locomotion_estimated_runtime.seconds
+        socket_print(-1, battery_percentage, all=True, type="battery-percentage")
+        socket_print(-1, battery_runtime, all=True, type="battery-runtime")
 
     def _stitch_images(self, image1, image2):
         return self.image_stitcher.stitch(image1, image2)
@@ -622,6 +635,7 @@ class Background_Process:
 
     def _get_images(self):
         self._get_image("front")
+        self._get_image("back")
 
     def _get_image(self, camera_name):
         if camera_name == "front":
@@ -630,15 +644,14 @@ class Background_Process:
             front_left = self._image_client.get_image_from_sources(
                 ["frontleft_fisheye_image"])[0]
             image = self._stitch_images(front_right, front_left)
+            image = self._encode_base64(image)
         
         if camera_name == "back":
             back_right = self._image_client.get_image_from_sources(
-                ["backright_fisheye_image"])[0]
-            back_left = self._image_client.get_image_from_sources(
-                ["backleft_fisheye_image"])[0]
-            image = self._stitch_images(back_right, back_left)
+                ["back_fisheye_image"])[0].shot.image.data
+            image = base64.b64encode(back_right).decode("utf8")
 
-        socket_print(-1, self._encode_base64(image),
+        socket_print(-1,image,
                     all=True, type=("@" + camera_name))
 
     def _do_command(self, command):
@@ -750,7 +763,6 @@ class Background_Process:
         self.active_program_name = name
 
     def get_state_of_everything(self):
-        return
         return get_members(self)
     
     def get_keyboard_control_state(self):

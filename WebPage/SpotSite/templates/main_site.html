@@ -11,6 +11,12 @@
     </head>
     <body>
         <h1>Spot Control Panel</h1>
+        <div class='battery'>
+            <div class="bar">
+                <p id="b_p"></p>
+            </div>
+        </div>
+        <p id="b_r"></p>
         <h1 id="isRunning" style="font-size: 20px; color: var(--yellow);">
             <!-- Reflects whether or not the background process is running when the page loads -->
             {% if is_running %}
