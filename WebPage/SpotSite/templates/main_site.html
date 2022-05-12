@@ -39,7 +39,7 @@
                         <button id="bgStart">Start All</button>
                     </div>
                     <div class="form">
-                        <button id="bgEnd">Disconnect</button>
+                        <button id="bgEnd">End Main Loop</button>
                     </div>
                 </div>
                 <div class="bg-process-container">
@@ -130,6 +130,9 @@
                 start_process: "{% url 'startProcess' %}",
                 end_process: "{% url 'endProcess' %}",
                 connect: "{% url 'connect' %}",
+                disconnect_robot: "{% url 'disconnect_robot' %}",
+                clear_estop: "{% url 'clear_estop' %}",
+                clear_lease: "{% url 'clear_lease' %}",
                 get_estop: "{% url 'get_estop' %}",
                 lease: "{% url 'lease' %}",
                 get_state: "{% url 'get_server_state' %}"

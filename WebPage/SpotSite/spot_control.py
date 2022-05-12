@@ -81,25 +81,21 @@ class Spot_Control:
         cmd = RobotCommandBuilder.synchro_stand_command()
 
         self.command_client.robot_command(cmd)
-        self.print("Stood up")
 
     def sit(self):
         cmd = RobotCommandBuilder.synchro_sit_command()
         self.command_client.robot_command(cmd)
-        self.print("Sitting Down")
 
     def self_right(self):
         self.sit()
         time.sleep(1)
         cmd = RobotCommandBuilder.selfright_command()
         self.command_client.robot_command(cmd)
-        self.print("Self Righting")
 
     def roll_over(self):
         # Direction(?) d = basic_command_pb2.BatteryChangePoseCommand.Request.HINT_RIGHT
         cmd = RobotCommandBuilder.battery_change_pose_command()
         self.command_client.robot_command(cmd)
-        self.print("Rolling OVer")
         self._is_rolled_over = True
 
     def walk(self, x, y, z, t=0, d=0):

@@ -60,6 +60,24 @@ def connect_to_robot(request):
         "valid": True,
     }, status=200)
 
+def disconnect_robot(request):
+    do_action(request, "disconnect_robot")
+    return JsonResponse({
+        "valid": True,
+    }, status=200)
+    
+def clear_estop(request):
+    do_action(request, "clear_estop")
+    return JsonResponse({
+        "valid": True,
+    }, status=200)
+    
+def clear_lease(request):
+    do_action(request, "clear_lease")
+    return JsonResponse({
+        "valid": True,
+    }, status=200)
+
 
 def acquire_lease(request):
     do_action(request, "acquire_lease")
@@ -128,6 +146,7 @@ def run_command(request):
 
 
 def add_program(request):
+    print("GOT REQUEST")
     if request.method == "POST":
         # Obtains data from the json file
         data = json.loads(request.body.decode("utf-8"))

@@ -47,13 +47,6 @@ invalid_keywords = [
     'cert',
     'logger'
 ]
-[
-    'bosdyn',
-    'logger',
-    'service_client_factories_by_type',
-    'cert',
-    'service_type_by_name',
-]
 
 max_depth = 5
 
@@ -67,7 +60,6 @@ def start_thread(func, args=()):
 
 def close():
     bg_process.is_running = False
-    time.sleep(0.5)
     while bg_process._is_shutting_down:
         pass
     print("\033[92m" + "    Background" +
@@ -82,11 +74,7 @@ def socket_print(socket_index, message, all=False, type="output"):
 def print_exception(socket_index):
     exc_type, exc_obj, exc_tb = sys.exc_info()
     fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-    print("Type: " + exc_type.__name__)
-    print("File: ", fname)
-    print("Object: ", exc_obj)
-    print("Line number: " + str(exc_tb.tb_lineno))
-    #socket_print(socket_index, str(exc_type) + "; " + str(fname) + "; "  + str(exc_tb.tb_lineno))
+    socket_print(socket_index, f"<red><b>Exception</b></red><br>{exc_obj}<br>&emsp; in <u>{fname}</u> line <red>{exc_tb.tb_lineno}</red>")
     #socket_print(socket_index, f'<red<Exception</red> {exc_type} <br>in {fname} line {exc_tb.tb_lineno} <br> {line}')
 
 
@@ -178,7 +166,11 @@ def get_members(obj, depth=0):
 def lock_until_finished(func):
     def wrapper(*args, **kwargs):
         lock.acquire(True)
-        val = func(*args, **kwargs)
+        try:
+            val = func(*args, **kwargs)
+        except Exception as e:
+            print(e)
+            val = False
         lock.release()
         return val
     return wrapper
@@ -312,6 +304,7 @@ class Background_Process:
                 self._lease_client)
 
             self._has_lease = True
+            socket_print(-1, "acquire", all=True, type="lease_toggle")
 
         except Exception as e:
             print_exception(socket_index)
@@ -342,6 +335,7 @@ class Background_Process:
             self.robot_is_estopped = False
 
             self._has_estop = True
+            socket_print(-1, "acquire", all=True, type="estop_toggle")
 
         except:
             print_exception(socket_index)
@@ -388,6 +382,8 @@ class Background_Process:
         success = True
         self._is_connecting = True
 
+        socket_print(socket_index, "Connecting to robot...")
+        
         try:
             self._sdk = bosdyn.client.create_standard_sdk('cc-server')
 
@@ -406,6 +402,9 @@ class Background_Process:
                 RobotCommandClient.default_service_name)
             self._robot_control = spot_control.Spot_Control(
                 self._command_client, socket_index, self.robot)
+            
+            socket_print(-1, "acquire", all=True, type="robot_toggle")
+            socket_print(socket_index, "Connected to robot")
 
         except:
             print_exception(socket_index)
@@ -485,6 +484,7 @@ class Background_Process:
         self._is_shutting_down = False
 
     def _clear_lease(self):
+        self._has_lease = False
         if self.robot:
             if self._lease_keep_alive and self.robot.is_powered_on():
                 self.turn_off(-1)
@@ -500,7 +500,8 @@ class Background_Process:
         self._lease_keep_alive = None
         self._lease = None
         self._lease_client = None
-        self._has_lease = False
+        
+        socket_print(-1, "clear", all=True, type="lease_toggle")
 
     def _clear_estop(self):
         if self._has_lease:
@@ -513,6 +514,8 @@ class Background_Process:
         self._estop_keep_alive = None
         self._estop_client = None
         self._has_estop = False
+        
+        socket_print(-1, "clear", all=True, type="estop_toggle")
 
     def _clear_time_sync(self):
         if not self.robot:
@@ -538,6 +541,8 @@ class Background_Process:
         self._command_client = None
         self.robot = None
         self._sdk = None
+        
+        socket_print(-1, "clear", all=True, type="robot_toggle")
 
     def start(self, socket_index):
         socket_print(socket_index, 'Connecting...')
@@ -568,7 +573,8 @@ class Background_Process:
             print_exception(socket_index)
 
     def _keep_robot_on(self, socket_index):
-        if not self.robot.is_powered_on() and not self.robot.is_estopped() and not self._robot_control.is_rolled_over:
+        if not self.robot.is_powered_on() and not self.robot.is_estopped()\
+            and not self._robot_control._is_rolled_over and self._has_lease:
             if not self.turn_on(-1):
                 raise Exception("Failed to turn robot back on")
 
@@ -607,7 +613,6 @@ class Background_Process:
             self._get_images()
             self.update_robot_state()
             
-            
     def get_robot_state(self):
         return self._robot_control.get_robot_state()
     
@@ -636,6 +641,7 @@ class Background_Process:
     def _get_images(self):
         self._get_image("front")
         self._get_image("back")
+        self._get_image("left")
 
     def _get_image(self, camera_name):
         if camera_name == "front":
@@ -647,9 +653,13 @@ class Background_Process:
             image = self._encode_base64(image)
         
         if camera_name == "back":
-            back_right = self._image_client.get_image_from_sources(
+            back = self._image_client.get_image_from_sources(
                 ["back_fisheye_image"])[0].shot.image.data
-            image = base64.b64encode(back_right).decode("utf8")
+            image = base64.b64encode(back).decode("utf8")
+            
+        if camera_name == "left":
+            left = self._image_client.get_image_from_sources(["left_fisheye_image"])[0].shot.image.data
+            image = base64.b64encode(left).decode("utf8")
 
         socket_print(-1,image,
                     all=True, type=("@" + camera_name))
@@ -754,7 +764,6 @@ class Background_Process:
         self._program_database.delete_program(name)
         socket_print(-1, self.get_programs(), all=True, type="programs")
 
-
     def set_program_to_run(self, name):
         if not self.programs[name]:
             return
@@ -814,11 +823,11 @@ def do_action(action, socket_index, args=None):
         # Makes sure that the background process is running before it ends it
         if not bg_process.is_running:
             socket_print(socket_index,
-                         "Cannot end background process because background process is not running")
+                         "Cannot end main loop because main loop is not running")
             return
 
         bg_process.end_bg_process()
-        socket_print(socket_index, "Background process ended")
+        socket_print(socket_index, "Main loop ended")
 
     elif action == "run_program":
         # Makes sure that the background process is running (robot is connected) before it tries to run a program
@@ -852,6 +861,15 @@ def do_action(action, socket_index, args=None):
             socket_print(socket_index, "Robot is already connecting!")
             return
         start_thread(bg_process._connect_to_robot, args=(socket_index))
+
+    elif action == "disconnect_robot":
+        bg_process._disconnect_from_robot()
+        
+    elif action == "clear_estop":
+        bg_process._clear_estop()
+        
+    elif action == "clear_lease":
+        bg_process._clear_lease()
 
     elif action == "acquire_estop":
         if bg_process._is_connecting:

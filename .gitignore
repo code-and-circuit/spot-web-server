@@ -6,3 +6,4 @@ WebPage/SpotSite/files_to_run/
 *.jpg
 *.txt
 *.png
+.vscode/tasks.json

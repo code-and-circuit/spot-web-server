@@ -108,8 +108,13 @@ socket.onmessage = function (message) {
                 border: "none",
                 cursor: "pointer",
             });
-        } else $("#isRunning").html("Background process is not running");
-    } else if (data["type"] == "estop") {
+        }
+        else 
+            $("#isRunning").html("Background process is not running");
+
+    }
+    
+    else if (data["type"] == "estop") {
         if (data["output"] == "estop") {
             robot_is_estopped = true;
             $("#estop").html("Release Estop");
@@ -118,7 +123,10 @@ socket.onmessage = function (message) {
                 border: "none",
                 cursor: "pointer",
             });
-        } else {
+            
+        }
+
+        else {
             robot_is_estopped = false;
             $("#estop").html("Estop");
             $("#estop").css({
@@ -127,30 +135,64 @@ socket.onmessage = function (message) {
                 cursor: "pointer",
             });
         }
-    } else if (data["type"] == "programs") {
+    }
+    
+    else if (data["type"] == "programs") {
         $(".program-list").html("");
         programs = data["output"];
         showPrograms();
-    } else if (data["type"][0] == "@") {
+    }
+    
+    else if (data["type"][0] == "@") {
         var image = data["output"];
         var image_name = data["type"].substring(1, data["type"].length);
         $("#" + image_name).attr("src", "data:image/jpeg;base64," + image);
-    } else if (data["type"] == "control_mode") {
+    }
+    
+    else if (data["type"] == "control_mode") {
         var mode = data["output"];
         $("#space").html(mode + " Mode");
     }
     else if (data["type"] == "battery-percentage") {
         var percentage = data["output"];
         $("#b_p").html(percentage + "%")
-        var c = percentage > 60 ? 'var(--green)' : percentage > 20 ? 'orange' : 'var(--red)'
+        var c = percentage > 50 ? 'var(--green)' : percentage > 20 ? 'orange' : 'var(--red)'
         $(".bar").css({
             'width': (percentage + "%"),
             'background-color': c
         })
     }
+
     else if (data["type"] == "battery-runtime") {
         var runtime = data["output"];
         $("#b_r").html(Math.round(runtime / 60) + " minutes")
+    }
+
+    else if (data["type"] == "robot_toggle") {
+        var state = data["output"];
+
+        if (state == "clear")
+            $("#connectRobot").html("Connect to Robot")
+        else
+            $("#connectRobot").html("Disconnect Robot")
+    }
+
+    else if (data["type"] == "estop_toggle") {
+        var state = data["output"];
+
+        if (state == "clear")
+            $("#getEstop").html("Acquire Estop")
+        else
+            $("#getEstop").html("Clear Estop")
+    }
+
+    else if (data["type"] == "lease_toggle") {
+        var state = data["output"];
+
+        if (state == "clear")
+            $("#getLease").html("Acquire Lease")
+        else
+            $("#getLease").html("Clear Lease")
     }
 
     // General output
@@ -243,15 +285,24 @@ $("#bgEnd").click(function () {
 });
 
 $("#connectRobot").click(function () {
-    sendRequest(urls.connect);
+    if ($("#connectRobot").html() == "Connect to Robot")
+        sendRequest(urls.connect);
+    else 
+        sendRequest(urls.disconnect_robot)
 });
 
 $("#getEstop").click(function () {
-    sendRequest(urls.get_estop);
+    if ($("#getEstop").html() == "Acquire Estop")
+        sendRequest(urls.get_estop);
+    else 
+        sendRequest(urls.clear_estop)
 });
 
 $("#getLease").click(function () {
-    sendRequest(urls.lease);
+    if ($("#getLease").html() == "Acquire Lease")
+        sendRequest(urls.lease);
+    else
+        sendRequest(urls.clear_lease)
 });
 
 // Sends a message to the server letting it know that the socket is closing. This command is inconsistent
