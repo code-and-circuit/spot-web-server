@@ -146,11 +146,9 @@ def run_command(request):
 
 
 def add_program(request):
-    print("GOT REQUEST")
     if request.method == "POST":
         # Obtains data from the json file
         data = json.loads(request.body.decode("utf-8"))
-
         background_process.bg_process.add_program(
             data['name'], data['commands'])
 

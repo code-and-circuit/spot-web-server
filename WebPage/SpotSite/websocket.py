@@ -7,8 +7,6 @@ import inspect
 from threading import Thread
 import background_process
 import spot_logging as l
-import nest_asyncio
-nest_asyncio.apply()
 
 # A class to hold a websocket and its information
 # I did not write the class for the python websocket

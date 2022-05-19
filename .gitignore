@@ -7,3 +7,4 @@ WebPage/SpotSite/files_to_run/
 *.txt
 *.png
 .vscode/tasks.json
+WebPage/db.sqlite3

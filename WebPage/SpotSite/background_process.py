@@ -20,9 +20,7 @@ import types
 import numpy as np
 import keyboard
 import sqlite3
-from pil import Image
-import nest_asyncio
-nest_asyncio.apply()
+from PIL import Image
 
 # Interproject imports
 import spot_control
@@ -166,11 +164,7 @@ def get_members(obj, depth=0):
 def lock_until_finished(func):
     def wrapper(*args, **kwargs):
         lock.acquire(True)
-        try:
-            val = func(*args, **kwargs)
-        except Exception as e:
-            print(e)
-            val = False
+        val = func(*args, **kwargs)
         lock.release()
         return val
     return wrapper
@@ -183,7 +177,6 @@ class SqliteConnection:
         
         self._cursor.execute('CREATE TABLE IF NOT EXISTS Programs (name TEXT, program TEXT)')
     
-    @lock_until_finished
     def _name_exists(self, name):
         query = self._cursor.execute("SELECT EXISTS (SELECT 1 FROM Programs WHERE name=? COLLATE NOCASE) LIMIT 1", (name,))
         return query.fetchone()[0]
@@ -194,7 +187,7 @@ class SqliteConnection:
             self._cursor.execute('UPDATE Programs SET program = ? WHERE name = ?', (program, name))
         else:
             self._cursor.execute('INSERT INTO Programs VALUES (?, ?)', (name, program))
-            pprint(f"Inserting {program}")
+        print("Wrote Program!")
         self._connection.commit()
     
     @lock_until_finished  
@@ -205,7 +198,8 @@ class SqliteConnection:
     @lock_until_finished
     def get_program(self, name):
         query = self._cursor.execute("SELECT program FROM Programs WHERE name = ?", (name,))
-        return query.fetchone()[0]
+        command_string = ''.join(query.fetchone()[0])
+        return eval(command_string)
     
     @lock_until_finished
     def get_all_programs(self):
@@ -765,7 +759,7 @@ class Background_Process:
         socket_print(-1, self.get_programs(), all=True, type="programs")
 
     def set_program_to_run(self, name):
-        if not self.programs[name]:
+        if not self._program_database._name_exists(name):
             return
 
         self.program_is_running = True
@@ -832,6 +826,7 @@ def do_action(action, socket_index, args=None):
     elif action == "run_program":
         # Makes sure that the background process is running (robot is connected) before it tries to run a program
         bg_process.active_program_name = args
+        
         if not bg_process.is_running:
             socket_print(socket_index,
                          "Cannot run program because background process is not running")
@@ -841,7 +836,7 @@ def do_action(action, socket_index, args=None):
             socket_print(socket_index,
                          "Cannot run program because a program is already running")
             return
-
+        
         bg_process.program_socket_index = socket_index
         bg_process.set_program_to_run(args)
         socket_print(socket_index, "Running Program")

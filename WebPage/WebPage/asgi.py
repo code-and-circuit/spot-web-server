@@ -19,9 +19,6 @@ from django.core.asgi import get_asgi_application
 from SpotSite.middleware import websockets
 import SpotSite.spot_logging as l
 
-import nest_asyncio
-nest_asyncio.apply()
-
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'WebPage.settings')
 
 django.setup()

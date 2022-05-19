@@ -78,6 +78,7 @@ class Spot_Control:
 
     def stand(self):
         # Stand
+        pprint(self.get_robot_state())
         cmd = RobotCommandBuilder.synchro_stand_command()
 
         self.command_client.robot_command(cmd)
@@ -106,6 +107,8 @@ class Spot_Control:
         if t == 0:
             distance = math.sqrt(x ** 2 + y ** 2 + z ** 2)
             t = d/distance
+
+        t = 1
 
         # Create walk command
         walk = RobotCommandBuilder.synchro_velocity_command(x, y, z)
