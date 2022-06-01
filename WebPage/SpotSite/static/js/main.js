@@ -168,6 +168,16 @@ socket.onmessage = function (message) {
         $("#b_r").html(Math.round(runtime / 60) + " minutes")
     }
 
+    else if (data["type"] == "toggle-accept-command") {
+        console.log("TOGGLE ACCEPT COMMAND!");
+        if (data["output"] == true) {
+            $("#accept-command-state").html("Accepting Commands")
+        }
+        else {
+            $("#accept-command-state").html("Blocking Commands")
+        }
+    }
+
     else if (data["type"] == "robot_toggle") {
         var state = data["output"];
 
@@ -227,9 +237,9 @@ function addOutput(text, sameLine = false) {
 }
 
 // Used for sending a request to the server
-function sendRequest(url) {
+function sendRequest(url, type="GET") {
     $.ajax({
-        type: "GET",
+        type: type,
         url: url,
         data: {
             // Socket index is sent so the server knows which socket to use for output
@@ -268,6 +278,10 @@ document.onkeypress = function (event) {
             sendRequest(urls.estop);
     }
 };
+
+$('#toggle-accept-command-button').click(function() {
+    sendRequest(urls.toggle_accept_command);
+})
 
 // Runs the program from a file
 $("#runProgram").click(function () {

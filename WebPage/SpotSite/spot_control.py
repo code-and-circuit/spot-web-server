@@ -98,7 +98,16 @@ class Spot_Control:
         cmd = RobotCommandBuilder.battery_change_pose_command()
         self.command_client.robot_command(cmd)
         self._is_rolled_over = True
-
+        
+    def _send_walk_command(self, x, y, z, t=1):
+        walk = RobotCommandBuilder.synchro_velocity_command(x, y, z)
+        walk.synchronized_command.mobility_command.params.CopyFrom(
+            RobotCommandBuilder._to_any(self.collision_avoid_params))
+        self.command_client.robot_command(walk, end_time_secs=time.time() + t)
+        self.print(f'Walking at ({x}, {y}, {z})m/s for {t}s')
+        # Don't allow any commands until robot is done walking
+        time.sleep(t)
+        
     def walk(self, x, y, z, t=0, d=0):
         # TODO: Create multiple walk commands if desired walking time exceeds the time allowed by the robot
         # If the desired time is too high, the robot says that the command is too far in the future
@@ -108,16 +117,18 @@ class Spot_Control:
             distance = math.sqrt(x ** 2 + y ** 2 + z ** 2)
             t = d/distance
 
-        t = 1
-
-        # Create walk command
-        walk = RobotCommandBuilder.synchro_velocity_command(x, y, z)
-        walk.synchronized_command.mobility_command.params.CopyFrom(
-            RobotCommandBuilder._to_any(self.collision_avoid_params))
-        self.command_client.robot_command(walk, end_time_secs=time.time() + t)
-        self.print(f'Walking at ({x}, {y}, {z})m/s for {t}s')
-        # Don't allow any commands until robot is done walking
-        time.sleep(t)
+        if abs(z) >= 1.5:
+            num_steps = int(abs(z) / 1.5)
+            leftover_x = x % num_steps
+            leftover_y = y % num_steps
+            leftover_z = 1.5 - z % 1.5
+            print(leftover_z)
+            for _ in range(num_steps):
+                self._send_walk_command(x/num_steps, y/num_steps, 1.5 if z > 0 else -1.5)
+            self._send_walk_command(leftover_x, leftover_y, leftover_z if z > 0 else -leftover_z)
+        else:
+            self._send_walk_command(x, y, z)
+        
 
     def set_stand_height(self, height):
         # Create stand height command

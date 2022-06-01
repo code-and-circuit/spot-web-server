@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from django.http import HttpResponseRedirect
+from django.http import HttpResponse
 from django.http import JsonResponse
 from django.core import serializers
 from django.core.files.storage import default_storage
@@ -13,6 +14,7 @@ from spot_logging import log
 import pathlib
 import json
 import os
+import time
 
 # Renders the main site
 
@@ -23,14 +25,15 @@ def main_site(request):
     context = {
         "is_running": background_process.bg_process.is_running,
         "programs": background_process.bg_process.get_programs,
+        "accepting_commands": background_process.bg_process._is_accepting_commands
     }
     return render(request, 'main_site.html', context)
 
 # Relays action information
 
 
-def do_action(request, action):
-    if request.method == "GET":
+def do_action(request, action, method_check = False):
+    if request.method == "GET" or method_check == True:
         background_process.do_action(
             action, request.GET["socket_index"], request.GET["selected_program"])
 
@@ -126,23 +129,34 @@ def estop_release(request):
         "valid": True
     }, status=200)
 
+def toggle_accept_command(request):
+    do_action(request, "toggle_accept_command")
+        
+    return JsonResponse({
+                "valid": True,
+            }, status=200)
+
 # Handles and relays commands sent from Scratch to be executed by the robot
-
-
 def run_command(request):
     if request.method == "POST":
         # Obtains data from the json file
         data = json.loads(request.body.decode("utf-8"))
-
-        if background_process.bg_process.is_running and not background_process.bg_process.robot.is_estopped():
+        if background_process.bg_process.is_running and not background_process.bg_process.robot.is_estopped() and \
+            background_process.bg_process._is_accepting_commands:
             # Adds the command to the queue of commands
             background_process.bg_process.command_queue.append(data)
             return JsonResponse({
                 "valid": True,
             }, status=200)
+            
+    elif request.method == "GET":
+        return JsonResponse({
+            'connection_valid': True
+        }, status=200)
+    
     return JsonResponse({
-        "valid": False,
-    }, status=200)
+                "valid": True,
+            }, status=200)
 
 
 def add_program(request):

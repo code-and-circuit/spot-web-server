@@ -51,6 +51,8 @@ max_depth = 5
 lock = threading.Lock()
 
 
+#TODO: Behavior fault exception catching (trying to run commands while not self-righted (BehaviorFaultError))
+
 def start_thread(func, args=()):
     thread = Thread(target=func, args=args)
     thread.start()
@@ -249,6 +251,7 @@ class Background_Process:
         self.active_program_name = ""
         self.program_socket_index = 0
 
+        self._is_accepting_commands = False
         self.command_queue = []
         self._keys_up = []
         self._keys_down = []
@@ -424,6 +427,7 @@ class Background_Process:
         if not self._acquire_lease(socket_index):
             return False
 
+        self._is_accepting_commands = False
         return True
 
     def estop(self):
@@ -433,6 +437,7 @@ class Background_Process:
             socket_print(0, "estop", all=True, type="estop")
             self.robot_is_estopped = True
             self._estop_keep_alive.settle_then_cut()
+            self._is_accepting_commands = False
             # Clear command queue so the robot does not execute commands the instant
             # the estop is released
             self.command_queue = []
@@ -470,6 +475,7 @@ class Background_Process:
 
         self.keyboard_control_mode = "Walk"
 
+        self._is_accepting_commands = False
         self.command_queue = []
         self.programs = {}
         self.keys = {}
@@ -686,7 +692,7 @@ class Background_Process:
             y = float(args['y'])
             z = float(args['z'])
 
-            self._robot_control.walk(x, y, z, d=1)
+            self._robot_control.walk(x, y, math.radians(z), t=1)
 
     def key_up(self, key):
         return key in self._keys_up
@@ -823,6 +829,17 @@ def do_action(action, socket_index, args=None):
         bg_process.end_bg_process()
         socket_print(socket_index, "Main loop ended")
 
+    elif action == "toggle_accept_command":
+        print("TOGGLE")
+        if not bg_process._is_accepting_commands:
+            bg_process._is_accepting_commands = True
+            socket_print(socket_index, "<green>Now accepting commands</green>")
+            socket_print(-1, True, type="toggle-accept-command", all=True)
+        else:
+            bg_process._is_accepting_commands = False
+            socket_print(socket_index, "No longer accepting commands</green>")
+            socket_print(-1, False, type="toggle-accept-command", all=True)
+            
     elif action == "run_program":
         # Makes sure that the background process is running (robot is connected) before it tries to run a program
         bg_process.active_program_name = args

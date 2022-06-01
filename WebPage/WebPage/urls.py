@@ -16,6 +16,7 @@ urlpatterns = [
     path('estop_release', views.estop_release, name='estop_release'),
     path('getInfo', views.get_info, name='getInfo'),
     path('get-server-state', views.get_server_state, name='get_server_state'),
+    path('toggle-accept-command', views.toggle_accept_command, name='toggle_accept_command'),
     path('command', views.run_command, name='command'),
     path('program', views.add_program, name='add_program'),
     path('get-programs', views.get_programs, name='get_programs'),

@@ -77,6 +77,19 @@
                             {% csrf_token %}
                             Remove
                         </button>
+                        <div id="toggle-accept-command">
+                            <p id="accept-command-state">
+                                {% if accepting_commands %}
+                                    Accepting Commands
+                                {% else %}
+                                    Blocking Commands
+                                {% endif %}
+                            </p>
+                            <button id="toggle-accept-command-button">
+                                {% csrf_token %}
+                                <small>Toggle</small>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -126,6 +139,7 @@
                 remove_program: "{% url 'remove_program' %}",
                 estop_release: "{% url 'estop_release' %}",
                 estop: "{% url 'estop' %}",
+                toggle_accept_command: "{% url 'toggle_accept_command' %}",
                 run_program: "{% url 'runProgram' %}",
                 start_process: "{% url 'startProcess' %}",
                 end_process: "{% url 'endProcess' %}",
