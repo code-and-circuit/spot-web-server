@@ -16,20 +16,14 @@ def clamp(num, min_num, max_num):
     return max(min_num, min(num, max_num))
 
 
-def dispatch(robot_state_client, *args, **kwargs):
-    def dispatch_func(func):
-        def dispatch_wrapper(*args, **kwargs):
-            robot_state = robot_state_client.get_robot_state()
-
-            pprint(vars(robot_state))
-
-            if True:
-                return func(*args, **kwargs)
-            print(
-                f"Could not execute {func.__name__} because robot is not idle!")
-            return False
-        return dispatch_wrapper
-    return dispatch_func
+def dispatch(func):
+    def dispatch_wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except bosdyn.client.robot_command.BehaviorFaultError:
+            websocket.websocket_list.print(-1, f"<red>Robot has uncleared behavior faults!</red><br>Function name: {func.__name__}", all=True)
+            
+    return dispatch_wrapper
 
 
 class Spot_Control:
@@ -68,6 +62,7 @@ class Spot_Control:
     def get_robot_state(self):
         return self.robot_state_client.get_robot_state()
 
+    @dispatch
     def rotate(self, yaw, roll, pitch):
         # Create rotation command
         rotation = bosdyn.geometry.EulerZXY(yaw=yaw, roll=roll, pitch=pitch)
@@ -76,6 +71,7 @@ class Spot_Control:
         self.command_client.robot_command(cmd)
         self.print(f'Rotated to yaw: {yaw}, roll: {roll}, pitch: {pitch}')
 
+    @dispatch
     def stand(self):
         # Stand
         pprint(self.get_robot_state())
@@ -83,6 +79,7 @@ class Spot_Control:
 
         self.command_client.robot_command(cmd)
 
+    @dispatch
     def sit(self):
         cmd = RobotCommandBuilder.synchro_sit_command()
         self.command_client.robot_command(cmd)
@@ -93,6 +90,7 @@ class Spot_Control:
         cmd = RobotCommandBuilder.selfright_command()
         self.command_client.robot_command(cmd)
 
+    @dispatch
     def roll_over(self):
         # Direction(?) d = basic_command_pb2.BatteryChangePoseCommand.Request.HINT_RIGHT
         cmd = RobotCommandBuilder.battery_change_pose_command()
@@ -108,6 +106,7 @@ class Spot_Control:
         # Don't allow any commands until robot is done walking
         time.sleep(t)
         
+    @dispatch
     def walk(self, x, y, z, t=0, d=0):
         # TODO: Create multiple walk commands if desired walking time exceeds the time allowed by the robot
         # If the desired time is too high, the robot says that the command is too far in the future
@@ -130,12 +129,14 @@ class Spot_Control:
             self._send_walk_command(x, y, z)
         
 
+    @dispatch
     def set_stand_height(self, height):
         # Create stand height command
         cmd = RobotCommandBuilder.synchro_stand_command(body_height=height)
         self.command_client.robot_command(cmd)
         self.print(f'Standing at: {height}')
 
+    @dispatch
     def keyboard_walk(self, d_x, d_y, d_z):
         walk = RobotCommandBuilder.synchro_velocity_command(
             d_x * self.KEYBOARD_COMMAND_VELOCITY,
@@ -147,6 +148,7 @@ class Spot_Control:
         self.command_client.robot_command(
             walk, end_time_secs=time.time() + self.KEYBOARD_COMMAND_DURATION)
 
+    @dispatch
     def keyboard_rotate(self, d_yaw, d_roll, d_pitch):
         self.rotation['yaw'] += d_yaw * self.KEYBOARD_ROTATION_VELOCITY
         self.rotation['yaw'] = clamp(
@@ -169,6 +171,7 @@ class Spot_Control:
             footprint_R_body=rotation)
         self.command_client.robot_command(cmd)
 
+    @dispatch
     def setup(self):
         self.stand()
         self.rotate(0, 0, 0)

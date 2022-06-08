@@ -20,6 +20,8 @@ import types
 import numpy as np
 import keyboard
 import sqlite3
+from pathlib import Path
+import os
 from PIL import Image
 
 # Interproject imports
@@ -173,7 +175,9 @@ def lock_until_finished(func):
 
 class SqliteConnection:
     @lock_until_finished
-    def __init__(self, path="C:\\Users\\willf\\OneDrive\\Documents\\GitHub\\spot-web-server\\WebPage\\db.sqlite3"):
+    def __init__(self):
+        path = Path(__file__).resolve().parent.parent
+        path = os.path.join(path, 'db.sqlite3')
         self._connection = sqlite3.connect(path, check_same_thread = False)
         self._cursor = self._connection.cursor()
         
@@ -639,9 +643,12 @@ class Background_Process:
         return base64.b64encode(bytes_image).decode("utf8")
 
     def _get_images(self):
-        self._get_image("front")
-        self._get_image("back")
-        self._get_image("left")
+        try:
+            self._get_image("front")
+            self._get_image("back")
+            self._get_image("left")
+        except Exception as e:
+            socket_print(-1, e, all=True)
 
     def _get_image(self, camera_name):
         if camera_name == "front":
@@ -705,6 +712,7 @@ class Background_Process:
         self._keys_up = keys_changed[1]
 
     def _do_keyboard_commands(self):
+        
         if self.key_up('space'):
             self.keyboard_control_mode = "Walk" if self.keyboard_control_mode == "Stand" else "Stand"
             return self._robot_control.stand()
