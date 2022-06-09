@@ -332,9 +332,8 @@ class Stitcher:
         self._save_image()
 
     def stitch(self, image_1, image_2):
-        return None
         if not self._is_running:
-            return  
+            return None
         self._images_should_exist = False
 
         self._image_1 = image_1
