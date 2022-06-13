@@ -21,7 +21,9 @@ def dispatch(func):
         try:
             return func(*args, **kwargs)
         except bosdyn.client.robot_command.BehaviorFaultError:
-            websocket.websocket_list.print(-1, f"<red>Robot has uncleared behavior faults!</red><br>Function name: {func.__name__}", all=True)
+            websocket.websocket_list.print(-1, f"<red>Robot has uncleared behavior faults!</red>:{func.__name__}", all=True)
+        except Exception as e:
+            websocket.socket_list.print(-1, f"<red>ERROR</red>: {e}", all=True)
             
     return dispatch_wrapper
 
@@ -84,6 +86,7 @@ class Spot_Control:
         cmd = RobotCommandBuilder.synchro_sit_command()
         self.command_client.robot_command(cmd)
 
+    @dispatch
     def self_right(self):
         self.sit()
         time.sleep(1)

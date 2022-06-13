@@ -25,6 +25,8 @@ from bosdyn.api import image_pb2
 from bosdyn.client.frame_helpers import BODY_FRAME_NAME, get_vision_tform_body, get_a_tform_b
 from ctypes import *
 
+import background_process
+
 
 class ImagePreppedForOpenGL():
     """Prep image for OpenGL from Spot image_response."""
@@ -255,7 +257,6 @@ def draw_routine(display, image_1, image_2, program):
 
 class Stitcher:
     def __init__(self):
-        return
         self._width = 1080
         self._height = 720
         self._display = (self._width, self._height)
@@ -270,7 +271,6 @@ class Stitcher:
         self._is_running = False
 
     def start_glut_loop(self):
-        return
         self._init_glut()
         self._load_shaders()
         self._start_glut()
@@ -328,7 +328,11 @@ class Stitcher:
         glClearColor(1, 1, 1, 0)
         glClear(GL_COLOR_BUFFER_BIT)
 
-        self._do_stitching()
+        try:
+            self._do_stitching()
+        except bosdyn.client.frame_helpers.ValidateFrameTreeError:
+            # background_process.socket_print(-1, "<red><b>Issue with cameras, robot must be rebooted</b></red>", all=True)
+            pass
         self._save_image()
 
     def stitch(self, image_1, image_2):

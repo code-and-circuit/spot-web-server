@@ -618,7 +618,8 @@ class Background_Process:
             self.update_robot_state()
             
     def get_robot_state(self):
-        return self._robot_control.get_robot_state()
+        if self._robot_control is not None:
+            return self._robot_control.get_robot_state()
     
     def update_robot_state(self):
         state = self.get_robot_state()
@@ -629,7 +630,11 @@ class Background_Process:
         socket_print(-1, battery_runtime, all=True, type="battery-runtime")
 
     def _stitch_images(self, image1, image2):
-        return self.image_stitcher.stitch(image1, image2)
+        try:
+            return self.image_stitcher.stitch(image1, image2)
+        except bosdyn.client.frame_helpers.ValidateFrameTreeError:
+            pass
+            # socket_print(-1, "<red><bold>Issue with cameras, robot must be rebooted</bold></red>", all=True)
 
     def _encode_base64(self, image):
         if image is None:
