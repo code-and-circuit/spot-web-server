@@ -5,8 +5,8 @@ import sys
 import os
 import inspect
 from threading import Thread
-import background_process
-import spot_logging as l
+from SpotSite import background_process
+from SpotSite import spot_logging as l
 
 # A class to hold a websocket and its information
 # I did not write the class for the python websocket

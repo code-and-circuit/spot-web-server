@@ -6,10 +6,10 @@ from django.core import serializers
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 
-import background_process
+from SpotSite import background_process
 from SpotSite import websocket
-from spot_logging import log_action
-from spot_logging import log
+from SpotSite.spot_logging import log_action
+from SpotSite.spot_logging import log
 
 import pathlib
 import json

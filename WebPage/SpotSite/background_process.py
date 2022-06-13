@@ -18,18 +18,18 @@ from pprint import pprint
 import inspect
 import types
 import numpy as np
-import keyboard
+#import keyboard
 import sqlite3
 from pathlib import Path
 import os
 from PIL import Image
 
 # Interproject imports
-import spot_control
+from SpotSite import spot_control
 from SpotSite import secrets
 from SpotSite import websocket
-from spot_logging import log_action
-from Stitching import stitch_images
+from SpotSite.spot_logging import log_action
+from SpotSite.Stitching import stitch_images
 
 # Boston Dynamics imports
 import bosdyn.client
@@ -927,4 +927,4 @@ def do_action(action, socket_index, args=None):
         socket_print(socket_index, f"Command not recognized: {action}")
 
 
-keyboard.add_hotkey('F4', bg_process.toggle_estop)
+#keyboard.add_hotkey('F4', bg_process.toggle_estop)

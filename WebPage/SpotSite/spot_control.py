@@ -1,7 +1,7 @@
 import time
 import math
 from SpotSite import websocket
-import spot_logging as l
+from SpotSite import spot_logging as l
 from pprint import pprint
 
 from bosdyn.api import robot_command_pb2, mobility_command_pb2

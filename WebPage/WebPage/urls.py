@@ -3,7 +3,7 @@ from django.contrib.staticfiles.storage import staticfiles_storage
 from django.views.generic.base import RedirectView
 from django.urls import path
 from django.urls import include
-import views
+from SpotSite import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),

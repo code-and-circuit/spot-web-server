@@ -24,7 +24,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'WebPage.settings')
 django.setup()
 
 from SpotSite import websocket as ws
-import background_process
+from SpotSite import background_process
 
 
 

@@ -25,7 +25,7 @@ from bosdyn.api import image_pb2
 from bosdyn.client.frame_helpers import BODY_FRAME_NAME, get_vision_tform_body, get_a_tform_b
 from ctypes import *
 
-import background_process
+from SpotSite import background_process
 
 
 class ImagePreppedForOpenGL():
@@ -257,6 +257,7 @@ def draw_routine(display, image_1, image_2, program):
 
 class Stitcher:
     def __init__(self):
+        return
         self._width = 1080
         self._height = 720
         self._display = (self._width, self._height)
@@ -271,11 +272,13 @@ class Stitcher:
         self._is_running = False
 
     def start_glut_loop(self):
+        return
         self._init_glut()
         self._load_shaders()
         self._start_glut()
 
     def _init_glut(self):
+        return
         glutInit()
         glutInitDisplayMode(GLUT_RGBA)
         glutInitWindowSize(self._width, self._height)
@@ -336,6 +339,7 @@ class Stitcher:
         self._save_image()
 
     def stitch(self, image_1, image_2):
+        return
         if not self._is_running:
             return None
         self._images_should_exist = False
