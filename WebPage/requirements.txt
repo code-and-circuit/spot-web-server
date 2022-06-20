@@ -1,4 +1,4 @@
-bosdyn_core==3.1.1
+bosdyn_core==3.1.2
 Django
 keyboard==0.13.5
 numpy==1.22.3
