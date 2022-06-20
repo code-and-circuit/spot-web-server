@@ -119,30 +119,23 @@
             <div class="front">
                 <img id="front">
             </div>
-            <div class="sides">
-                <div class="left">
-                    <img id="left">
-                </div>
-                <div class="right">
-                    <img id="right">
-                </div>
-            </div>
             <div class="back">
                 <img id="back">
             </div>
-            
         </div>
 
         <script>
+            // Need to declare these inside of the html file so we can take
+            // advantage of the django server urls defined in urls.py
             var urls = {
                 get_program: "{% url 'get_programs' %}",
                 remove_program: "{% url 'remove_program' %}",
                 estop_release: "{% url 'estop_release' %}",
                 estop: "{% url 'estop' %}",
                 toggle_accept_command: "{% url 'toggle_accept_command' %}",
-                run_program: "{% url 'runProgram' %}",
-                start_process: "{% url 'startProcess' %}",
-                end_process: "{% url 'endProcess' %}",
+                run_program: "{% url 'run_program' %}",
+                start_process: "{% url 'start_process' %}",
+                end_process: "{% url 'end_process' %}",
                 connect: "{% url 'connect' %}",
                 disconnect_robot: "{% url 'disconnect_robot' %}",
                 clear_estop: "{% url 'clear_estop' %}",
@@ -152,6 +145,7 @@
                 get_state: "{% url 'get_server_state' %}"
             }
         </script>
+        <script src="{% static 'js/programs.js' %}"></script>
         <script src="{% static 'js/main.js' %}"></script>
         <script src="{% static 'js/keyboard.js' %}"></script>
         <script src="{% static 'js/style.js' %}"></script>

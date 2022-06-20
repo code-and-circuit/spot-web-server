@@ -1,0 +1,8 @@
+bosdyn_core==3.1.1
+Django
+keyboard==0.13.5
+numpy==1.22.3
+opencv_python==4.5.5.64
+Pillow==9.1.1
+PyOpenGL==3.1.6
+uvicorn==0.17.6

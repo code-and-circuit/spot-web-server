@@ -17,8 +17,6 @@ import os
 import time
 
 # Renders the main site
-
-
 def main_site(request):
     # Is the background process running or not?
     # Reflected in the yellow text output at top of webpage
@@ -29,16 +27,11 @@ def main_site(request):
     }
     return render(request, 'main_site.html', context)
 
-# Relays action information
-
-
+# Utility function to relay action information
 def do_action(request, action, method_check = False):
     if request.method == "GET" or method_check == True:
         background_process.do_action(
             action, request.GET["socket_index"], request.GET["selected_program"])
-
-# Starts the background process
-
 
 def start_process(request):
     do_action(request, "start")
@@ -47,15 +40,11 @@ def start_process(request):
         "valid": True,
     }, status=200)
 
-# Ends the background process
-
-
 def end_process(request):
     do_action(request, "end")
     return JsonResponse({
         "valid": True,
     }, status=200)
-
 
 def connect_to_robot(request):
     do_action(request, "connect")
@@ -69,18 +58,17 @@ def disconnect_robot(request):
         "valid": True,
     }, status=200)
     
+def acquire_estop(request):
+    do_action(request, "acquire_estop")
+    return JsonResponse({
+        "valid": True,
+    }, status=200)
+
 def clear_estop(request):
     do_action(request, "clear_estop")
     return JsonResponse({
         "valid": True,
     }, status=200)
-    
-def clear_lease(request):
-    do_action(request, "clear_lease")
-    return JsonResponse({
-        "valid": True,
-    }, status=200)
-
 
 def acquire_lease(request):
     do_action(request, "acquire_lease")
@@ -88,15 +76,11 @@ def acquire_lease(request):
         "valid": True,
     }, status=200)
 
-
-def acquire_estop(request):
-    do_action(request, "acquire_estop")
+def clear_lease(request):
+    do_action(request, "clear_lease")
     return JsonResponse({
         "valid": True,
     }, status=200)
-
-# Runs the program in the file
-
 
 def run_program(request):
     do_action(request, "run_program")
@@ -105,7 +89,6 @@ def run_program(request):
         "valid": True,
     }, status=200)
 
-
 def remove_program(request):
     do_action(request, "remove_program")
 
@@ -113,14 +96,12 @@ def remove_program(request):
         "valid": True
     }, status=200)
 
-
 def estop(request):
     do_action(request, "estop")
 
     return JsonResponse({
         "valid": True
     }, status=200)
-
 
 def estop_release(request):
     do_action(request, "estop_release")
@@ -158,7 +139,6 @@ def run_command(request):
                 "valid": True,
             }, status=200)
 
-
 def add_program(request):
     if request.method == "POST":
         # Obtains data from the json file
@@ -174,13 +154,11 @@ def add_program(request):
         "valid": False,
     }, status=200)
 
-
 def get_programs(request):
     return JsonResponse({
         "valid": True,
         "programs": background_process.bg_process.get_programs()
     }, status=200)
-
 
 def write_file(file):
     path = str(pathlib.Path(__file__).parent.resolve()) + \
@@ -189,7 +167,8 @@ def write_file(file):
         os.remove(path)
     default_storage.save(path, ContentFile(file.read()))
 
-
+# Allows entire files to be sent and run. 
+# ---> NOT GOOD FOR SECURITY <---
 def receive_file(request):
     valid = True
     main_name = request.POST['main']
@@ -217,8 +196,6 @@ def receive_file(request):
 
 # Gets information about the state of the server
 # Currently only used to tell if the background process is running
-
-
 def get_info(request):
     if request.method == "GET":
         return JsonResponse({
@@ -226,7 +203,7 @@ def get_info(request):
             "is_running": background_process.bg_process.is_running,
         }, status=200)
 
-
+# Uses the one-line return statement (mainly for fun)
 def get_state_of_everything(request):
     if request.method == "GET":
         state = background_process.bg_process.get_state_of_everything()
@@ -259,12 +236,7 @@ def get_keyboard_control_state(request):
         except Exception:
             return JsonResponse({}, status=500)
         
-
-        
-
 # Handles new websockets and adds them to a list of active sockets. Then keeps the socket alive forever (until it closes itself)
-
-
 async def websocket_view(socket):
     socket_index = websocket.websocket_list.add_socket(socket)
     await socket.accept()
@@ -273,10 +245,3 @@ async def websocket_view(socket):
         'socket_index': socket_index
     })
     await websocket.websocket_list.sockets[socket_index].keep_alive()
-
-    try:
-        # await websocket.websocket_list.sockets[socket_index].keep_alive()
-        pass
-    except Exception as e:
-        print("ERROR: ", e)
-        websocket.websocket_list.remove_key(socket_index)

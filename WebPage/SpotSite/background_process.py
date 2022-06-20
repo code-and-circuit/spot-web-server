@@ -59,7 +59,6 @@ def start_thread(func, args=()):
     thread = Thread(target=func, args=args)
     thread.start()
 
-
 def close():
     bg_process.is_running = False
     while bg_process._is_shutting_down:
@@ -67,11 +66,9 @@ def close():
     print("\033[92m" + "    Background" +
           "\033[0m" + ": Disconnecting from robot")
 
-
 def socket_print(socket_index, message, all=False, type="output"):
     websocket.websocket_list.print(
         socket_index, message, all=all, type=type)
-
 
 def print_exception(socket_index):
     exc_type, exc_obj, exc_tb = sys.exc_info()
@@ -79,20 +76,16 @@ def print_exception(socket_index):
     socket_print(socket_index, f"<red><b>Exception</b></red><br>{exc_obj}<br>&emsp; in <u>{fname}</u> line <red>{exc_tb.tb_lineno}</red>")
     #socket_print(socket_index, f'<red<Exception</red> {exc_type} <br>in {fname} line {exc_tb.tb_lineno} <br> {line}')
 
-
 def is_primitive(obj):
     return not hasattr(obj, '__dict__')
 
-
 def is_not_special_function(obj):
     return not(obj[0].startswith("__") and obj[0].endswith("__"))
-
 
 def get_name(obj, lower=True):
     name = obj.__name__ if hasattr(obj, '__name__') else type(obj).__name__
 
     return name.lower() if lower else name
-
 
 def is_jsonable(x):
     try:
@@ -136,31 +129,6 @@ def get_members(obj, depth=0):
             (value.__name__ if 
                 hasattr(value, '__name__') 
                     else type(value).__name__)
-        )
-        for key, value in (obj.__dict__.items() if hasattr(obj, '__dict__') else obj.items())
-    } if hasattr(obj, '__dict__') or isinstance(obj, dict) else obj) if depth < max_depth else "MAX RECURSION"
-    
-    
-    return ({
-        (get_name(key, lower=False) if hasattr(key, '__dict__') else key):
-        get_members(value, depth=depth+1) if (
-            hasattr(value, '__dict__') and
-            True not in [s.lower() in get_name(value) or s.lower()
-                         in str(key).lower() for s in invalid_keywords]
-        ) else (
-            [get_members(item) for item in value] if isinstance(value, list) else (
-                "function" if type(value) == types.LambdaType else (
-                    get_name(value, lower=False) if hasattr(value, '__dict__') else (
-                        get_members(value, depth=depth+1) if isinstance(value, dict) else (
-                            value if (is_jsonable(value)) else (
-                                'Not JSONable'
-                            )
-                        )
-                    )
-                )
-            )
-        ) if True not in [s.lower() in get_name(value) or s.lower() in str(key).lower() for s in invalid_keywords] else (
-            get_name(value)
         )
         for key, value in (obj.__dict__.items() if hasattr(obj, '__dict__') else obj.items())
     } if hasattr(obj, '__dict__') or isinstance(obj, dict) else obj) if depth < max_depth else "MAX RECURSION"
@@ -263,7 +231,6 @@ class Background_Process:
         self.image_stitcher = None
         self._program_database = SqliteConnection()
         
-
     def turn_on(self, socket_index):
         socket_print(socket_index, "Powering On...")
         self.robot.power_on(timeout_sec=20)
@@ -612,7 +579,7 @@ class Background_Process:
 
     def _video_loop(self):
         self.image_stitcher = stitch_images.Stitcher()
-        start_thread(self.image_stitcher.start_glut_loop)
+        start_thread(self.image_stitcher.start_glfw_loop)
         while self._show_video_feed:
             self._get_images()
             self.update_robot_state()
@@ -626,8 +593,8 @@ class Background_Process:
         power_state = state.power_state
         battery_percentage = power_state.locomotion_charge_percentage.value
         battery_runtime = power_state.locomotion_estimated_runtime.seconds
-        socket_print(-1, battery_percentage, all=True, type="battery-percentage")
-        socket_print(-1, battery_runtime, all=True, type="battery-runtime")
+        socket_print(-1, battery_percentage, all=True, type="battery_percentage")
+        socket_print(-1, battery_runtime, all=True, type="battery_runtime")
 
     def _stitch_images(self, image1, image2):
         try:
@@ -651,7 +618,6 @@ class Background_Process:
         try:
             self._get_image("front")
             self._get_image("back")
-            self._get_image("left")
         except Exception as e:
             socket_print(-1, e, all=True)
 
@@ -816,8 +782,6 @@ class Background_Process:
 bg_process = Background_Process()
 
 # Handles actions from the client
-
-
 def do_action(action, socket_index, args=None):
     if action == "start":
         # Makes sure that the background process is not already running before it starts it
@@ -843,15 +807,14 @@ def do_action(action, socket_index, args=None):
         socket_print(socket_index, "Main loop ended")
 
     elif action == "toggle_accept_command":
-        print("TOGGLE")
         if not bg_process._is_accepting_commands:
             bg_process._is_accepting_commands = True
             socket_print(socket_index, "<green>Now accepting commands</green>")
-            socket_print(-1, True, type="toggle-accept-command", all=True)
         else:
             bg_process._is_accepting_commands = False
-            socket_print(socket_index, "No longer accepting commands</green>")
-            socket_print(-1, False, type="toggle-accept-command", all=True)
+            socket_print(socket_index, "No longer accepting commands")
+        
+        socket_print(-1, bg_process._is_accepting_commands, type="toggle_accept_command", all=True)
             
     elif action == "run_program":
         # Makes sure that the background process is running (robot is connected) before it tries to run a program

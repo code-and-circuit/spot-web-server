@@ -16,20 +16,6 @@ from SpotSite import secrets
 import sys
 import pathlib
 
-
-def add_dir(path):
-    current_dir = os.getcwd()
-    parent_dir = os.path.dirname(current_dir)
-    dir_to_add = current_dir + path
-    sys.path.append(dir_to_add)
-
-
-add_dir("\\SpotSite\\files_to_run\\")
-add_dir("\\SpotSite\\")
-add_dir("\\SpotSite\\Stitching")
-add_dir("\\WebPage\\")
-
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 

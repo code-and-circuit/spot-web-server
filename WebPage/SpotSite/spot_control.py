@@ -76,12 +76,11 @@ class Spot_Control:
     @dispatch
     def stand(self):
         # Stand
-        pprint(self.get_robot_state())
+        #pprint(self.get_robot_state())
         cmd = RobotCommandBuilder.synchro_stand_command()
 
         self.command_client.robot_command(cmd)
 
-    @dispatch
     def sit(self):
         cmd = RobotCommandBuilder.synchro_sit_command()
         self.command_client.robot_command(cmd)
@@ -119,6 +118,7 @@ class Spot_Control:
             distance = math.sqrt(x ** 2 + y ** 2 + z ** 2)
             t = d/distance
 
+        # Splites commands up if specified turn value is too high. Works, but can probably be improved
         if abs(z) >= 1.5:
             num_steps = int(abs(z) / 1.5)
             leftover_x = x % num_steps

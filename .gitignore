@@ -1,10 +1,9 @@
 *.pyc
-*.pyc
 WebPage/SpotSite/secrets.py
 WebPage/SpotSite/file_to_run.py
 WebPage/SpotSite/files_to_run/
 *.jpg
-*.txt
+WebPage/SpotSite/Logs/
 *.png
 .vscode/tasks.json
 WebPage/db.sqlite3
