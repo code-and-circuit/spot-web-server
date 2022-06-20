@@ -1,101 +1,35 @@
-// Creates a link used to connect the websocket. Necessary because the IP of the server may change based on what device
-// is accessing it (localhost) or the network it is connected to
-// This solution isn't great but it works. There's probably a better way to do it
-var href =
-    "ws" +
-    window.location.href.substring(4, window.location.href.length - 1) +
-    "/ws/";
-socket = new WebSocket(href);
-var socket_index = null;
-var robot_is_estopped = false;
+// Creates a url used to connect the websocket. 
+// - IP of the server may change, so it cannot be static
+// - example: ws://localhost:8000/ws/
+const href =
+    "ws://" +
+    window.location.hostname +
+    ":8000/ws/"
+let socket;
 
-var selected_program = "";
-
-var programs = [];
-
-function showPrograms() {
-    $(".program-list").html("");
-        for (var program in programs) {
-            $(".program-list").html(
-                $(".program-list").html() +
-                "<br><button id='program' onclick=displayProgram('" +
-                program +
-                "')>" +
-                program +
-                "</button>"
-            );
-        }
+// Make sure that the socket connection was successful, and tell the client if it was not
+try {
+    socket = new WebSocket(href);
+} catch (err) {
+    addOutput("<red>Error connecting to the server</red>");
 }
 
-function getPrograms() {
-    $.ajax({
-        type: "GET",
-        url: urls.get_program,
-        data: {},
-        success: function (response) {
-            programs = response["programs"];
-            showPrograms();
-        },
-        error: function (response) {
-            addOutput("<red>Server error: " + response["status"] + ".</red>");
-            // A 500 error is generally caused by the socket being closed when output tries to be sent back
-            if (response["status"] == "500") {
-                addOutput("Did the socket close? If so, try reloading.", true);
-            }
-        },
-    });
-}
+let socket_index = null;
+let robot_is_estopped = false;
 
-function displayProgram(name) {
-    selected_program = name;
-    $("#program-name").html(selected_program);
-    $("#program-info").html("");
-    for (var c in programs[name]) {
-        command = programs[name][c];
-        var line = command["Command"] + "(";
-        for (var arg in command["Args"]) {
-            line += command["Args"][arg] + ", ";
-        }
-        if (line.substring(line.length - 1, line.length) != "(")
-            line = line.substring(0, line.length - 2);
-        line += ")<br>";
-        $("#program-info").html($("#program-info").html() + line);
-    }
-}
-
-// Function to get the cookie for sending some commands
-// Not sure how it works, just copy and pasted it
-function getCookie(name) {
-    var cookieValue = null;
-    if (document.cookie && document.cookie !== "") {
-        var cookies = document.cookie.split(";");
-        for (var i = 0; i < cookies.length; i++) {
-            var cookie = jQuery.trim(cookies[i]);
-            if (cookie.substring(0, name.length + 1) === name + "=") {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
-        }
-    }
-    return cookieValue;
-}
-// Needed for sending files
-var csrftoken = getCookie("csrftoken");
+program_handler.get_programs();
 
 // Handles socket messages from the server
-socket.onmessage = function (message) {
+socket.onmessage = (message) => {
     // Parses the JSON
-    var data = JSON.parse(message["data"]);
-    // If the message is indicating that a socket has been created, store the socket's index (more of an ID: see websocket.py)
-    // for future use. Also sends a message back to ensure that the connected was successful
+    const data = JSON.parse(message["data"]);
+
+    // Ensures that the socket connection was successful and stores its index for future use
     if (data["type"] == "socket_create") {
         socket_index = data["socket_index"];
         addOutput(
-            "Successfully connected to the server at <green>socket index " +
-            socket_index +
-            "</green>"
+            "Successfully connected to the server at <green>socket index " + socket_index + "</green>"
         );
-
     }
     // Updates the yellow text that tells whether or not the background process is running
     else if (data["type"] == "bg_process") {
@@ -109,11 +43,10 @@ socket.onmessage = function (message) {
                 cursor: "pointer",
             });
         }
-        else 
+        else
             $("#isRunning").html("Background process is not running");
-
     }
-    
+    // Updates the estop button. Useful if multiple clients are active
     else if (data["type"] == "estop") {
         if (data["output"] == "estop") {
             robot_is_estopped = true;
@@ -123,9 +56,7 @@ socket.onmessage = function (message) {
                 border: "none",
                 cursor: "pointer",
             });
-            
         }
-
         else {
             robot_is_estopped = false;
             $("#estop").html("Estop");
@@ -136,93 +67,101 @@ socket.onmessage = function (message) {
             });
         }
     }
-    
+    // Handles the message containing the program list
     else if (data["type"] == "programs") {
         $(".program-list").html("");
-        programs = data["output"];
-        showPrograms();
+        program_handler.programs = data["output"];
+        program_handler.show_programs();
     }
-    
+    // Handles video feed, the prefix @ specifies that the message is an image in the video feed
     else if (data["type"][0] == "@") {
-        var image = data["output"];
-        var image_name = data["type"].substring(1, data["type"].length);
+        const image = data["output"];
+        const image_name = data["type"].substring(1, data["type"].length);
         $("#" + image_name).attr("src", "data:image/jpeg;base64," + image);
     }
-    
+    // Updates the keyboard control mode (Walk/Stand)
     else if (data["type"] == "control_mode") {
-        var mode = data["output"];
+        const mode = data["output"];
         $("#space").html(mode + " Mode");
     }
-    else if (data["type"] == "battery-percentage") {
-        var percentage = data["output"];
-        $("#b_p").html(percentage + "%")
-        var c = percentage > 50 ? 'var(--green)' : percentage > 20 ? 'orange' : 'var(--red)'
+    // Updates the battery percentage
+    else if (data["type"] == "battery_percentage") {
+        const percentage = data["output"];
+        $("#b_p").html(percentage + "%");
+        // Specifies the color of the battery icon
+        const c = percentage > 50 ? 'var(--green)' : percentage > 20 ? 'orange' : 'var(--red)';
         $(".bar").css({
             'width': (percentage + "%"),
             'background-color': c
         })
     }
-
-    else if (data["type"] == "battery-runtime") {
-        var runtime = data["output"];
-        $("#b_r").html(Math.round(runtime / 60) + " minutes")
+    // Updates the battery runtime
+    else if (data["type"] == "battery_runtime") {
+        const runtime = data["output"];
+        const runtime_minutes = Math.round(runtime / 60); // Runtime is given in seconds, convert to minutes
+        $("#b_r").html(runtime_minutes + " minutes");
     }
-
-    else if (data["type"] == "toggle-accept-command") {
+    // Updates whether the server is accepting commands or not
+    else if (data["type"] == "toggle_accept_command") {
         console.log("TOGGLE ACCEPT COMMAND!");
         if (data["output"] == true) {
-            $("#accept-command-state").html("Accepting Commands")
+            $("#accept-command-state").html("Accepting Commands");
         }
         else {
-            $("#accept-command-state").html("Blocking Commands")
+            $("#accept-command-state").html("Blocking Commands");
         }
     }
-
+    // Updates whether the robot is connected, and which action can be taken as a result
     else if (data["type"] == "robot_toggle") {
-        var state = data["output"];
+        const state = data["output"];
 
         if (state == "clear")
             $("#connectRobot").html("Connect to Robot")
         else
             $("#connectRobot").html("Disconnect Robot")
     }
-
+    // Updates whether the estop is accquired, and which action can be taken as a result
     else if (data["type"] == "estop_toggle") {
-        var state = data["output"];
+        const state = data["output"];
 
         if (state == "clear")
             $("#getEstop").html("Acquire Estop")
         else
             $("#getEstop").html("Clear Estop")
     }
-
+    // Updates whether the lease is accquired, and which action can be taken as a result
     else if (data["type"] == "lease_toggle") {
-        var state = data["output"];
+        const state = data["output"];
 
         if (state == "clear")
             $("#getLease").html("Acquire Lease")
         else
             $("#getLease").html("Clear Lease")
     }
-
     // General output
     else if (data["type"] == "output") {
         addOutput(data["output"]);
-    } else {
+    }
+    // Handles unknown output types (should not happen, just for safetey and potential debugging) 
+    else {
         addOutput("<red>Type not recognized: " + data["type"] + "</red>");
     }
 };
 
-// Socket closes when 1) the web page closes or is reloaded 2) the server reloads during development
-// This command can be inconsistent, which is why extra code is needed in websocket.py
-socket.onclose = function (message) {
-    setTimeout(function () {
+/*
+Lets the client know when the socket has closed
+- Displays after a delay because simply reloading the page, and there is
+    no reason to flash an error message on a reload
+- This should only be seen if the webpage is open while the server is under development
+*/
+socket.onclose = (message) => {
+    setTimeout(() => {
         addOutput(
             "<red>Socket " +
             socket_index +
             " has closed.<br> You should be seeing this only if the server is being worked on.</red>"
         );
-    }, 500);
+    }, 1000);
 };
 
 // Adds output to the client console and scrolls to the bottom. Text can be added to a new line or
@@ -236,15 +175,15 @@ function addOutput(text, sameLine = false) {
     $("#output").scrollTop($("#output").scrollTop() + 100);
 }
 
-// Used for sending a request to the server
-function sendRequest(url, type="GET") {
+// Utility function for sending a request to the server
+function sendRequest(url, type = "GET") {
     $.ajax({
         type: type,
         url: url,
         data: {
             // Socket index is sent so the server knows which socket to use for output
             socket_index: socket_index,
-            selected_program: selected_program,
+            selected_program: program_handler.selected_program,
         },
         success: function (response) { },
         error: function (response) {
@@ -259,7 +198,7 @@ function sendRequest(url, type="GET") {
 
 $("#removeProgram").click(function () {
     sendRequest(urls.remove_program);
-    getPrograms();
+    program_handler.get_programs();
     $("#program-info").html("");
     $("#program-name").html("");
 });
@@ -270,30 +209,19 @@ $("#estop").click(function () {
         sendRequest(urls.estop);
 });
 
-document.onkeypress = function (event) {
-    event = event || window.event;
-    if (event.keyCode == 123) {
-        if (robot_is_estopped) return sendRequest(urls.estop_release);
-        if ($("#isRunning").html() == "Background process is running")
-            sendRequest(urls.estop);
-    }
-};
 
-$('#toggle-accept-command-button').click(function() {
+$('#toggle-accept-command-button').click(function () {
     sendRequest(urls.toggle_accept_command);
 })
 
-// Runs the program from a file
 $("#runProgram").click(function () {
     sendRequest(urls.run_program);
 });
 
-// Starts the background process
 $("#bgStart").click(function () {
     sendRequest(urls.start_process);
 });
 
-// Ends the background process
 $("#bgEnd").click(function () {
     sendRequest(urls.end_process);
 });
@@ -301,14 +229,14 @@ $("#bgEnd").click(function () {
 $("#connectRobot").click(function () {
     if ($("#connectRobot").html() == "Connect to Robot")
         sendRequest(urls.connect);
-    else 
+    else
         sendRequest(urls.disconnect_robot)
 });
 
 $("#getEstop").click(function () {
     if ($("#getEstop").html() == "Acquire Estop")
         sendRequest(urls.get_estop);
-    else 
+    else
         sendRequest(urls.clear_estop)
 });
 
@@ -319,8 +247,7 @@ $("#getLease").click(function () {
         sendRequest(urls.clear_lease)
 });
 
-// Sends a message to the server letting it know that the socket is closing. This command is inconsistent
-// and not always sent, requiring extra code in websocket.py
+// Sends a message to the server letting it know that the socket is closing
 $(window).on("beforeunload", function () {
     socket.send(
         JSON.stringify({
@@ -328,5 +255,3 @@ $(window).on("beforeunload", function () {
         })
     );
 });
-
-getPrograms();

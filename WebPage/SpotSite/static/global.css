@@ -1,21 +1,26 @@
 /* 
 
-Pretty messy but it works 
+Messy but it works 
 It would be nice to clean it up or change it. I have very little preference on how it looks,
 I just want it to function well, be easy on the eyes and feel sleek
+
+I have no desire to refactor since it works, but anyone who wants to is welcome to
 
 */
 
 :root {
+  /*
+    Allows for hues to be dynamically changed
+  */
   --main-hue: 230;
   --brightness-mult: 1;
   --saturation-mult: 1;
 
-  --green: hsl(calc(var(--main-hue) - 100 ), calc(var(--saturation-mult) * 80%), calc(var(--brightness-mult) * 60%));
-  --yellow: hsl(calc(var(--main-hue) - 170), calc(var(--saturation-mult) * 80%), calc(var(--brightness-mult) * 60%));
-  --purple: hsl(calc(var(--main-hue) + 40), calc(var(--saturation-mult) * 80%), calc(var(--brightness-mult) * 60%));
-  --red: hsl(calc(var(--main-hue) - 230), calc(var(--saturation-mult) * 80%), calc(var(--brightness-mult) * 60%));
-  --white: hsl(0, 0%, calc(var(--brightness-mult) * 100%));
+  --green: hsl(calc(var(--main-hue) - 100 ), calc(var(--saturation-mult) * 80%), 60%);
+  --yellow: hsl(calc(var(--main-hue) - 170), calc(var(--saturation-mult) * 80%), 60%);
+  --purple: hsl(calc(var(--main-hue) + 40), calc(var(--saturation-mult) * 80%), 60%);
+  --red: hsl(calc(var(--main-hue) - 230), calc(var(--saturation-mult) * 80%), 60%);
+  --white: hsl(0, 0%, 100%);
 
   --body-bg: hsl(var(--main-hue), calc(var(--saturation-mult) * 25%), calc(var(--brightness-mult) * 20%));
   --container-bg: hsl(var(--main-hue), calc(var(--saturation-mult) * 25%), calc(var(--brightness-mult) * 14%));
@@ -350,14 +355,13 @@ red {
 .video-feed {
   width: 100%;
   height: 350%;
-  margin-top: 300px;
   display: flex;
   align-items: center;
   justify-content: space-evenly;
   flex-direction: column;
 }
 
-.front, .back, .left {
+.front, .back {
   width: 90%;
   max-width: 720px;
 
@@ -365,7 +369,7 @@ red {
   background-color: rgb(30, 30, 36);
 }
 
-#front, #back, #left {
+#front, #back {
   width: 100%;
   height: 100%;
 }

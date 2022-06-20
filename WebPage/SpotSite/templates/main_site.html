@@ -119,14 +119,6 @@
             <div class="front">
                 <img id="front">
             </div>
-            <div class="sides">
-                <div class="left">
-                    <img id="left">
-                </div>
-                <div class="right">
-                    <img id="right">
-                </div>
-            </div>
             <div class="back">
                 <img id="back">
             </div>
@@ -152,6 +144,7 @@
                 get_state: "{% url 'get_server_state' %}"
             }
         </script>
+        <script src="{% static 'js/programs.js' %}"></script>
         <script src="{% static 'js/main.js' %}"></script>
         <script src="{% static 'js/keyboard.js' %}"></script>
         <script src="{% static 'js/style.js' %}"></script>

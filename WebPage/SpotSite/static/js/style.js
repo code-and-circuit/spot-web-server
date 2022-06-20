@@ -1,8 +1,11 @@
+/*
+    Used to set the height of the video feed divs
+    - Aspect ratio should be fixed, no easy way to do with css
+*/
 function resize_div(div_name, ratio=2/3) {
-    var div = $("." + div_name);
-    var width = div.width();
+    const div = $("." + div_name);
 
-    //div.css("height", width * ratio);
+    div.css("height", div.width() * ratio);
 }
 
 function resize_divs() {

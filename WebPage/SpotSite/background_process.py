@@ -626,8 +626,8 @@ class Background_Process:
         power_state = state.power_state
         battery_percentage = power_state.locomotion_charge_percentage.value
         battery_runtime = power_state.locomotion_estimated_runtime.seconds
-        socket_print(-1, battery_percentage, all=True, type="battery-percentage")
-        socket_print(-1, battery_runtime, all=True, type="battery-runtime")
+        socket_print(-1, battery_percentage, all=True, type="battery_percentage")
+        socket_print(-1, battery_runtime, all=True, type="battery_runtime")
 
     def _stitch_images(self, image1, image2):
         try:
@@ -651,7 +651,6 @@ class Background_Process:
         try:
             self._get_image("front")
             self._get_image("back")
-            self._get_image("left")
         except Exception as e:
             socket_print(-1, e, all=True)
 
@@ -843,15 +842,14 @@ def do_action(action, socket_index, args=None):
         socket_print(socket_index, "Main loop ended")
 
     elif action == "toggle_accept_command":
-        print("TOGGLE")
         if not bg_process._is_accepting_commands:
             bg_process._is_accepting_commands = True
             socket_print(socket_index, "<green>Now accepting commands</green>")
-            socket_print(-1, True, type="toggle-accept-command", all=True)
         else:
             bg_process._is_accepting_commands = False
-            socket_print(socket_index, "No longer accepting commands</green>")
-            socket_print(-1, False, type="toggle-accept-command", all=True)
+            socket_print(socket_index, "No longer accepting commands")
+        
+        socket_print(-1, bg_process._is_accepting_commands, type="toggle_accept_command", all=True)
             
     elif action == "run_program":
         # Makes sure that the background process is running (robot is connected) before it tries to run a program

@@ -1,10 +1,18 @@
-var robot_mode = "Walk";
-var toggled = false;
-var valid_keys = ["q", "e", "w", "a", "s", "d", "r", "f", " ", "z", "x"];
-var keys_up = [];
-var keys_down = [];
-var refresh_rate = 0.2;
+const valid_keys = ["q", "e", "w", "a", "s", "d", "r", "f", " ", "z", "x"];
+const refresh_rate = 0.2;
 
+let robot_mode = "Walk";
+let toggled = false;
+let keys_up = [];
+let keys_down = [];
+let cmdLoop = null;
+
+/*
+    Functions for handling keyboard input to control the robot
+    - Only one client can control the robot at a time (managed by the server)
+*/
+
+// Toggles the keyboard control panel
 function toggle() {
     if (toggled) {
         toggled = false;
@@ -25,11 +33,11 @@ function getKey(e) {
     return key_name;
 }
 
-$("#ctrl").keypress(function (e) {
+$("#ctrl").keypress((e) => {
     $("#ctrl").val("");
 
-    var key_pressed = getKey(e);
-    if (keys_down.includes(key_pressed)) return;
+    let key_pressed = getKey(e);
+    if (keys_down.includes(key_pressed)) return; // Don't handle keys already pressed
     if (key_pressed == " ") {
         $("#space").addClass("key-selected");
         key_pressed = "space";
@@ -39,11 +47,11 @@ $("#ctrl").keypress(function (e) {
     keys_down.push(key_pressed);
 });
 
-$("#ctrl").keyup(function (e) {
+$("#ctrl").keyup((e) => {
     $("#ctrl").val("");
 
-    var key_up = getKey(e);
-    if (keys_up.includes(key_up)) return;
+    let key_up = getKey(e);
+    if (keys_up.includes(key_up)) return; // Make sure we aren't handling a keyup event twice
     if (key_up == " ") {
         $("#space").removeClass("key-selected");
         robot_mode = robot_mode == "Walk" ? "Stand" : "Walk";
@@ -55,9 +63,9 @@ $("#ctrl").keyup(function (e) {
     keys_up.push(key_up);
 });
 
-var cmdLoop = null;
 
-$("#ctrl").focus(function () {
+$("#ctrl").focus(() => {
+    // Tell the server that keyboard control has started
     socket.send(
         JSON.stringify({
             action: "keyboard_control_start",
@@ -78,7 +86,8 @@ $("#ctrl").focus(function () {
     }, refresh_rate * 1000);
 });
 
-$("#ctrl").focusout(function () {
+$("#ctrl").focusout(() => {
+    // Tell the server that keyboard control has ended
     socket.send(
         JSON.stringify({
             action: "keyboard_control_release",
