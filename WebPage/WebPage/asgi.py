@@ -26,15 +26,10 @@ django.setup()
 from SpotSite import websocket as ws
 from SpotSite import background_process
 
-
-
-
-
 application = get_asgi_application()
 application = websockets(application)
 
 original_handler = Server.handle_exit
-
 
 class AppStatus:
     should_exit = False
@@ -45,6 +40,5 @@ class AppStatus:
         ws.close_all_sockets()
         background_process.close()
         original_handler(*args, **kwargs)
-
 
 Server.handle_exit = AppStatus.handle_exit
