@@ -122,10 +122,11 @@
             <div class="back">
                 <img id="back">
             </div>
-            
         </div>
 
         <script>
+            // Need to declare these inside of the html file so we can take
+            // advantage of the django server urls defined in urls.py
             var urls = {
                 get_program: "{% url 'get_programs' %}",
                 remove_program: "{% url 'remove_program' %}",
