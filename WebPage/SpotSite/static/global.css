@@ -349,7 +349,8 @@ red {
 
 .video-feed {
   width: 100%;
-  height: 250%;
+  height: 350%;
+  margin-top: 300px;
   display: flex;
   align-items: center;
   justify-content: space-evenly;

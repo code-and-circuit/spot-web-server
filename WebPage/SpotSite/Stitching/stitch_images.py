@@ -18,7 +18,7 @@ import time
 from OpenGL.GL import *
 from OpenGL.GL import shaders, GL_VERTEX_SHADER
 from OpenGL.GLU import *
-from OpenGL.GLUT import *
+import glfw
 from PIL import Image
 from PIL import ImageOps
 from bosdyn.api import image_pb2
@@ -261,6 +261,7 @@ class Stitcher:
         self._width = 1080
         self._height = 720
         self._display = (self._width, self._height)
+        self._window = None
 
         self._program = None
         self._image_1 = None
@@ -271,20 +272,15 @@ class Stitcher:
         self.frame_num = 0
         self._is_running = False
 
-    def start_glut_loop(self):
-        return
-        self._init_glut()
+    def start_glfw_loop(self):
+        self._init_glfw()
         self._load_shaders()
-        self._start_glut()
+        self._start_glfw()
 
-    def _init_glut(self):
-        return
-        glutInit()
-        glutInitDisplayMode(GLUT_RGBA)
-        glutInitWindowSize(self._width, self._height)
-        glutInitWindowPosition(0, 0)
-        window = glutCreateWindow("Image Stitching")
-        #glutHideWindow()
+    def _init_glfw(self):
+        glfw.init()
+        self._window = glfw.create_window(self._width, self._height, "Image Stitching", None, None)
+        glfw.make_current_context(self._window)
 
     def _load_shaders(self):
         with open('SpotSite\\Stitching\\shader_vert.glsl', 'r') as file:
@@ -294,10 +290,12 @@ class Stitcher:
 
         self._program = CompiledShader(vert_shader, frag_shader)
 
-    def _start_glut(self):
-        glutDisplayFunc(self._update_image)
-        glutIdleFunc(glutPostRedisplay)
-        glutMainLoop()
+    def _start_glfw(self):
+        while not glfw.window_should_close(self._window):
+            glfw.poll_events()
+            self._update_image()
+            glfw.swap_buffers(self._window)
+        glfw.terminate()
 
     def _draw_string(self, string, x, y, color):
         glMatrixMode(GL_PROJECTION)
@@ -305,7 +303,9 @@ class Stitcher:
         glColor3f(color[0], color[1], color[2])
         glRasterPos2f(x / self._width, y / self._height)
         for char in string:
+            continue
             glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, ord(char))
+        print("String printing is currently not working, since glfw is being used instead of glut.")
 
     def _save_image(self):
         glPixelStorei(GL_PACK_ALIGNMENT, 1)
@@ -327,7 +327,6 @@ class Stitcher:
 
     def _update_image(self):
         self._is_running = True
-        glutSwapBuffers()
         glClearColor(1, 1, 1, 0)
         glClear(GL_COLOR_BUFFER_BIT)
 

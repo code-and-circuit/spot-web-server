@@ -2,7 +2,7 @@ function resize_div(div_name, ratio=2/3) {
     var div = $("." + div_name);
     var width = div.width();
 
-    div.css("height", width * ratio);
+    //div.css("height", width * ratio);
 }
 
 function resize_divs() {
