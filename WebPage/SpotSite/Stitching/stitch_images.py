@@ -272,17 +272,17 @@ class Stitcher:
         self.frame_num = 0
         self._is_running = False
 
-    def start_glfw_loop(self):
+    def start_glfw_loop(self) -> None:
         self._init_glfw()
         self._load_shaders()
         self._start_glfw()
 
-    def _init_glfw(self):
+    def _init_glfw(self) -> None:
         glfw.init()
         self._window = glfw.create_window(self._width, self._height, "Image Stitching", None, None)
         glfw.make_current_context(self._window)
 
-    def _load_shaders(self):
+    def _load_shaders(self) -> None:
         with open('SpotSite\\Stitching\\shader_vert.glsl', 'r') as file:
             vert_shader = file.read()
         with open('SpotSite\\Stitching\\shader_frag.glsl', 'r') as file:
@@ -290,14 +290,14 @@ class Stitcher:
 
         self._program = CompiledShader(vert_shader, frag_shader)
 
-    def _start_glfw(self):
+    def _start_glfw(self) -> None:
         while not glfw.window_should_close(self._window):
             glfw.poll_events()
             self._update_image()
             glfw.swap_buffers(self._window)
         glfw.terminate()
 
-    def _draw_string(self, string, x, y, color):
+    def _draw_string(self, string: str, x: float, y: float, color: tuple) -> None:
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
         glColor3f(color[0], color[1], color[2])
@@ -307,14 +307,14 @@ class Stitcher:
             glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, ord(char))
         print("String printing is currently not working, since glfw is being used instead of glut.")
 
-    def _save_image(self):
+    def _save_image(self) -> None:
         glPixelStorei(GL_PACK_ALIGNMENT, 1)
         data = glReadPixels(0, 0, self._width, self._height,
                             GL_RGB, GL_UNSIGNED_BYTE)
         image = Image.frombytes("RGB", self._display, data)
         self._stitched_image = ImageOps.flip(image)
 
-    def _do_stitching(self):
+    def _do_stitching(self) -> None:
         if not self._images_should_exist:
             return
 
@@ -325,7 +325,7 @@ class Stitcher:
         image_2 = ImagePreppedForOpenGL(self._image_2)
         draw_routine(self._display, image_1, image_2, self._program)
 
-    def _update_image(self):
+    def _update_image(self) -> None:
         self._is_running = True
         glClearColor(1, 1, 1, 0)
         glClear(GL_COLOR_BUFFER_BIT)
@@ -337,7 +337,7 @@ class Stitcher:
             pass
         self._save_image()
 
-    def stitch(self, image_1, image_2):
+    def stitch(self, image_1, image_2) -> PIL.Image.Image:
         if not self._is_running:
             return None
         self._images_should_exist = False

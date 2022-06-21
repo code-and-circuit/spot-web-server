@@ -12,11 +12,11 @@ from bosdyn.client.robot_command import RobotCommandBuilder, blocking_stand
 from bosdyn.client.robot_state import RobotStateClient
 
 
-def clamp(num, min_num, max_num):
+def clamp(num: (float, int), min_num: (float, int), max_num: (float, int)) -> (float, int):
     return max(min_num, min(num, max_num))
 
 
-def dispatch(func):
+def dispatch(func: any):
     def dispatch_wrapper(*args, **kwargs):
         try:
             return func(*args, **kwargs)
@@ -29,7 +29,7 @@ def dispatch(func):
 
 
 class Spot_Control:
-    def __init__(self, cmd_client, s, robot):
+    def __init__(self, cmd_client: bosdyn.client.robot_command.RobotCommandClient, s: (int, str), robot: bosdyn.client.robot):
         self.command_client = cmd_client
         self.socket_index = s
         self.robot = robot
@@ -65,7 +65,7 @@ class Spot_Control:
         return self.robot_state_client.get_robot_state()
 
     @dispatch
-    def rotate(self, yaw, roll, pitch):
+    def rotate(self, yaw: float, roll: float, pitch: float) -> None:
         # Create rotation command
         rotation = bosdyn.geometry.EulerZXY(yaw=yaw, roll=roll, pitch=pitch)
         cmd = RobotCommandBuilder.synchro_stand_command(
@@ -74,32 +74,32 @@ class Spot_Control:
         self.print(f'Rotated to yaw: {yaw}, roll: {roll}, pitch: {pitch}')
 
     @dispatch
-    def stand(self):
+    def stand(self) -> None:
         # Stand
         #pprint(self.get_robot_state())
         cmd = RobotCommandBuilder.synchro_stand_command()
 
         self.command_client.robot_command(cmd)
 
-    def sit(self):
+    def sit(self) -> None:
         cmd = RobotCommandBuilder.synchro_sit_command()
         self.command_client.robot_command(cmd)
 
     @dispatch
-    def self_right(self):
+    def self_right(self) -> None:
         self.sit()
         time.sleep(1)
         cmd = RobotCommandBuilder.selfright_command()
         self.command_client.robot_command(cmd)
 
     @dispatch
-    def roll_over(self):
+    def roll_over(self) -> None:
         # Direction(?) d = basic_command_pb2.BatteryChangePoseCommand.Request.HINT_RIGHT
         cmd = RobotCommandBuilder.battery_change_pose_command()
         self.command_client.robot_command(cmd)
         self._is_rolled_over = True
         
-    def _send_walk_command(self, x, y, z, t=1):
+    def _send_walk_command(self, x: float, y: float, z: float, t: float = 1) -> None:
         walk = RobotCommandBuilder.synchro_velocity_command(x, y, z)
         walk.synchronized_command.mobility_command.params.CopyFrom(
             RobotCommandBuilder._to_any(self.collision_avoid_params))
@@ -109,7 +109,7 @@ class Spot_Control:
         time.sleep(t)
         
     @dispatch
-    def walk(self, x, y, z, t=0, d=0):
+    def walk(self, x: float, y: float, z: float, t: float = 0, d: float = 0) -> None:
         # TODO: Create multiple walk commands if desired walking time exceeds the time allowed by the robot
         # If the desired time is too high, the robot says that the command is too far in the future
 
@@ -133,14 +133,14 @@ class Spot_Control:
         
 
     @dispatch
-    def set_stand_height(self, height):
+    def set_stand_height(self, height: float) -> None:
         # Create stand height command
         cmd = RobotCommandBuilder.synchro_stand_command(body_height=height)
         self.command_client.robot_command(cmd)
         self.print(f'Standing at: {height}')
 
     @dispatch
-    def keyboard_walk(self, d_x, d_y, d_z):
+    def keyboard_walk(self, d_x: float, d_y: float, d_z: float) -> None:
         walk = RobotCommandBuilder.synchro_velocity_command(
             d_x * self.KEYBOARD_COMMAND_VELOCITY,
             d_y * self.KEYBOARD_COMMAND_VELOCITY,
@@ -152,7 +152,7 @@ class Spot_Control:
             walk, end_time_secs=time.time() + self.KEYBOARD_COMMAND_DURATION)
 
     @dispatch
-    def keyboard_rotate(self, d_yaw, d_roll, d_pitch):
+    def keyboard_rotate(self, d_yaw: float, d_roll: float, d_pitch: float) -> None:
         self.rotation['yaw'] += d_yaw * self.KEYBOARD_ROTATION_VELOCITY
         self.rotation['yaw'] = clamp(
             self.rotation['yaw'], -self.YAW_OFFSET_MAX, self.YAW_OFFSET_MAX)
@@ -175,7 +175,7 @@ class Spot_Control:
         self.command_client.robot_command(cmd)
 
     @dispatch
-    def setup(self):
+    def setup(self) -> None:
         self.stand()
         self.rotate(0, 0, 0)
         time.sleep(0.5)

@@ -17,7 +17,7 @@ import os
 import time
 
 # Renders the main site
-def main_site(request):
+def main_site(request: HttpRequest) -> HttpResponse:
     # Is the background process running or not?
     # Reflected in the yellow text output at top of webpage
     context = {
@@ -27,90 +27,90 @@ def main_site(request):
     }
     return render(request, 'main_site.html', context)
 
-# Utility function to relay action information
-def do_action(request, action, method_check = False):
+# Utility function to relay action information. method_check allows post requests to be passed if parameter is true
+def do_action(request: HttpRequest, action: str, method_check: bool = False):
     if request.method == "GET" or method_check == True:
         background_process.do_action(
             action, request.GET["socket_index"], request.GET["selected_program"])
 
-def start_process(request):
+def start_process(request: HttpRequest) -> JsonResponse:
     do_action(request, "start")
 
     return JsonResponse({
         "valid": True,
     }, status=200)
 
-def end_process(request):
+def end_process(request: HttpRequest) -> JsonResponse:
     do_action(request, "end")
     return JsonResponse({
         "valid": True,
     }, status=200)
 
-def connect_to_robot(request):
+def connect_to_robot(request: HttpRequest) -> JsonResponse:
     do_action(request, "connect")
     return JsonResponse({
         "valid": True,
     }, status=200)
 
-def disconnect_robot(request):
+def disconnect_robot(request: HttpRequest) -> JsonResponse:
     do_action(request, "disconnect_robot")
     return JsonResponse({
         "valid": True,
     }, status=200)
     
-def acquire_estop(request):
+def acquire_estop(request: HttpRequest) -> JsonResponse:
     do_action(request, "acquire_estop")
     return JsonResponse({
         "valid": True,
     }, status=200)
 
-def clear_estop(request):
+def clear_estop(request: HttpRequest) -> JsonResponse:
     do_action(request, "clear_estop")
     return JsonResponse({
         "valid": True,
     }, status=200)
 
-def acquire_lease(request):
+def acquire_lease(request: HttpRequest) -> JsonResponse:
     do_action(request, "acquire_lease")
     return JsonResponse({
         "valid": True,
     }, status=200)
 
-def clear_lease(request):
+def clear_lease(request: HttpRequest) -> JsonResponse:
     do_action(request, "clear_lease")
     return JsonResponse({
         "valid": True,
     }, status=200)
 
-def run_program(request):
+def run_program(request: HttpRequest) -> JsonResponse:
     do_action(request, "run_program")
 
     return JsonResponse({
         "valid": True,
     }, status=200)
 
-def remove_program(request):
+def remove_program(request: HttpRequest) -> JsonResponse:
     do_action(request, "remove_program")
 
     return JsonResponse({
         "valid": True
     }, status=200)
 
-def estop(request):
+def estop(request: HttpRequest) -> JsonResponse:
     do_action(request, "estop")
 
     return JsonResponse({
         "valid": True
     }, status=200)
 
-def estop_release(request):
+def estop_release(request: HttpRequest) -> JsonResponse:
     do_action(request, "estop_release")
 
     return JsonResponse({
         "valid": True
     }, status=200)
 
-def toggle_accept_command(request):
+def toggle_accept_command(request: HttpRequest) -> JsonResponse:
     do_action(request, "toggle_accept_command")
         
     return JsonResponse({
@@ -118,7 +118,7 @@ def toggle_accept_command(request):
             }, status=200)
 
 # Handles and relays commands sent from Scratch to be executed by the robot
-def run_command(request):
+def run_command(request: HttpRequest) -> JsonResponse:
     if request.method == "POST":
         # Obtains data from the json file
         data = json.loads(request.body.decode("utf-8"))
@@ -139,7 +139,7 @@ def run_command(request):
                 "valid": True,
             }, status=200)
 
-def add_program(request):
+def add_program(request: HttpRequest) -> JsonResponse:
     if request.method == "POST":
         # Obtains data from the json file
         data = json.loads(request.body.decode("utf-8"))
@@ -154,13 +154,13 @@ def add_program(request):
         "valid": False,
     }, status=200)
 
-def get_programs(request):
+def get_programs(request: HttpRequest) -> JsonResponse:
     return JsonResponse({
         "valid": True,
         "programs": background_process.bg_process.get_programs()
     }, status=200)
 
-def write_file(file):
+def write_file(file: request.FILE) -> None:
     path = str(pathlib.Path(__file__).parent.resolve()) + \
         "\\files_to_run\\" + file.name
     if os.path.exists(path):
@@ -169,7 +169,7 @@ def write_file(file):
 
 # Allows entire files to be sent and run. 
 # ---> NOT GOOD FOR SECURITY <---
-def receive_file(request):
+def receive_file(request: HttpRequest) -> JsonResponse:
     valid = True
     main_name = request.POST['main']
     if request.method == "POST":
@@ -196,7 +196,7 @@ def receive_file(request):
 
 # Gets information about the state of the server
 # Currently only used to tell if the background process is running
-def get_info(request):
+def get_info(request: HttpRequest) -> JsonResponse:
     if request.method == "GET":
         return JsonResponse({
             "valid": True,
@@ -204,7 +204,7 @@ def get_info(request):
         }, status=200)
 
 # Uses the one-line return statement (mainly for fun)
-def get_state_of_everything(request):
+def get_state_of_everything(request: HttpRequest) -> JsonResponse:
     if request.method == "GET":
         state = background_process.bg_process.get_state_of_everything()
         try:
@@ -212,7 +212,7 @@ def get_state_of_everything(request):
         except Exception as e:
             return JsonResponse({}, status=500)
         
-def get_server_state(request):
+def get_server_state(request: HttpRequest) -> JsonResponse:
     if request.method == "GET":
         state = background_process.bg_process.get_server_state()
         try:
@@ -220,7 +220,7 @@ def get_server_state(request):
         except Exception:
             return JsonResponse({}, status=500)
         
-def get_internal_state(request):
+def get_internal_state(request: HttpRequest) -> JsonResponse:
     if request.method == "GET":
         state = background_process.bg_process.get_internal_state()
         try:
@@ -228,7 +228,7 @@ def get_internal_state(request):
         except Exception:
             return JsonResponse({}, status=500)
         
-def get_keyboard_control_state(request):
+def get_keyboard_control_state(request: HttpRequest) -> JsonResponse:
     if request.method == "GET":
         state = background_process.bg_process.get_keyboard_control_state()
         try:
@@ -237,7 +237,7 @@ def get_keyboard_control_state(request):
             return JsonResponse({}, status=500)
         
 # Handles new websockets and adds them to a list of active sockets. Then keeps the socket alive forever (until it closes itself)
-async def websocket_view(socket):
+async def websocket_view(socket: WebSocket) -> None:
     socket_index = websocket.websocket_list.add_socket(socket)
     await socket.accept()
     await socket.send_json({
