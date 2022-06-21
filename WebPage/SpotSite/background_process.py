@@ -86,7 +86,7 @@ def get_name(obj: object, lower: bool = True) -> str:
 
     return name.lower() if lower else name
 
-def is_jsonable(x: oject) -> bool:
+def is_jsonable(x: object) -> bool:
     try:
         json.dumps(x)
         return True
@@ -340,16 +340,23 @@ class Background_Process:
 
         return success
 
+    def _robot_is_on_wifi(self, ip: str = secrets.ROBOT_IP) -> bool:
+        response = os.system(f"ping {ip} -c 1")
+        return True if response == 0 else False
+
     def _connect_to_robot(self, socket_index: (int, str)) -> bool:
         if self.robot is not None:
             socket_print(socket_index, "Robot is already connected")
             return True
 
+        socket_print(socket_index, "Connecting to robot...")
+        if not self._robot_is_on_wifi():
+            socket_print(socket_index, "<red><b>Robot is not at the specified address!</b></red> Is it on the wifi?")
+            return False
+
         success = True
         self._is_connecting = True
-
-        socket_print(socket_index, "Connecting to robot...")
-        
+    
         try:
             self._sdk = bosdyn.client.create_standard_sdk('cc-server')
 
@@ -542,6 +549,9 @@ class Background_Process:
             print_exception(socket_index)
 
     def _keep_robot_on(self, socket_index: (int, str)) -> None:
+        if self.robot is None:
+            self.is_running = false
+            return
         if not self.robot.is_powered_on() and not self.robot.is_estopped()\
             and not self._robot_control._is_rolled_over and self._has_lease:
             if not self.turn_on(-1):
@@ -594,7 +604,7 @@ class Background_Process:
         socket_print(-1, battery_percentage, all=True, type="battery_percentage")
         socket_print(-1, battery_runtime, all=True, type="battery_runtime")
 
-    def _stitch_images(self, image1: bosdyn.client.image, image2: bosdyn.client.image) -> PIL.Image.Image:
+    def _stitch_images(self, image1: bosdyn.client.image, image2: bosdyn.client.image) -> Image:
         try:
             return self.image_stitcher.stitch(image1, image2)
         except bosdyn.client.frame_helpers.ValidateFrameTreeError:
@@ -618,6 +628,7 @@ class Background_Process:
             socket_print(-1, e, all=True)
 
     def _get_image(self, camera_name: str) -> None:
+        from io import BytesIO
         if camera_name == "front":
             front_right = self._image_client.get_image_from_sources(
                 ["frontright_fisheye_image"])[0]
@@ -625,6 +636,24 @@ class Background_Process:
                 ["frontleft_fisheye_image"])[0]
             image = self._stitch_images(front_right, front_left)
             image = self._encode_base64(image)
+            # As a backup, just put the two images next to each other rather than stitching
+            if image is None:
+                front_right =front_right.shot.image.data
+                front_left = front_left.shot.image.data
+
+                img_file = BytesIO(front_right)
+                front_right = Image.open(img_file)
+                front_right = front_right.rotate(-90)
+
+                img_file = BytesIO(front_left)
+                front_left = Image.open(img_file)
+                front_left = front_left.rotate(-90)
+
+                full_image = Image.new("RGB", (1280, 480), "white")
+                full_image.paste(front_left, (640, 0))
+                full_image.paste(front_right, (0, 0))
+
+                image = self._encode_base64(full_image)
         
         if camera_name == "back":
             back = self._image_client.get_image_from_sources(
@@ -661,12 +690,22 @@ class Background_Process:
                 yaw), math.radians(roll), math.radians(pitch))
 
         if action == 'move':
+            MAX_SPEED = 0.5
             args = command['Args']
             x = float(args['x'])
             y = float(args['y'])
             z = float(args['z'])
 
-            self._robot_control.walk(x, y, math.radians(z), t=1)
+            l = math.sqrt(x * x + y * y + z * z)
+
+            if (l < 1):
+                self._robot_control.walk(x, y, math.radians(z), t=1)
+            else:
+                x /= l
+                y /= l
+                z /= l
+
+                self._robot_control.walk(x, y, math.radians(z), t=l)
 
     def key_up(self, key: str) -> bool:
         return key in self._keys_up
@@ -683,6 +722,7 @@ class Background_Process:
         if self.key_up('space'):
             self.keyboard_control_mode = "Walk" if self.keyboard_control_mode == "Stand" else "Stand"
             return self._robot_control.stand()
+            self._robot_control.rotation = {"pitch": 0, "yaw": 0, "roll": 0}
 
         if self.key_down('x'):
             return self._robot_control.roll_over()
@@ -691,6 +731,7 @@ class Background_Process:
             return self._robot_control.self_right()
 
         if self.key_down('r'):
+            self._robot_control.rotation = {"pitch": 0, "yaw": 0, "roll": 0}
             return self._robot_control.stand()
 
         if self.key_down('f'):

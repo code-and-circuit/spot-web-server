@@ -80,9 +80,14 @@ $("#ctrl").focus(() => {
                     keys_up: keys_up,
                 })
             );
+            keys_up.forEach((key) => {
+                if (keys_down.includes(key)) {
+                    keys_down.splice(keys_down.indexOf(key), 1);
+                }
+            })
         }
         keys_up = [];
-        keys_down = [];
+        //keys_down = [];
     }, refresh_rate * 1000);
 });
 

@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.http import HttpResponseRedirect
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpRequest
 from django.http import JsonResponse
 from django.core import serializers
 from django.core.files.storage import default_storage
@@ -128,6 +128,7 @@ def run_command(request: HttpRequest) -> JsonResponse:
             background_process.bg_process.command_queue.append(data)
             return JsonResponse({
                 "valid": True,
+                "command_sent": True
             }, status=200)
             
     elif request.method == "GET":
@@ -137,6 +138,7 @@ def run_command(request: HttpRequest) -> JsonResponse:
     
     return JsonResponse({
                 "valid": True,
+                "command_sent": False
             }, status=200)
 
 def add_program(request: HttpRequest) -> JsonResponse:
@@ -160,7 +162,7 @@ def get_programs(request: HttpRequest) -> JsonResponse:
         "programs": background_process.bg_process.get_programs()
     }, status=200)
 
-def write_file(file: request.FILE) -> None:
+def write_file(file: object) -> None:
     path = str(pathlib.Path(__file__).parent.resolve()) + \
         "\\files_to_run\\" + file.name
     if os.path.exists(path):
@@ -237,7 +239,7 @@ def get_keyboard_control_state(request: HttpRequest) -> JsonResponse:
             return JsonResponse({}, status=500)
         
 # Handles new websockets and adds them to a list of active sockets. Then keeps the socket alive forever (until it closes itself)
-async def websocket_view(socket: WebSocket) -> None:
+async def websocket_view(socket: object) -> None:
     socket_index = websocket.websocket_list.add_socket(socket)
     await socket.accept()
     await socket.send_json({

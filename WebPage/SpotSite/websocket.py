@@ -13,7 +13,7 @@ from SpotSite import spot_logging as l
 
 
 class Websocket:
-    def __init__(self, socket: WebSocket, socket_list: list, index: str):
+    def __init__(self, socket: object, socket_list: list, index: str):
         self.socket = socket
         self.alive = True
         self.list = socket_list

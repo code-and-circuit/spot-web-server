@@ -257,7 +257,6 @@ def draw_routine(display, image_1, image_2, program):
 
 class Stitcher:
     def __init__(self):
-        return
         self._width = 1080
         self._height = 720
         self._display = (self._width, self._height)
@@ -273,6 +272,7 @@ class Stitcher:
         self._is_running = False
 
     def start_glfw_loop(self) -> None:
+        return
         self._init_glfw()
         self._load_shaders()
         self._start_glfw()
@@ -280,12 +280,13 @@ class Stitcher:
     def _init_glfw(self) -> None:
         glfw.init()
         self._window = glfw.create_window(self._width, self._height, "Image Stitching", None, None)
-        glfw.make_current_context(self._window)
+        glfw.make_context_current(self._window)
 
     def _load_shaders(self) -> None:
-        with open('SpotSite\\Stitching\\shader_vert.glsl', 'r') as file:
+        print(os.listdir())
+        with open('SpotSite/Stitching/shader_vert.glsl', 'r') as file:
             vert_shader = file.read()
-        with open('SpotSite\\Stitching\\shader_frag.glsl', 'r') as file:
+        with open('SpotSite/Stitching/shader_frag.glsl', 'r') as file:
             frag_shader = file.read()
 
         self._program = CompiledShader(vert_shader, frag_shader)
@@ -337,7 +338,7 @@ class Stitcher:
             pass
         self._save_image()
 
-    def stitch(self, image_1, image_2) -> PIL.Image.Image:
+    def stitch(self, image_1, image_2) -> Image:
         if not self._is_running:
             return None
         self._images_should_exist = False

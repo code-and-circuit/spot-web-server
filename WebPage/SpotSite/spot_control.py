@@ -59,7 +59,7 @@ class Spot_Control:
 
     def print(self, message, all=False, type="output"):
         #print(message)
-        websocket.websocket_list.print(self.socket_index, message, all=all, type=type)
+        websocket.websocket_list.print(-1, message, all=True, type=type)
         
     def get_robot_state(self):
         return self.robot_state_client.get_robot_state()
@@ -71,14 +71,11 @@ class Spot_Control:
         cmd = RobotCommandBuilder.synchro_stand_command(
             footprint_R_body=rotation)
         self.command_client.robot_command(cmd)
-        self.print(f'Rotated to yaw: {yaw}, roll: {roll}, pitch: {pitch}')
+        self.print(f'Rotated to yaw: {round(yaw, 2)}({round(math.degrees(yaw), 2)}°), roll: {round(roll, 2)}({round(math.degrees(roll), 2)}°), pitch: {round(pitch, 2)}({round(math.degrees(pitch), 2)}°)')
 
     @dispatch
     def stand(self) -> None:
-        # Stand
-        #pprint(self.get_robot_state())
         cmd = RobotCommandBuilder.synchro_stand_command()
-
         self.command_client.robot_command(cmd)
 
     def sit(self) -> None:
@@ -118,7 +115,7 @@ class Spot_Control:
             distance = math.sqrt(x ** 2 + y ** 2 + z ** 2)
             t = d/distance
 
-        # Splites commands up if specified turn value is too high. Works, but can probably be improved
+        # Splits commands up if specified turn value is too high. Works, but can probably be improved
         if abs(z) >= 1.5:
             num_steps = int(abs(z) / 1.5)
             leftover_x = x % num_steps
@@ -129,7 +126,7 @@ class Spot_Control:
                 self._send_walk_command(x/num_steps, y/num_steps, 1.5 if z > 0 else -1.5)
             self._send_walk_command(leftover_x, leftover_y, leftover_z if z > 0 else -leftover_z)
         else:
-            self._send_walk_command(x, y, z)
+            self._send_walk_command(x, y, z, t = t)
         
 
     @dispatch
