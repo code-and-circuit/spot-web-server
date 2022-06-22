@@ -357,7 +357,7 @@ class Background_Process:
     Attributes:
         _sdk(bosdyn.client.sdk.Sdk): The Boston Dynamics sdk object
         robot(bosdyn.client.robot.Robot): The Boston Dynamics robot object
-        _robot_control(Spot_Control): The object used to send motor commands to Spot
+        _robot_control(spot_control.Spot_Control): The object used to send motor commands to Spot
         
         _command_client(bosdyn.client.robot_command.RobotCommandClient): The Boston Dynamics command client object
         _lease_client(bosdyn.client.lease.LeaseClient): The Boston Dynamics lease client object
