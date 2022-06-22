@@ -1,3 +1,19 @@
+"""
+Manages websockets and websocket actions
+
+Classes:
+
+    Websocket
+    Websocket_list
+    
+Functions:
+
+    close_all_sockets()
+    
+Misc Variables:
+
+    websocket_list (Websocket_list): the list to hold the websockets
+"""
 import asyncio
 import json
 import time
@@ -8,35 +24,63 @@ from threading import Thread
 from SpotSite import background_process
 from SpotSite import spot_logging as l
 
-# A class to hold a websocket and its information
-# I did not write the class for the python websocket
-
-
 class Websocket:
+    """
+    A class to hold a websocket and its information
+    
+    Attributes:
+        socket(WebSocket): The websocket
+        alive(bool): Whether the socket should be alive
+        list(Websocket_List): the websocket list
+        index(int): the index (or id) of the websocket
+        
+    Methods:
+        open():
+            Opens the websocket
+        close():
+            Closes the socket
+        keep_alive():
+            Keeps the socket alive
+        set_socket(socket):
+            Sets the socket passed from the client
+        
+    """
     def __init__(self, socket: object, socket_list: list, index: str):
         self.socket = socket
         self.alive = True
         self.list = socket_list
         self.index = index
 
-    # Opens the socket
     async def open(self) -> None:
+        """
+        Opens the websocket
+        
+        """
         await self.socket.accept()
-
-    # Closes the socket
+        
     async def close(self) -> None:
+        """
+        Closes the socket
+
+        """
         await self.socket.close()
 
-    # Keeps the socket alive
     async def keep_alive(self) -> None:
+        """
+        Keeps the socket alive
+
+        Raises:
+            RuntimeError: raised if issues with the websocket arise
+        """
         while self.alive:
-            # The program relies on a command being sent from the client when
-            # the webpage closes but this command is inconsistent based on what device is being used.
-            # The socket is removed from the list of active sockets if an error occurs
+            """
+            The program relies on a command being sent from the client when
+                the webpage closes but this command is inconsistent based on what device is being used.
+                The socket is removed from the list of active sockets if an error occurs
 
-            # TODO: Fix the issue in a better way. This is more of a temporary fix but might just stay because it's
-            # not worth the effort to figure it out. This works.
-
+            TODO: Fix the issue in a better way. This is more of a temporary fix but might just stay because it's
+                not worth the effort to figure it out. This works.
+            """
             newMessage = await self.socket.receive_text()
             if newMessage == "Disconnected":
                 continue
@@ -67,49 +111,82 @@ class Websocket:
         # and disconnecting
         self.list.remove_key(self.index)
 
-    # Sets the socket passed from the client
-    def set_socket(self, s: str) -> None:
-        self.socket = s
+    def set_socket(self, socket: object) -> None:
+        """
+        Sets the socket passed from the client
 
+        Args:
+            socket (object): the Websocket object
+        """
+        self.socket = socket
 
-# The list of all sockets and their indexes (indicies? this isn't an english class)
-# Also handles printing
 class Websocket_List:
+    """
+    The list of all sockets and their indexes (indicies?)
+        Also handles printing
+        
+    Attributes:
+        sockets(dict): a dictionary of all active sockets
+        keyboard_control_socket_index(int): the index of the socket with keyboard control
+        loop(AbstractEventLoop): the asyncio event loop
+    """
     def __init__(self):
         self.sockets = {}
         # A list of queued outputs
         self.keyboard_control_socket_index = -1
-        self.loop_is_running = False
         self.loop = asyncio.get_event_loop()
 
-    # Removes a socket from the list
     def remove_key(self, key: str) -> None:
+        """
+        Removes a socket from the list
+
+        Args:
+            key (str): the index of the socket to remove
+        """
         if key in self.sockets:
             self.sockets.pop(key, None)
 
     def _find_lowest_key(self) -> str:
+        """
+        Finds the lowest available number not in the list to be used for a new socket
+
+        Returns:
+            str: the number, as a string
+        """
         for i in range(0, len(self.sockets) + 1):
             if str(i) not in self.sockets:
                 return str(i)
-    # Adds a socket to the list
 
-    def add_socket(self, s: str) -> str:
-        # Chooses the minimum index needed for the incoming socket. Not technically needed but if it was not used,
-        # the socket indices could get large over time. Cleaner and easier to always use the smallest number necessary.
-        # The socket index is completely arbitrary as the client holds the index for its own socket. The index does not refer
-        # to a position in a list, it's simply an identifier. Maybe the term "ID" is better
+    def add_socket(self, socket: object) -> str:
+        """
+            # Adds a socket to the list
+
+
+        Args:
+            socket (object): the socket to be added
+
+        Returns:
+            str: the index of the socket, determined during the procedure
+        """
 
         new_index = self._find_lowest_key()
-        new_socket = Websocket(s, self, new_index)
+        new_socket = Websocket(socket, self, new_index)
         self.sockets[new_index] = new_socket
         return new_index
 
-    # Outputs messages to the client. Almost all messages are just output, but there is one that
-    # is sent when the background process is sucessfully started, so that all clients are updated to show that
-    # the background process is running
     async def print_out(self, socket_index: (int, str), message: str, all: bool = False, type: str = "output") -> None:
+        """
+        Outputs information to the client(s)
+
+        Args:
+            socket_index (int, str): the index of the socket to output to (-1 can be used to denote that there are multiple sockets)
+            message (str): the information to be outputted
+            all (bool, optional): whether all sockets should receive the information. Defaults to False.
+            type (str, optional): the type of information being sent. Defaults to "output".
+        """
         if socket_index == -1 and not all:
-            return print(message)
+            print(message)
+            return 
         try:
             if all:
                 for sI in self.sockets:
@@ -136,22 +213,48 @@ class Websocket_List:
                 # print(message)
                 # print("ERROR IN SOCKETS")
 
-    # Used to add an output to the queue of outputs
     def print(self, socket_index: (int, str), message: str, all: bool = False, type: str = "output") -> None:
-        
+        """
+        Takes information to be sent to ```print_out``` and creates an asynchronous task to output information
+
+        see ```print_out``` method for argument information
+        """
         asyncio.ensure_future(self.print_out(socket_index, message, all=all, type=type), loop=self.loop)
 
-    def start_keyboard_control(self, socket_index: (int, str)) -> None:
+    def start_keyboard_control(self, socket_index: str) -> None:
+        """
+        Allows a client to take keyboard control if another does not already have control
+
+        Args:
+            socket_index str: the index of the socket attemtping to take control
+        """
         if not background_process.bg_process.is_handling_keyboard_commands:
             background_process.bg_process.is_handling_keyboard_commands = True
             self.keyboard_control_socket_index = socket_index
 
-    def release_keyboard_control(self, socket_index: (int, str)) -> None:
+    def release_keyboard_control(self, socket_index: str) -> None:
+        """
+        Releases keyboard control from a socket with control to allow a different client to control the robot
+
+        Args:
+            socket_index (str): the index of the socket reliquishing control
+        """
+        
         if socket_index == self.keyboard_control_socket_index:
             self.keyboard_control_socket_index = -1
             background_process.bg_process.is_handling_keyboard_commands = False
 
-    def keys(self, keys_changed, socket_index: (int, str)) -> None:
+    def keys(self, keys_changed: list, socket_index: str) -> None:
+        """
+        Handles keyboard controls and relays them to the background process
+
+        See ```background_process.bg_process.keyboard``` method for implentation of keyboard inputs
+
+        Args:
+            keys_changed (list): the keys changed, both keypresses and keyups
+            socket_index (str): the index of the socket with the key changes
+        """
+        # Only the socket that currently has control can send commands
         if socket_index == self.keyboard_control_socket_index:
             background_process.bg_process.keyboard(keys_changed)
 
@@ -162,6 +265,10 @@ websocket_list = Websocket_List()
 
 
 def close_all_sockets() -> None:
+    """
+        Closes all sockets
+        Called when the server is shutting down
+    """
     for _, socket in websocket_list.sockets.items():
         socket.alive = False
     print("\033[92m" + "    Websockets" + "\033[0m" + ": Closing sockets")

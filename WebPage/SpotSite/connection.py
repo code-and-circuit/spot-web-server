@@ -1,3 +1,4 @@
+"""Websocket utility"""
 import json
 import typing as t
 from urllib import parse
