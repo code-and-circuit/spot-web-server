@@ -129,6 +129,24 @@ class Websocket_List:
         sockets(dict): a dictionary of all active sockets
         keyboard_control_socket_index(int): the index of the socket with keyboard control
         loop(AbstractEventLoop): the asyncio event loop
+        
+    Methods:
+        remove_key(key):
+            Removes a socket from the list
+        _find_lowest_key():
+            Finds the lowest available number not in the list to be used for a new socket
+        add_socket(socket):
+            Adds a socket to the list
+        print_out(socket_index, message, all, type):
+            Outputs information to the client(s)
+        print(socket_index, message, all, type):
+            Takes information to be sent to ```print_out``` and creates an asynchronous task to output information
+        start_keyboard_control(socket_index):
+            Allows a client to take keyboard control if another does not already have control
+        release_keyboard_control(socket_index):
+            Releases keyboard control from a socket with control to allow a different client to control the robot
+        keys(keys_changed, socket_index):
+            Handles keyboard controls and relays them to the background process
     """
     def __init__(self):
         self.sockets = {}
@@ -159,7 +177,7 @@ class Websocket_List:
 
     def add_socket(self, socket: object) -> str:
         """
-            # Adds a socket to the list
+        Adds a socket to the list
 
 
         Args:
