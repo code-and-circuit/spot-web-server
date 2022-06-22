@@ -1,3 +1,32 @@
+"""
+    Main server file
+
+    Classes:
+        
+        SqliteConnection
+        Background_Process
+        
+    Functions:
+
+        start_thread(func, args)
+        close()
+        socket_print(socket_index, message, all, type)
+        print_exception(socket_index)
+        is_primitive(obj) -> bool
+        is_not_special_function(obj) -> bool
+        get_name(obj, lower) -> str
+        is_jsonable(x) -> bool
+        get_members(obj, depth) -> dict
+        lock_until_finished(func) -> function
+        do_action(action, socket_index, args)
+        
+    Misc. variables:
+
+        bg_process
+        invalid_keywords
+        max_depth
+        lock
+"""
 # General system imports
 import time
 import sys
@@ -23,6 +52,7 @@ import sqlite3
 from pathlib import Path
 import os
 from PIL import Image
+from io import BytesIO
 
 # Interproject imports
 from SpotSite import spot_control
@@ -52,14 +82,21 @@ max_depth = 5
 
 lock = threading.Lock()
 
-
-#TODO: Behavior fault exception catching (trying to run commands while not self-righted (BehaviorFaultError))
-
 def start_thread(func, args: tuple = ()):
+    """Starts a new thread from the given function to
+
+    Args:
+        func (_type_): the function
+        args (tuple, optional): any arguments passed to the function. Defaults to ().
+    """
     thread = Thread(target=func, args=args)
     thread.start()
 
 def close():
+    """
+    Helper function to help close the server properly. 
+    
+    """    
     bg_process.is_running = False
     while bg_process._is_shutting_down:
         pass
@@ -67,33 +104,95 @@ def close():
           "\033[0m" + ": Disconnecting from robot")
 
 def socket_print(socket_index: (int, str), message: str, all: bool = False, type: str ="output"):
+    """
+    Outputs information to a given socket
+
+    Args:
+        socket_index (int, str): the index of the socket object
+        message (str): the information being sent
+        all (bool, optional): whether all sockets should receive the information. Defaults to False.
+        type (str, optional): what kind of information is being sent. Defaults to "output".
+    """    
     websocket.websocket_list.print(
         socket_index, message, all=all, type=type)
 
 def print_exception(socket_index: (int, str)):
+    """
+    Prints an exception with relevant information to a given socket
+
+    Args:
+        socket_index (int, str): the index of the socket
+    """    
     exc_type, exc_obj, exc_tb = sys.exc_info()
     fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
     socket_print(socket_index, f"<red><b>Exception</b></red><br>{exc_obj}<br>&emsp; in <u>{fname}</u> line <red>{exc_tb.tb_lineno}</red>")
 
-def is_primitive(obj: object) -> object:
+def is_primitive(obj: object) -> bool:
+    """
+    Tells whether an object is of a primitive type
+
+    Args:
+        obj (object): The object
+
+    Returns:
+        bool: Whether the object type is primitive
+    """    
     return not hasattr(obj, '__dict__')
 
 def is_not_special_function(obj: object) -> bool:
+    """
+    Helper function to determine whether an object is a dunder method
+
+    Args:
+        obj (object): the object
+
+    Returns:
+        bool: Whether or not the object is a dunder method
+    """    
     return not(obj[0].startswith("__") and obj[0].endswith("__"))
 
 def get_name(obj: object, lower: bool = True) -> str:
+    """
+    Gets the name of an object
+
+    Args:
+        obj (object): The object
+        lower (bool, optional): Whether or not the returned string should be lowercase. Defaults to True.
+
+    Returns:
+        str: The name of the object
+    """    
     name = obj.__name__ if hasattr(obj, '__name__') else type(obj).__name__
 
     return name.lower() if lower else name
 
 def is_jsonable(x: object) -> bool:
+    """
+    Tests whether an object can be passed in a JSON request
+
+    Args:
+        x (object): The object
+
+    Returns:
+        bool: Whether the object can be passed through a JSON request
+    """    
     try:
         json.dumps(x)
         return True
     except (TypeError, OverflowError):
         return False
 
-def get_members(obj: object, depth: int = 0) -> dict:  
+def get_members(obj: object, depth: int = 0) -> dict:
+    """
+    Recursively gets attributes of an object
+
+    Args:
+        obj (object): The targrt object
+        depth (int, optional): The recursion depth. Defaults to 0.
+
+    Returns:
+        dict: A nested dictionary containing all attributes of objects
+    """    
     # This is all a single-line return statement. 
     # Did it just for fun, it was boring with multiple lines
     
@@ -133,6 +232,14 @@ def get_members(obj: object, depth: int = 0) -> dict:
     } if hasattr(obj, '__dict__') or isinstance(obj, dict) else obj) if depth < max_depth else "MAX RECURSION"
 
 def lock_until_finished(func):
+    """
+    Locks the thread until a function is finished executing
+    
+    Necessary for using SQL in an asynchronous context
+
+    Args:
+        func (callable): The function
+    """    
     def wrapper(*args, **kwargs):
         lock.acquire(True)
         val = func(*args, **kwargs)
@@ -141,6 +248,27 @@ def lock_until_finished(func):
     return wrapper
 
 class SqliteConnection:
+    """
+    A class to manage the connection to the SQL database containing programs
+    
+    Attributes:
+        _connection (sqlite3.Connection): the connection to the database
+        _cursor (sqlite3.Cursor): the cursor used to interact with the database
+        
+    Methods:
+        _name_exists(name):
+            Tells whether a program already exists with the given name
+        write_program(name, program):
+            Writes a program to the database
+        delete_program(name):
+            Deletes a program from the database
+        get_program(name):
+            Returns a program with a given name
+        get_all_programs():
+            Returns all programs in the database
+        close()
+            Closes the cursor and the database connection
+    """    
     @lock_until_finished
     def __init__(self):
         path = Path(__file__).resolve().parent.parent
@@ -151,11 +279,26 @@ class SqliteConnection:
         self._cursor.execute('CREATE TABLE IF NOT EXISTS Programs (name TEXT, program TEXT)')
     
     def _name_exists(self, name: str) -> bool:
+        """Tells whether a program already exists with the given name
+
+        Args:
+            name (str): the name of the program
+
+        Returns:
+            bool: whether the program exists
+        """        
         query = self._cursor.execute("SELECT EXISTS (SELECT 1 FROM Programs WHERE name=? COLLATE NOCASE) LIMIT 1", (name,))
         return query.fetchone()[0]
     
     @lock_until_finished
-    def write_program(self, name: bool, program: (tuple, list)):
+    def write_program(self, name: str, program: (tuple, list)):
+        """
+        Writes a program to the database
+
+        Args:
+            name (str): the name of the database
+            program (tuple, list): the program
+        """        
         if self._name_exists(name):
             self._cursor.execute('UPDATE Programs SET program = ? WHERE name = ?', (program, name))
         else:
@@ -164,26 +307,185 @@ class SqliteConnection:
     
     @lock_until_finished  
     def delete_program(self, name: str):
+        """
+        Deletes a program from the database
+
+        Args:
+            name (str): the name of the program
+        """        
         self._cursor.execute("DELETE FROM Programs WHERE name=?", (name,))
         self._connection.commit()
         
     @lock_until_finished
     def get_program(self, name: str) -> tuple:
+        """
+        Returns a program with a given name
+
+        Args:
+            name (str): the name of the program
+
+        Returns:
+            tuple: the program
+        """        
         query = self._cursor.execute("SELECT program FROM Programs WHERE name = ?", (name,))
         command_string = ''.join(query.fetchone()[0])
         return eval(command_string)
     
     @lock_until_finished
     def get_all_programs(self) -> tuple:
+        """
+        Returns all programs in the database
+
+        Returns:
+            tuple: The list of programs
+        """        
         query = self._cursor.execute("SELECT name, program FROM Programs").fetchall()
         return query
 
     @lock_until_finished
     def close(self):
+        """
+        Closes the cursor and the database connection
+        """        
         self._cursor.close()
         self._connection.close()
 
 class Background_Process:
+    """
+    The main class to manage a connection with Spot and perform tasks
+    
+    Attributes:
+        _sdk(bosdyn.client.sdk.Sdk): The Boston Dynamics sdk object
+        robot(bosdyn.client.robot.Robot): The Boston Dynamics robot object
+        _robot_control(Spot_Control): The object used to send motor commands to Spot
+        
+        _command_client(bosdyn.client.robot_command.RobotCommandClient): The Boston Dynamics command client object
+        _lease_client(bosdyn.client.lease.LeaseClient): The Boston Dynamics lease client object
+        _image_client(bosdyn.client.image.ImageClient): The Boston Dynamics image client object
+        _estop_client(bosdyn.client.estop.EstopClient): The Boston Dyanmics estop client object
+        _time_sync_client(bosdyn.client.time_sync.TimeSyncClient): The Boston Dynamics time sync client 
+        
+        _lease(bosdyn.client.lease.Lease): The Boston Dynamics lease object
+        _lease_keep_alive(bosdyn.client.lease.LeaseKeepAlive): The Boston Dynamics object to keep the active lease alive
+        _estop_keep_alive(bosdyn.client.estop.EstopKeepAlive): The Boston Dynamics object to keep the active estop alive
+        _time_sync_thread(bosdyn.client.time_sync.TimeSyncThread): The Boston Dyanmics object for maintaining a time sync with Spot
+        
+        is_running(bool): Whether the main background process is running
+        _is_connecting(bool): Whether the server is currently connecting a service
+        program_is_running(bool): Whether a program is currently running
+        is_running_commands(bool): Whether the server is currently running commands from the command queue
+        is_handling_keyboard_commands(bool): Whether the server is currently handling commands from the keyboard
+        robot_is_estopped(bool): Whether Spot is currently estopped
+        _show_video_feed(bool): Whether video feed should be displayed and active
+        _is_shutting_down(bool): Whether the server is in the process of shutting down
+        _has_lease(bool): Whether the server has an active lease with Spot
+        _has_estop(bool): Whether the server has active estop cut authority with Spot
+        _has_time_sync(bool): Whether the server has an active time sync with Spot
+        keyboard_control_mode(str): Which keyboard control mode is active ```"Walk" or "Stand"```
+        active_program_name(str): The name of the program currently being executed
+        program_socket_index(str): The index of the socket that send the command to execute the currently executing program
+        is_accepting_commands(bool): Whether the server is currenly accepting robot commands
+        command_queue(list): The queue of commands to be sent to Spot
+        _keys_up(list): The list of keyups in the last frame from the socket with keyboard control authority
+        _keys_down(list): The list of keypresses in the last frame from the socket with keyboard control authority
+        image_stitcher(stitch_images.Stitcher): The object used to stitch the right and left front camera images    
+        _program_database(SqliteConnection): The object used to maintain a connection with and perform tasks on the SQL database
+        
+    Methods:
+        turn_on(socket_index):
+            Attempts to turn on Spot
+        turn_off(socket_index):
+            Attempts to turn off Spot
+        _acquire_lease(socket_index):
+            Attemps to acquire a lease from Spot
+        _acquire_estop(socket_index):
+            Attempts to acquire estop cut authority from Spot
+        _acquire_time_sync(socket_index):
+            Attempts to acquire a time sync with 
+        _robot_is_on_wifi(ip):
+            Tells whether Spot is detected at a particular IP address on the wifi
+        _connect_to_robot(socket_index):
+            Attempts to connect to Spot
+        _connect_all(socket_index):
+            Attempts to connect to Spot, acquire an estop, and acquire a lease
+        estop():
+            Estops Spot
+        release_estop():
+            Releases any active Estop on Spot
+        toggle_estop():
+            Toggles the estop on Spot
+        _clear(socket_index):
+            Disconnects all services and resets all information
+        _clear_lease():
+            Returns and clears any active lease with Spot
+        _clear_estop():
+            Returns and clears any active estop authority with Spot
+        _clear_time_sync():
+            Returns and clears any active time sync with Spot
+        _disconnect_from_robot():
+            Disconnects from Spot
+        start(socket_index):
+            Attempts to start the main background process, including connecting all services
+        _background_loop(socket_index):
+            Starts and houses the main background loop
+        _keep_robot_on(socket_index):
+            Turns Spot back on if it turns off for no discernable reason
+        _execute_commands(socket_index):
+            Executes commands in the command queue
+        _run_program(socket_index):
+            Runs the program corresponding to the name of the active program being executed
+        _start_video_loop():
+            Creates a thread to start the main video loop
+        _video_loop():
+            Houses and runs the main video feed loop
+        get_robot_state():
+            Returns the state of Spot (Boston Dyanmics RobotState object)
+        update_robot_state():
+            Updates clients with the most recent robot state information
+        _stitch_images(image1, image2):
+            Sttiches the right and left from camera images
+        _encode_base64(image):
+            Encodes an image in base64
+        _get_images():
+            Gets and displays all relevant images for the video feed
+        _get_image(camera_name):
+            Gets and updates the client with an image
+        _do_command(command):
+            Executes a command from the queue
+        key_up(key):
+            Returns whether a keyup event happened for a specific key in the last frame
+        key_down(key):
+            Returns whether a keydown event happened for a specific key in the last frame
+        _set_keys(keys_changed):
+            Sets object attributes to the most recent keyboard events to be used in other methods
+        _do_keyboard_commands():
+            Executes a command based on which keys were pressed in the last frame
+        keyboard(keys_changed):
+            Updates the keys changed, runs keyboard commands, and updates client with the control mode (Walk or Stand)
+        start_bg_process(socket_index):
+            Creates a thread so the background process can be run in the background
+        end_bg_process():
+            Updates the server with information to shut down
+        get_programs():
+            Returns a list of all programs in the database
+        add_program(name, program):
+            Adds a program to the database
+        remove_program(name):
+            Removes a program from the database
+        set_program_to_run(name):
+            Sets a program to run
+        get_state_of_everything():
+            Returns a nested dictionary of the state of all attributes of the main background process class
+        get_keyboard_control_state():
+            Returns information about the keyboard control state
+        get_internal_state():
+            Returns information about the internal state of the server
+        get_server_state():
+            Returns the internal state and the keyboard control state
+
+        
+        
+    """    
     def __init__(self):
         # Boilerplate
         self._sdk = None
@@ -219,7 +521,7 @@ class Background_Process:
 
         self.keyboard_control_mode = "Walk"
         self.active_program_name = ""
-        self.program_socket_index = 0
+        self.program_socket_index = ""
 
         self._is_accepting_commands = False
         self.command_queue = []
@@ -230,9 +532,18 @@ class Background_Process:
         self._program_database = SqliteConnection()
         
     def turn_on(self, socket_index: (int, str)) -> bool:
+        """
+        Attempts to turn on Spot
+
+        Args:
+            socket_index (int, str): The index of the socket to display information to
+
+        Returns:
+            bool: Whether the action was successful
+        """        
         socket_print(socket_index, "Powering On...")
         self.robot.power_on(timeout_sec=20)
-        # Checks to make sure that the robot successfully powered on
+        # Checks to make sure that Spot successfully powered on
         if not self.robot.is_powered_on():
             socket_print(socket_index, "<red>Robot Power On Failed</red>")
             return False
@@ -241,9 +552,18 @@ class Background_Process:
             return True
 
     def turn_off(self, socket_index: (int, str)) -> bool:
+        """
+        Attempts to turn off Spot
+
+        Args:
+            socket_index (int, str): The index of the socket to display information to
+
+        Returns:
+            bool: Whether the action was successful
+        """        
         socket_print(socket_index, "Powering off...")
         self.robot.power_off(cut_immediately=False, timeout_sec=20)
-        # Checks to make sure that the robot successfully powered off
+        # Checks to make sure that Spot successfully powered off
         if self.robot.is_powered_on():
             socket_print(socket_index, "<red>Robot power off failed</red>")
             return False
@@ -252,6 +572,18 @@ class Background_Process:
             return True
 
     def _acquire_lease(self, socket_index: (int, str)) -> bool:
+        """
+        Attempts to acquire a lease from Spot
+
+        Args:
+            socket_index (int, str): The index of the socket to display information to
+
+        Raises:
+            Exception: Raises if Spot is estopped
+
+        Returns:
+            bool: Whether the action was successful
+        """        
         if self._lease_client is not None:
             socket_print(socket_index, "Lease already acquired")
             return True
@@ -284,6 +616,16 @@ class Background_Process:
         return success
 
     def _acquire_estop(self, socket_index: (int, str)) -> bool:
+        """
+        Attempts to acquire estop cut authority from Spot
+
+        Args:
+            socket_index (int, str): The index of the socket to display information to
+
+        Returns:
+            bool: Whether the action was successful
+        """        
+        
         if self._estop_client is not None:
             socket_print(socket_index, "Estop already acquired")
             return True
@@ -315,6 +657,15 @@ class Background_Process:
         return success
 
     def _acquire_time_sync(self, socket_index: (int, str)) -> bool:
+        """
+        Attempts to acquire a time sync with Spot
+
+        Args:
+            socket_index (int, str): The socket of the index to display information to
+
+        Returns:
+            bool: Whether the action was successful
+        """        
         if self._time_sync_client is not None:
             return True
 
@@ -341,10 +692,34 @@ class Background_Process:
         return success
 
     def _robot_is_on_wifi(self, ip: str = secrets.ROBOT_IP) -> bool:
+        """
+        Tells whether Spot is detected at a particular IP address on the wifi
+
+        Args:
+            ip (str, optional): The ip of Spot. Defaults to secrets.ROBOT_IP.
+
+        Returns:
+            bool: Whether a ping was successful
+        """        
         response = os.system(f"ping {ip} -c 1")
         return True if response == 0 else False
 
     def _connect_to_robot(self, socket_index: (int, str)) -> bool:
+        """
+        Attempts to connect to Spot
+        
+        Acquires clients and creates necessary objects for communication and interation with Spot
+
+        Args:
+            socket_index (int, str): The socket of the index to display information to
+
+        Raises:
+            Exception: Raises if a time sync could not be acquired with Spot
+
+        Returns:
+            bool: Whether the action was successful
+        """        
+        
         if self.robot is not None:
             socket_print(socket_index, "Robot is already connected")
             return True
@@ -365,7 +740,7 @@ class Background_Process:
                 secrets.ROBOT_USERNAME, secrets.ROBOT_PASSWORD)
 
             if not self._acquire_time_sync(socket_index):
-                raise
+                raise Exception("Could not acquire time sync with Spot")
 
             self._image_client = self.robot.ensure_client(
                 ImageClient.default_service_name)
@@ -382,7 +757,7 @@ class Background_Process:
         except:
             print_exception(socket_index)
             socket_print(
-                socket_index, "<red>Failed to connect to the robot</red>")
+                socket_index, "<red>Failed to connect to Spot</red>")
             success = False
             self._disconnect_from_robot()
 
@@ -392,6 +767,15 @@ class Background_Process:
         return success
 
     def _connect_all(self, socket_index: (int, str)) -> bool:
+        """
+        Attempts to connect to Spot, acquire an estop, and acquire a lease
+
+        Args:
+            socket_index (int, str): The socket of the index to output to
+
+        Returns:
+            bool: Whether all actions were successful
+        """    
         socket_print(socket_index, "Starting...")
 
         if not self._connect_to_robot(socket_index):
@@ -407,6 +791,9 @@ class Background_Process:
         return True
 
     def estop(self) -> None:
+        """
+        Estops Spot
+        """        
         if not self._has_estop:
             return
         if self._estop_keep_alive and not self.robot.is_estopped():
@@ -414,11 +801,14 @@ class Background_Process:
             self.robot_is_estopped = True
             self._estop_keep_alive.settle_then_cut()
             self._is_accepting_commands = False
-            # Clear command queue so the robot does not execute commands the instant
+            # Clear command queue so Spot does not execute commands the instant
             # the estop is released
             self.command_queue = []
 
     def release_estop(self) -> None:
+        """
+        Releases any active Estop on Spot
+        """        
         if not self._has_estop:
             return
         if self._estop_keep_alive and self.robot.is_estopped():
@@ -427,6 +817,9 @@ class Background_Process:
             self._estop_keep_alive.allow()
 
     def toggle_estop(self) -> None:
+        """
+        Toggles the estop on Spot
+        """       
         if not self._has_estop:
             return
 
@@ -436,6 +829,12 @@ class Background_Process:
             self.estop()
 
     def _clear(self, socket_index: (int, str)) -> None:
+        """
+        Disconnects all services and resets all information
+
+        Args:
+            socket_index (int, str): The index of the socket to output to
+        """        
         self._is_shutting_down = True
         self._show_video_feed = False
         self._clear_lease()
@@ -460,6 +859,9 @@ class Background_Process:
         self._is_shutting_down = False
 
     def _clear_lease(self) -> None:
+        """
+        Returns and clears any active lease with Spot
+        """        
         self._has_lease = False
         if self.robot:
             if self._lease_keep_alive and self.robot.is_powered_on():
@@ -480,6 +882,9 @@ class Background_Process:
         socket_print(-1, "clear", all=True, type="lease_toggle")
 
     def _clear_estop(self) -> None:
+        """
+        Returns and clears any active estop authority with Spot
+        """        
         if self._has_lease:
             self._clear_lease()
 
@@ -494,6 +899,9 @@ class Background_Process:
         socket_print(-1, "clear", all=True, type="estop_toggle")
 
     def _clear_time_sync(self) -> None:
+        """
+        Returns and clears any active time sync with Spot
+        """        
         if not self.robot:
             return
 
@@ -505,6 +913,9 @@ class Background_Process:
         self._has_time_sync = False
 
     def _disconnect_from_robot(self) -> None:
+        """
+        Disconnects from Spot
+        """        
         if self._has_lease or self._has_estop:
             self._clear_estop()
         if self._has_time_sync:
@@ -521,6 +932,12 @@ class Background_Process:
         socket_print(-1, "clear", all=True, type="robot_toggle")
 
     def start(self, socket_index: (int, str)) -> None:
+        """
+        Attempts to start the main background process, including connecting all services
+
+        Args:
+            socket_index (int, str): The index of the socket to output to
+        """        
         socket_print(socket_index, 'Connecting...')
 
         if not self._connect_all(socket_index):
@@ -535,6 +952,15 @@ class Background_Process:
         self._clear(socket_index)
 
     def _background_loop(self, socket_index: (int, str)) -> None:
+        """
+        Starts and houses the main background loop
+
+        Args:
+            socket_index (int, str): The index of the socket to output to
+
+        Raises:
+            Exception: Raises if Spot fails to turn on
+        """        
         try:
             if not self.turn_on(socket_index):
                 raise Exception("<red>Failed to turn robot on.</red>")
@@ -549,6 +975,15 @@ class Background_Process:
             print_exception(socket_index)
 
     def _keep_robot_on(self, socket_index: (int, str)) -> None:
+        """
+        Turns Spot back on if it turns off for no discernable reason
+
+        Args:
+            socket_index (int, str): The index of the socket to output to
+
+        Raises:
+            Exception: Raises if Spot fails to turn on
+        """        
         if self.robot is None:
             self.is_running = false
             return
@@ -558,6 +993,12 @@ class Background_Process:
                 raise Exception("Failed to turn robot back on")
 
     def _execute_commands(self, socket_index: (int, str)) -> None:
+        """
+        Executes commands in the command queue
+
+        Args:
+            socket_index (int, str): The index of the socket to output to
+        """        
         if self.command_queue:
             self.is_running_commands = True
             self._robot_control.socket_index = -1
@@ -571,6 +1012,12 @@ class Background_Process:
             self.is_running_commands = False
 
     def _run_programs(self, socket_index: (int, str)) -> None:
+        """
+        Runs the program corresponding to the name of the active program being executed
+
+        Args:
+            socket_index (int, str): The index of the socket to output to
+        """        
         if self.program_is_running:
             program = self._program_database.get_program(self.active_program_name)
             try:
@@ -581,11 +1028,17 @@ class Background_Process:
             self.program_is_running = False
 
     def _start_video_loop(self) -> None:
+        """
+        Creates a thread to start the main video loop
+        """        
         self._show_video_feed = True
 
         start_thread(self._video_loop)
 
     def _video_loop(self) -> None:
+        """
+        Houses and runs the main video feed loop
+        """        
         self.image_stitcher = stitch_images.Stitcher()
         start_thread(self.image_stitcher.start_glfw_loop)
         while self._show_video_feed:
@@ -593,10 +1046,19 @@ class Background_Process:
             self.update_robot_state()
             
     def get_robot_state(self) -> object:
+        """
+        Returns the state of Spot (Boston Dyanmics RobotState object)
+
+        Returns:
+            object: The object containing Spot state
+        """        
         if self._robot_control is not None:
             return self._robot_control.get_robot_state()
     
     def update_robot_state(self) -> None:
+        """
+        Updates clients with the most recent robot state information
+        """        
         state = self.get_robot_state()
         power_state = state.power_state
         battery_percentage = power_state.locomotion_charge_percentage.value
@@ -605,12 +1067,31 @@ class Background_Process:
         socket_print(-1, battery_runtime, all=True, type="battery_runtime")
 
     def _stitch_images(self, image1: bosdyn.client.image, image2: bosdyn.client.image) -> Image:
+        """
+        Sttiches the right and left from camera images
+
+        Args:
+            image1 (bosdyn.client.image): The right camera image
+            image2 (bosdyn.client.image): The left camera image
+
+        Returns:
+            Image: The stitched image
+        """        
         try:
             return self.image_stitcher.stitch(image1, image2)
         except bosdyn.client.frame_helpers.ValidateFrameTreeError:
             socket_print(-1, "<red><bold>Issue with cameras, robot must be rebooted</bold></red>", all=True)
 
-    def _encode_base64(self, image) -> str:
+    def _encode_base64(self, image: Image) -> str:
+        """
+        Encodes an image in base64
+
+        Args:
+            image (Image): The image
+
+        Returns:
+            str: The image bytes encoded in base64
+        """        
         if image is None:
             return
         buf = io.BytesIO()
@@ -621,6 +1102,9 @@ class Background_Process:
         return base64.b64encode(bytes_image).decode("utf8")
 
     def _get_images(self) -> None:
+        """
+        Gets and displays all relevant images for the video feed
+        """        
         try:
             self._get_image("front")
             self._get_image("back")
@@ -628,7 +1112,12 @@ class Background_Process:
             socket_print(-1, e, all=True)
 
     def _get_image(self, camera_name: str) -> None:
-        from io import BytesIO
+        """
+        Gets and updates the client with an image
+
+        Args:
+            camera_name (str): The name of the desired image
+        """        
         if camera_name == "front":
             front_right = self._image_client.get_image_from_sources(
                 ["frontright_fisheye_image"])[0]
@@ -668,7 +1157,12 @@ class Background_Process:
                     all=True, type=("@" + camera_name))
 
     def _do_command(self, command: object) -> None:
-        # Executes commands from the queue
+        """
+        Executes a command from the queue
+
+        Args:
+            command (object): The command
+        """        
         action = command['Command']
 
         if action == 'stand':
@@ -708,34 +1202,66 @@ class Background_Process:
                 self._robot_control.walk(x, y, math.radians(z), t=l)
 
     def key_up(self, key: str) -> bool:
+        """
+        Returns whether a keyup event happened for a specific key in the last frame
+
+        Args:
+            key (str): The string representation of the key
+
+        Returns:
+            bool: Whether a keyup event occurred
+        """        
         return key in self._keys_up
 
     def key_down(self, key: str) -> bool:
+        """
+        Returns whether a keydown event happened for a specific key in the last frame
+        
+
+        Args:
+            key (str): The string representation of the key
+
+        Returns:
+            bool: Whether a keydown event occured
+        """        
         return key in self._keys_down
 
     def _set_keys(self, keys_changed: list) -> None:
+        """
+        Sets object attributes to the most recent keyboard events to be used in other methods
+
+        Args:
+            keys_changed (list): the list containing both keyup and keydown events
+        """        
         self._keys_down = keys_changed[0]
         self._keys_up = keys_changed[1]
 
     def _do_keyboard_commands(self) -> None:
-        
+        """
+        Executes a command based on which keys were pressed in the last frame
+        """        
         if self.key_up('space'):
             self.keyboard_control_mode = "Walk" if self.keyboard_control_mode == "Stand" else "Stand"
-            return self._robot_control.stand()
+            self._robot_control.stand()
+            return 
             self._robot_control.rotation = {"pitch": 0, "yaw": 0, "roll": 0}
 
         if self.key_down('x'):
-            return self._robot_control.roll_over()
+            self._robot_control.roll_over()
+            return 
 
         if self.key_down('z'):
-            return self._robot_control.self_right()
+            self._robot_control.self_right()
+            return 
 
         if self.key_down('r'):
             self._robot_control.rotation = {"pitch": 0, "yaw": 0, "roll": 0}
-            return self._robot_control.stand()
+            self._robot_control.stand()
+            return 
 
         if self.key_down('f'):
-            return self._robot_control.sit()
+            self._robot_control.sit()
+            return 
 
         # Takes advantage of fact that True == 1 and False == 0.
         # True - True = 0; True - False = 1; False - True = 0
@@ -749,6 +1275,12 @@ class Background_Process:
             self._robot_control.keyboard_rotate(dy, -dz, dx)
 
     def keyboard(self, keys_changed: list) -> None:
+        """
+        Updates the keys changed, runs keyboard commands, and updates client with the control mode (Walk or Stand)
+
+        Args:
+            keys_changed (list): The list of keyboard events in the last frame
+        """        
         self._set_keys(keys_changed)
 
         if self.program_is_running or self.is_running_commands or not self._robot_control or not self.robot.is_powered_on():
@@ -759,28 +1291,61 @@ class Background_Process:
                      all=True, type="control_mode")
 
     def start_bg_process(self, socket_index: (int, str)) -> None:
-        # Create a thread so the background process can be run in the background
+        """
+        Creates a thread so the background process can be run in the background
+
+        Args:
+            socket_index (int, str): The index of the socket to output to
+        """ 
         start_thread(self.start, args=(socket_index, ))
 
     def end_bg_process(self) -> None:
+        """
+        Updates the server with information to shut down
+        """        
         self.is_running = False
         self._show_video_feed = False
 
     def get_programs(self) -> list:
+        """
+        Returns a list of all programs in the database
+
+        Returns:
+            list: The list of programs
+        """        
         programs = self._program_database.get_all_programs()
         programs = {p[0]: eval(p[1]) for p in programs}
         
         return programs
 
     def add_program(self, name: str, program: list) -> None:
+        """
+        Adds a program to the database
+
+        Args:
+            name (str): The name of the program
+            program (list): The program content
+        """        
         self._program_database.write_program(name, json.dumps(program))
         socket_print(-1, self.get_programs(), all=True, type="programs")
         
     def remove_program(self, name: str) -> None:
+        """
+        Removes a program from the database
+
+        Args:
+            name (str): The name of the program
+        """        
         self._program_database.delete_program(name)
         socket_print(-1, self.get_programs(), all=True, type="programs")
 
     def set_program_to_run(self, name: str) -> None:
+        """
+        Sets a program to run
+
+        Args:
+            name (str): The name of the program
+        """        
         if not self._program_database._name_exists(name):
             return
 
@@ -788,9 +1353,21 @@ class Background_Process:
         self.active_program_name = name
 
     def get_state_of_everything(self) -> dict:
+        """
+        Returns a nested dictionary of the state of all attributes of the main background process class
+
+        Returns:
+            dict: The dictionary with the state of everything
+        """        
         return get_members(self)
     
     def get_keyboard_control_state(self) -> dict:
+        """
+        Returns information about the keyboard control state
+
+        Returns:
+            dict: The information
+        """        
         return {
             'is_handling_keyboard_commands': self.is_handling_keyboard_commands,
             'keyboard_control_name': self.keyboard_control_mode,
@@ -799,6 +1376,12 @@ class Background_Process:
         }
         
     def get_internal_state(self) -> dict:
+        """
+        Returns information about the internal state of the server
+
+        Returns:
+            dict: The information
+        """        
         return {
             'robot_is_connected': self._has_time_sync,
             'server_has_estop': self._has_estop,
@@ -812,14 +1395,31 @@ class Background_Process:
         }
         
     def get_server_state(self) -> dict:
+        """
+        Returns the internal state and the keyboard control state
+
+        Returns:
+            dict: The information
+        """        
         return self.get_internal_state() + self.get_keyboard_control_state()
 
 
-# Creates an instance of the background_process class used for interacting with the background process connected to the robot
+# Creates an instance of the background_process class used for interacting with the background process connected to Spot
 bg_process = Background_Process()
 
-# Handles actions from the client
-def do_action(action: str, socket_index: (int, str), args: any = None):
+def do_action(action: str, socket_index: (int, str), args: any = None) -> any:
+    """
+    Handles actions from the client
+
+
+    Args:
+        action (str): The name of the action
+        socket_index (int, str): The index of the socket to display to
+        args (any, optional): Any arguments. Defaults to None.
+
+    Returns:
+        any: Requested information
+    """    
     if action == "start":
         # Makes sure that the background process is not already running before it starts it
         if bg_process.is_running:
@@ -925,6 +1525,3 @@ def do_action(action: str, socket_index: (int, str), args: any = None):
 
     else:
         socket_print(socket_index, f"Command not recognized: {action}")
-
-
-#keyboard.add_hotkey('F4', bg_process.toggle_estop)
