@@ -25,3 +25,4 @@ SECRET_KEY = YOUR_DJANGO_SECRET_KEY
 - Clean up ```background_process.Background_Process._get_image``` when images cannot be stitched
 - Tell if the robot is executing a motor command and block or hold other commands until it is done
 - Create multiple walk commands if desired walking time exceeds the time allowed by the robot. If the desired time is too high, the robot says that the command is too far in the future
+- How to install and run
