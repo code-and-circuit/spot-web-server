@@ -71,6 +71,7 @@ class Spot_Control:
         cmd = RobotCommandBuilder.synchro_stand_command(
             footprint_R_body=rotation)
         self.command_client.robot_command(cmd)
+        # I know the line is long. I'm lazy.
         self.print(f'Rotated to yaw: {round(yaw, 2)}({round(math.degrees(yaw), 2)}°), roll: {round(roll, 2)}({round(math.degrees(roll), 2)}°), pitch: {round(pitch, 2)}({round(math.degrees(pitch), 2)}°)')
 
     @dispatch
