@@ -1008,7 +1008,10 @@ class Background_Process:
                     self._do_command(command)
                 except:
                     print_exception(socket_index)
-                self.command_queue.pop(0)
+                try:
+                    self.command_queue.pop(0)
+                except IndexError:
+                    socket_print(socket_index, "Command List is empty!")
             self.is_running_commands = False
 
     def _run_programs(self, socket_index: (int, str)) -> None:
@@ -1190,7 +1193,7 @@ class Background_Process:
             y = float(args['y'])
             z = float(args['z'])
 
-            l = math.sqrt(x * x + y * y + z * z)
+            l = math.sqrt(x * x + y * y)
 
             if (l < 1):
                 self._robot_control.walk(x, y, math.radians(z), t=1)
@@ -1387,7 +1390,7 @@ class Background_Process:
             'server_has_estop': self._has_estop,
             'server_has_lease': self._has_lease,
             'background_is_running': self.is_running,
-            'is_connecting_service': self.is_connecting,
+            'is_connecting_service': self._is_connecting,
             'is_running_commands': self.is_running_commands,
             'active_program_name': self.active_program_name,
             'program_socket_index': self.program_socket_index,
@@ -1401,7 +1404,9 @@ class Background_Process:
         Returns:
             dict: The information
         """        
-        return self.get_internal_state() + self.get_keyboard_control_state()
+        state = self.get_internal_state()
+        state.update(self.get_keyboard_control_state())
+        return state
 
 
 # Creates an instance of the background_process class used for interacting with the background process connected to Spot

@@ -53,7 +53,7 @@ def dispatch(func: callable):
         except bosdyn.client.robot_command.BehaviorFaultError:
             websocket.websocket_list.print(-1, f"<red>Robot has uncleared behavior faults!</red>:{func.__name__}", all=True)
         except Exception as e:
-            websocket.socket_list.print(-1, f"<red>ERROR</red>: {e}", all=True)
+            websocket.websocket_list.print(-1, f"<red>ERROR</red>: {e}", all=True)
             
     return dispatch_wrapper
 

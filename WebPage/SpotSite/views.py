@@ -465,7 +465,8 @@ def get_server_state(request: HttpRequest) -> JsonResponse:
         state = background_process.bg_process.get_server_state()
         try:
             return JsonResponse(state, status=200)
-        except Exception:
+        except Exception as e:
+            print(e)
             return JsonResponse({}, status=500)
         
 def get_internal_state(request: HttpRequest) -> JsonResponse:
