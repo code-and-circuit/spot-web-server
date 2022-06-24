@@ -12,9 +12,12 @@ password = YOUR_ROBOT_PASSWORD
 SECRET_KEY = YOUR_DJANGO_SECRET_KEY
 ```
 
-**Commands To Run**
-```cd path/to/WebPage```
-```uvicorn WebPage.asgi:application```
+**To Run**
+```
+run commands:
+cd path/to/WebPage
+uvicorn WebPage.asgi:application
+```
 Arguments: 
 - ```--host 0.0.0.0``` to make it publicy accessable
 - ```--reload``` to automatically reload when files are changed
