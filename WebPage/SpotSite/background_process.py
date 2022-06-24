@@ -985,7 +985,7 @@ class Background_Process:
             Exception: Raises if Spot fails to turn on
         """        
         if self.robot is None:
-            self.is_running = false
+            self.is_running = False
             return
         if not self.robot.is_powered_on() and not self.robot.is_estopped()\
             and not self._robot_control._is_rolled_over and self._has_lease:
