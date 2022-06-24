@@ -13,8 +13,8 @@ SECRET_KEY = YOUR_DJANGO_SECRET_KEY
 ```
 
 **To Run**
-```
 run commands:
+```
 cd path/to/WebPage
 uvicorn WebPage.asgi:application
 ```
