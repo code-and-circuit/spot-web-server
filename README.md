@@ -17,7 +17,7 @@
 - run ```uvicorn WebPage.asgi:application``` or ```python -m uvicorn WebPage.asgi:application``` or ```python3 -m uvicorn WebPage.asgi:application``` depending on your environment configuration.
 
 Arguments for run command: 
-- ```--host [Address]``` (0.0.0.0) to make it publicy accessable
+- ```--host [Address]``` (0.0.0.0 to make it publicy accessable)
 - ```--reload``` to automatically reload when files are changed
 
 Server runs on port 8000
