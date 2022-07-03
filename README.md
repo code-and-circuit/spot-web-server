@@ -17,7 +17,8 @@ run commands:
 ```
 cd path/to/spot-web-server/WebPage
 ```
-```uvicorn WebPage.asgi:application``` or ```python -m uvicorn WebPage.asgi:application``` or ```python3 -m uvicorn WebPage.asgi:application``` depending on your environment configuration
+```uvicorn WebPage.asgi:application``` or ```python -m uvicorn WebPage.asgi:application``` or ```python3 -m uvicorn WebPage.asgi:application``` depending on your environment configuration.
+
 Arguments: 
 - ```--host 0.0.0.0``` to make it publicy accessable
 - ```--reload``` to automatically reload when files are changed
