@@ -1,28 +1,26 @@
 # spot-web-server
 
-**NEEDED TO RUN**
-add a file to spot-web-server\WebPage\SpotSite named 
-```
-secrets.py
-```
-containing 
-```
-username = YOUR_ROBOT_USERNAME
-password = YOUR_ROBOT_PASSWORD
-SECRET_KEY = YOUR_DJANGO_SECRET_KEY
-```
-
 **To Run**
-```
-cd path/to/spot-web-server/WebPage
-```
-then
 
-```uvicorn WebPage.asgi:application``` or ```python -m uvicorn WebPage.asgi:application``` or ```python3 -m uvicorn WebPage.asgi:application``` depending on your environment configuration.
+- add a file to spot-web-server\WebPage\SpotSite named 
+  ```
+  secrets.py
+  ```
+  containing 
+  ```
+  username = YOUR_ROBOT_USERNAME
+  password = YOUR_ROBOT_PASSWORD
+  SECRET_KEY = YOUR_DJANGO_SECRET_KEY
+  ROBOT_IP = YOUR_SPOT_IP (192.168.80.3 by default)
+  ```
+- ```cd path/to/spot-web-server/WebPage```
+- run ```uvicorn WebPage.asgi:application``` or ```python -m uvicorn WebPage.asgi:application``` or ```python3 -m uvicorn WebPage.asgi:application``` depending on your environment configuration.
 
-Arguments: 
-- ```--host 0.0.0.0``` to make it publicy accessable
+Arguments for run command: 
+- ```--host [Address]``` (0.0.0.0) to make it publicy accessable
 - ```--reload``` to automatically reload when files are changed
+
+Server runs on port 8000
 
 **TODO**
 - File to hold default starting configuration (ex. whether the server is accepting commands)
