@@ -103,12 +103,12 @@ def close():
     print("\033[92m" + "    Background" +
           "\033[0m" + ": Disconnecting from robot")
 
-def socket_print(socket_index: (int, str), message: str, all: bool = False, type: str ="output"):
+def socket_print(socket_index: any, message: str, all: bool = False, type: str ="output"):
     """
     Outputs information to a given socket
 
     Args:
-        socket_index (int, str): the index of the socket object
+        socket_index any: the index of the socket object
         message (str): the information being sent
         all (bool, optional): whether all sockets should receive the information. Defaults to False.
         type (str, optional): what kind of information is being sent. Defaults to "output".
@@ -116,12 +116,12 @@ def socket_print(socket_index: (int, str), message: str, all: bool = False, type
     websocket.websocket_list.print(
         socket_index, message, all=all, type=type)
 
-def print_exception(socket_index: (int, str)):
+def print_exception(socket_index: any):
     """
     Prints an exception with relevant information to a given socket
 
     Args:
-        socket_index (int, str): the index of the socket
+        socket_index any: the index of the socket
     """    
     exc_type, exc_obj, exc_tb = sys.exc_info()
     fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
@@ -291,7 +291,7 @@ class SqliteConnection:
         return query.fetchone()[0]
     
     @lock_until_finished
-    def write_program(self, name: str, program: (tuple, list)):
+    def write_program(self, name: str, program: tuple):
         """
         Writes a program to the database
 
@@ -531,12 +531,12 @@ class Background_Process:
         self.image_stitcher = None
         self._program_database = SqliteConnection()
         
-    def turn_on(self, socket_index: (int, str)) -> bool:
+    def turn_on(self, socket_index: any) -> bool:
         """
         Attempts to turn on Spot
 
         Args:
-            socket_index (int, str): The index of the socket to display information to
+            socket_index any: The index of the socket to display information to
 
         Returns:
             bool: Whether the action was successful
@@ -551,12 +551,12 @@ class Background_Process:
             socket_print(socket_index, "Powered On")
             return True
 
-    def turn_off(self, socket_index: (int, str)) -> bool:
+    def turn_off(self, socket_index: any) -> bool:
         """
         Attempts to turn off Spot
 
         Args:
-            socket_index (int, str): The index of the socket to display information to
+            socket_index any: The index of the socket to display information to
 
         Returns:
             bool: Whether the action was successful
@@ -571,12 +571,12 @@ class Background_Process:
             socket_print(socket_index, "Powered Off")
             return True
 
-    def _acquire_lease(self, socket_index: (int, str)) -> bool:
+    def _acquire_lease(self, socket_index: any) -> bool:
         """
         Attempts to acquire a lease from Spot
 
         Args:
-            socket_index (int, str): The index of the socket to display information to
+            socket_index any: The index of the socket to display information to
 
         Raises:
             Exception: Raises if Spot is estopped
@@ -615,12 +615,12 @@ class Background_Process:
 
         return success
 
-    def _acquire_estop(self, socket_index: (int, str)) -> bool:
+    def _acquire_estop(self, socket_index: any) -> bool:
         """
         Attempts to acquire estop cut authority from Spot
 
         Args:
-            socket_index (int, str): The index of the socket to display information to
+            socket_index any: The index of the socket to display information to
 
         Returns:
             bool: Whether the action was successful
@@ -656,12 +656,12 @@ class Background_Process:
 
         return success
 
-    def _acquire_time_sync(self, socket_index: (int, str)) -> bool:
+    def _acquire_time_sync(self, socket_index: any) -> bool:
         """
         Attempts to acquire a time sync with Spot
 
         Args:
-            socket_index (int, str): The socket of the index to display information to
+            socket_index any: The socket of the index to display information to
 
         Returns:
             bool: Whether the action was successful
@@ -704,14 +704,14 @@ class Background_Process:
         response = os.system(f"ping {ip} -c 1")
         return True if response == 0 else False
 
-    def _connect_to_robot(self, socket_index: (int, str)) -> bool:
+    def _connect_to_robot(self, socket_index: any) -> bool:
         """
         Attempts to connect to Spot
         
         Acquires clients and creates necessary objects for communication and interation with Spot
 
         Args:
-            socket_index (int, str): The socket of the index to display information to
+            socket_index any: The socket of the index to display information to
 
         Raises:
             Exception: Raises if a time sync could not be acquired with Spot
@@ -766,12 +766,12 @@ class Background_Process:
 
         return success
 
-    def _connect_all(self, socket_index: (int, str)) -> bool:
+    def _connect_all(self, socket_index: any) -> bool:
         """
         Attempts to connect to Spot, acquire an estop, and acquire a lease
 
         Args:
-            socket_index (int, str): The socket of the index to output to
+            socket_index any: The socket of the index to output to
 
         Returns:
             bool: Whether all actions were successful
@@ -828,12 +828,12 @@ class Background_Process:
         else:
             self.estop()
 
-    def _clear(self, socket_index: (int, str)) -> None:
+    def _clear(self, socket_index: any) -> None:
         """
         Disconnects all services and resets all information
 
         Args:
-            socket_index (int, str): The index of the socket to output to
+            socket_index any: The index of the socket to output to
         """        
         self._is_shutting_down = True
         self._show_video_feed = False
@@ -931,12 +931,12 @@ class Background_Process:
         
         socket_print(-1, "clear", all=True, type="robot_toggle")
 
-    def start(self, socket_index: (int, str)) -> None:
+    def start(self, socket_index: any) -> None:
         """
         Attempts to start the main background process, including connecting all services
 
         Args:
-            socket_index (int, str): The index of the socket to output to
+            socket_index any: The index of the socket to output to
         """        
         socket_print(socket_index, 'Connecting...')
 
@@ -951,12 +951,12 @@ class Background_Process:
 
         self._clear(socket_index)
 
-    def _background_loop(self, socket_index: (int, str)) -> None:
+    def _background_loop(self, socket_index: any) -> None:
         """
         Starts and houses the main background loop
 
         Args:
-            socket_index (int, str): The index of the socket to output to
+            socket_index any: The index of the socket to output to
 
         Raises:
             Exception: Raises if Spot fails to turn on
@@ -974,12 +974,12 @@ class Background_Process:
         except:
             print_exception(socket_index)
 
-    def _keep_robot_on(self, socket_index: (int, str)) -> None:
+    def _keep_robot_on(self, socket_index: any) -> None:
         """
         Turns Spot back on if it turns off for no discernable reason
 
         Args:
-            socket_index (int, str): The index of the socket to output to
+            socket_index any: The index of the socket to output to
 
         Raises:
             Exception: Raises if Spot fails to turn on
@@ -992,12 +992,12 @@ class Background_Process:
             if not self.turn_on(-1):
                 raise Exception("Failed to turn robot back on")
 
-    def _execute_commands(self, socket_index: (int, str)) -> None:
+    def _execute_commands(self, socket_index: any) -> None:
         """
         Executes commands in the command queue
 
         Args:
-            socket_index (int, str): The index of the socket to output to
+            socket_index any: The index of the socket to output to
         """        
         if self.command_queue:
             self.is_running_commands = True
@@ -1014,12 +1014,12 @@ class Background_Process:
                     socket_print(socket_index, "Command List is empty!")
             self.is_running_commands = False
 
-    def _run_programs(self, socket_index: (int, str)) -> None:
+    def _run_programs(self, socket_index: any) -> None:
         """
         Runs the program corresponding to the name of the active program being executed
 
         Args:
-            socket_index (int, str): The index of the socket to output to
+            socket_index any: The index of the socket to output to
         """        
         if self.program_is_running:
             program = self._program_database.get_program(self.active_program_name)
@@ -1293,12 +1293,12 @@ class Background_Process:
         socket_print(-1, self.keyboard_control_mode,
                      all=True, type="control_mode")
 
-    def start_bg_process(self, socket_index: (int, str)) -> None:
+    def start_bg_process(self, socket_index: any) -> None:
         """
         Creates a thread so the background process can be run in the background
 
         Args:
-            socket_index (int, str): The index of the socket to output to
+            socket_index any: The index of the socket to output to
         """ 
         start_thread(self.start, args=(socket_index, ))
 
@@ -1412,14 +1412,14 @@ class Background_Process:
 # Creates an instance of the background_process class used for interacting with the background process connected to Spot
 bg_process = Background_Process()
 
-def do_action(action: str, socket_index: (int, str), args: any = None) -> any:
+def do_action(action: str, socket_index: any, args: any = None) -> any:
     """
     Handles actions from the client
 
 
     Args:
         action (str): The name of the action
-        socket_index (int, str): The index of the socket to display to
+        socket_index any: The index of the socket to display to
         args (any, optional): Any arguments. Defaults to None.
 
     Returns:
