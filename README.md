@@ -37,3 +37,4 @@ Server runs on port 8000
 - Create multiple walk commands if desired walking time exceeds the time allowed by the robot. If the desired time is too high, the robot says that the command is too far in the future
 - How to install and run
 - Explain the best way to add to/continue developing the server
+- Add ability to choose which port the server runs on (if possible)
