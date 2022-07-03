@@ -13,10 +13,11 @@ SECRET_KEY = YOUR_DJANGO_SECRET_KEY
 ```
 
 **To Run**
-run commands:
 ```
 cd path/to/spot-web-server/WebPage
 ```
+then
+
 ```uvicorn WebPage.asgi:application``` or ```python -m uvicorn WebPage.asgi:application``` or ```python3 -m uvicorn WebPage.asgi:application``` depending on your environment configuration.
 
 Arguments: 
@@ -37,3 +38,4 @@ Arguments:
 - Tell if the robot is executing a motor command and block or hold other commands until it is done
 - Create multiple walk commands if desired walking time exceeds the time allowed by the robot. If the desired time is too high, the robot says that the command is too far in the future
 - How to install and run
+- Explain the best way to add to/continue developing the server
