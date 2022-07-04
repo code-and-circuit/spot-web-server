@@ -24,7 +24,6 @@ Server runs on port 8000
 
 **TODO**
 - Option to automatically connect to the robot on server startup
-- Ability to end program execution or clear the command queue without estopping the robot
 - Ability to accept commands but not execute them (toggle whether commands are executed immediately)
 - Document the information returned from the get_state functions
 - Rewrite or credit the creator of connection.py
