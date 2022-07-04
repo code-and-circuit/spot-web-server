@@ -38,3 +38,4 @@ Server runs on port 8000
 - How to install and run
 - Explain the best way to add to/continue developing the server
 - Add ability to choose which port the server runs on (if possible)
+- Retry connection attempts if first attempt to robot failed
