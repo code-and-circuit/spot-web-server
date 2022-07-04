@@ -30,6 +30,7 @@
 """
 # General system imports
 import time
+import ctypes
 import sys
 import os
 import math
@@ -551,18 +552,22 @@ class Background_Process:
         self.image_stitcher = None
         self._program_database = SqliteConnection()
 
-        self._load_defaults()
+        self.default_data = self._load_defaults()
 
 
-    def _load_defaults(self, filepath = "./SpotSite/config.json"):
+    def _load_defaults(self, filepath = "./SpotSite/config.json") -> dict:
         """
         Loads default settings for the server
 
         Args:
             filepath (str, optional): the filepath(from the parent directory). Defaults to "/SpotSite/config.json".
+        
+        Returns:
+            dict: the default data
         """        
         data = read_json(filepath)["defaults"]
         self._is_accepting_commands = data['accept_commands']
+        return data
 
         
     def turn_on(self, socket_index: any) -> bool:
@@ -735,8 +740,16 @@ class Background_Process:
         Returns:
             bool: Whether a ping was successful
         """        
-        response = os.system(f"ping {ip} -c 1")
-        return True if response == 0 else False
+        try:
+            is_admin = os.getuid() == 0
+        except AttributeError:
+            is_admin = ctypes.windll.shell32.IsUserAnAdmin() != 0
+        if is_admin:
+            response = os.system(f"ping {ip} -c 1")
+            return True if response == 0 else False
+        else:
+            return True
+
 
     def _connect_to_robot(self, socket_index: any) -> bool:
         """
@@ -1429,6 +1442,7 @@ class Background_Process:
             'active_program_name': self.active_program_name,
             'program_socket_index': self.program_socket_index,
             'command_queue': self.command_queue,
+            'is_accepting_commands': self._is_accepting_commands
         }
         
     def get_server_state(self) -> dict:

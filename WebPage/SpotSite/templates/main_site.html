@@ -17,20 +17,9 @@
             </div>
         </div>
         <p id="b_r"></p>
-        <h1 id="isRunning" style="font-size: 20px; color: var(--yellow);">
-            <!-- Reflects whether or not the background process is running when the page loads -->
-            {% if is_running %}
-                Background process is running
-            {% else %}
-                Background process is not running
-            {% endif %}
-        </h1>
+        <h1 id="isRunning" style="font-size: 20px; color: var(--yellow);"></h1>
         <div id="estop-container">
-            {% if is_running %}
-                <button id="estop" style="background-color: var(--red); border: none; cursor: pointer">ESTOP</button>
-            {% else %}
-                <button id="estop">Robot is not connected</button>
-            {% endif %}
+            <button id="estop"></button>
         </div>
         <div class="container" id="main-container">
             <div class="panel">
@@ -62,31 +51,19 @@
         <div class="container" id="programs-container">
             <div class="program-list-container">
                 <div class="program-list">
-                    {% for program in programs %}
-                        <br><button id="program" onclick=displayProgram("{{ program }}")>{{ program }}</button>
-                    {% endfor %}
                 </div>
                 <div class="run-program-container">
                     <p id="program-name"></p>
                     <div class="program-controls">
                         <button id="runProgram">
-                            {% csrf_token %}
                             Run
                         </button>
                         <button id="removeProgram">
-                            {% csrf_token %}
                             Remove
                         </button>
                         <div id="toggle-accept-command">
-                            <p id="accept-command-state">
-                                {% if accepting_commands %}
-                                    Accepting Commands
-                                {% else %}
-                                    Blocking Commands
-                                {% endif %}
-                            </p>
+                            <p id="accept-command-state"></p>
                             <button id="toggle-accept-command-button">
-                                {% csrf_token %}
                                 <small>Toggle</small>
                             </button>
                         </div>
@@ -145,9 +122,78 @@
                 get_state: "{% url 'get_server_state' %}"
             }
         </script>
+        <script>
+            function update_server_state(state) {
+                if (state.server_has_estop == true) {
+                    $("#estop").css({
+                        "background-color": "var(--red)",
+                        "border": "none",
+                        "cursor": "pointer"
+                    });
+                    $("#estop").html("ESTOP");
+                    $("#getEstop").html("Clear Estop")
+                }
+                else if (state.server_has_estop == false){
+                    $("#estop").html("Robot is not connected");
+                    $("#getEstop").html("Acquire Estop")
+                }
+
+                if (state.server_has_lease == true) {
+                    $("#getLease").html("Clear Lease");
+                }
+                else if (state.server_has_lease == false) {
+                    $("#getLease").html("Acquire Lease");
+                }
+
+                if (state.robot_is_connected == true) {
+                    $("#connectRobot").html("Disconnect Robot");
+                }
+                else if (state.robot_is_connected == false){
+                    $("#connectRobot").html("Connect to Robot");
+                }
+
+                if (state.background_is_running == true) {
+                    $("#isRunning").html("Background process is running");
+                }
+                else if (state.background_is_running == false) {
+                    $("#isRunning").html("Background process is not running");
+                }
+
+                if (state.is_accepting_commands == true) {
+                    $("#accept-command-state").html("Accepting Commands");
+                }
+                else if (state.is_accepting_commands == false) {
+                    $("#accept-command-state").html("Blocking Commands");
+                }
+            }
+
+            onload = () => {
+                var server_info;
+                $.ajax({
+                    type: "GET",
+                    url: window.location.href + "get-server-state",
+                    data: {
+                        // Socket index is sent so the server knows which socket to use for output
+                        socket_index: -1,
+                        selected_program: "",
+                    },
+                    success: update_server_state,
+                    error: (response) => {
+                        addOutput("<red>Issue reading server information: " + response["status"] + ".</red>");
+                        // A 500 error is generally caused by the socket being closed when output tries to be sent back
+                        if (response["status"] == "500") {
+                            addOutput("Did the socket close? If so, try reloading.", true);
+                        }
+                    },
+                });                
+            };
+        </script>
         <script src="{% static 'js/programs.js' %}"></script>
         <script src="{% static 'js/main.js' %}"></script>
         <script src="{% static 'js/keyboard.js' %}"></script>
         <script src="{% static 'js/style.js' %}"></script>
+        <script defer>
+            program_handler.get_programs();
+        </script>
     </body>
 </html>

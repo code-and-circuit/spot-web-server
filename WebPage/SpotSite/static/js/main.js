@@ -17,8 +17,6 @@ try {
 let socket_index = null;
 let robot_is_estopped = false;
 
-program_handler.get_programs();
-
 // Handles socket messages from the server
 socket.onmessage = (message) => {
     // Parses the JSON
@@ -172,7 +170,7 @@ function addOutput(text, sameLine = false) {
     } else {
         $("#output").html($("#output").html() + "<br>> " + text);
     }
-    $("#output").scrollTop($("#output").scrollTop() + 100);
+    $(".output").scrollTop($(".output").scrollTop() + 100);
 }
 
 // Utility function for sending a request to the server
@@ -249,9 +247,14 @@ $("#getLease").click(function () {
 
 // Sends a message to the server letting it know that the socket is closing
 $(window).on("beforeunload", function () {
-    socket.send(
-        JSON.stringify({
-            action: "unload",
-        })
-    );
+    try {
+        socket.send(
+            JSON.stringify({
+                action: "unload",
+            })
+        );
+    }
+    catch(err) {
+        console.log(err);
+    }
 });

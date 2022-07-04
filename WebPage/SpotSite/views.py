@@ -62,14 +62,8 @@ def main_site(request: HttpRequest) -> HttpResponse:
     Returns:
         HttpResponse: the rendered site
     """
-    # Is the background process running or not?
-    # Reflected in the yellow text output at top of webpage
-    context = {
-        "is_running": background_process.bg_process.is_running,
-        "programs": background_process.bg_process.get_programs,
-        "accepting_commands": background_process.bg_process._is_accepting_commands
-    }
-    return render(request, 'main_site.html', context)
+
+    return render(request, 'main_site.html')
 
 # Utility function to relay action information. method_check allows post requests to be passed if parameter is true
 def do_action(request: HttpRequest, action: str, method_check: bool = False):
@@ -512,6 +506,7 @@ async def websocket_view(socket: object) -> None:
         socket (object): the websocket object
     """
     socket_index = websocket.websocket_list.add_socket(socket)
+    
     await socket.accept()
     await socket.send_json({
         'type': "socket_create",

@@ -1,5 +1,5 @@
 {
     "defaults" : {
-        "accept_commands" : true
+        "accept_commands" : true,
     }
 }
