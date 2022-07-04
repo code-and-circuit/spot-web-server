@@ -8,8 +8,8 @@
   ```
   containing 
   ```
-  username = YOUR_ROBOT_USERNAME
-  password = YOUR_ROBOT_PASSWORD
+  ROBOT_USERNAME = YOUR_ROBOT_USERNAME
+  ROBOT_PASSWORD = YOUR_ROBOT_PASSWORD
   SECRET_KEY = YOUR_DJANGO_SECRET_KEY
   ROBOT_IP = YOUR_SPOT_IP (192.168.80.3 by default)
   ```
@@ -23,7 +23,6 @@ Arguments for run command:
 Server runs on port 8000
 
 **TODO**
-- File to hold default starting configuration (ex. whether the server is accepting commands)
 - Option to automatically connect to the robot on server startup
 - Ability to end program execution or clear the command queue without estopping the robot
 - Ability to accept commands but not execute them (toggle whether commands are executed immediately)
