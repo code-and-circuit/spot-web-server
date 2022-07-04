@@ -324,7 +324,7 @@ red {
 
 #stop-program {
   margin-top: 10px;
-  background: none;
+  background: var(--body-bg);
   border: 1px solid var(--white);
   cursor: pointer;
 }
