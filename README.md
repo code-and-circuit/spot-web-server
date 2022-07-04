@@ -23,7 +23,6 @@ Arguments for run command:
 Server runs on port 8000
 
 **TODO**
-- File to hold default starting configuration (ex. whether the server is accepting commands)
 - Option to automatically connect to the robot on server startup
 - Ability to end program execution or clear the command queue without estopping the robot
 - Ability to accept commands but not execute them (toggle whether commands are executed immediately)
