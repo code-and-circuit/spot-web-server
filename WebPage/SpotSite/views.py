@@ -497,6 +497,13 @@ def get_keyboard_control_state(request: HttpRequest) -> JsonResponse:
             return JsonResponse(state, status=200)
         except Exception:
             return JsonResponse({}, status=500)
+
+def clear_queue(request: HttpRequest) -> JsonResponse:
+    if (request.method == "GET"):
+        background_process.bg_process.command_queue = []
+
+    return JsonResponse({}, status=200)
+
         
 async def websocket_view(socket: object) -> None:
     """

@@ -207,10 +207,14 @@ $("#estop").click(function () {
         sendRequest(urls.estop);
 });
 
+$("#stop-program").click(() => {
+    sendRequest(urls.clear_queue);
+});
+
 
 $('#toggle-accept-command-button').click(function () {
     sendRequest(urls.toggle_accept_command);
-})
+});
 
 $("#runProgram").click(function () {
     sendRequest(urls.run_program);

@@ -20,6 +20,7 @@
         <h1 id="isRunning" style="font-size: 20px; color: var(--yellow);"></h1>
         <div id="estop-container">
             <button id="estop"></button>
+            <button id="stop-program">Clear Command Queue</button>
         </div>
         <div class="container" id="main-container">
             <div class="panel">
@@ -119,7 +120,8 @@
                 clear_lease: "{% url 'clear_lease' %}",
                 get_estop: "{% url 'get_estop' %}",
                 lease: "{% url 'lease' %}",
-                get_state: "{% url 'get_server_state' %}"
+                get_state: "{% url 'get_server_state' %}",
+                clear_queue: "{% url 'clear_queue' %}",
             }
         </script>
         <script>

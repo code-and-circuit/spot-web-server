@@ -28,6 +28,7 @@ urlpatterns = [
     path('clear-lease', views.clear_lease, name='clear_lease'),
     path('lease', views.acquire_lease, name='lease'),
     path('get-estop', views.acquire_estop, name='get_estop'),
+    path('clear-queue', views.clear_queue, name="clear_queue"),
     path(
         "favicon.ico",
         RedirectView.as_view(url=staticfiles_storage.url("favicon.ico")),

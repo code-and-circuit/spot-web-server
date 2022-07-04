@@ -299,6 +299,7 @@ red {
   margin-top: 40px;
   width: 100%;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   margin-bottom: -60px;
@@ -307,7 +308,7 @@ red {
   background: none;
 }
 
-#estop {
+#estop, #stop-program {
   width: 200px;
   height: 40px;
   background: var(--purple);
@@ -320,6 +321,21 @@ red {
 #estop:hover {
   color: var(--white);
 }
+
+#stop-program {
+  margin-top: 10px;
+  background: none;
+  border: 1px solid var(--white);
+  cursor: pointer;
+}
+
+#stop-program:hover {
+  background: var(--red);
+  border: 1px solid var(--red);
+  color: white;
+}
+
+
 
 .key-selected {
   cursor: default;
