@@ -19,8 +19,7 @@
 Arguments for run command: 
 - ```--host [Address]``` (0.0.0.0 to make it publicy accessable)
 - ```--reload``` to automatically reload when files are changed
-
-Server runs on port 8000
+- ```--port [Port]``` to set the port (8000 by default)
 
 **TODO**
 - Option to automatically connect to the robot on server startup
