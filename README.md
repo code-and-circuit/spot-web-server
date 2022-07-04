@@ -22,7 +22,6 @@ Arguments for run command:
 - ```--port [Port]``` to set the port (8000 by default)
 
 **TODO**
-- Option to automatically connect to the robot on server startup
 - Ability to accept commands but not execute them (toggle whether commands are executed immediately)
 - Document the information returned from the get_state functions
 - Rewrite or credit the creator of connection.py
