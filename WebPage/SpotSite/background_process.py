@@ -18,6 +18,7 @@
         is_jsonable(x) -> bool
         get_members(obj, depth) -> dict
         lock_until_finished(func) -> function
+        read_json(filepath) -> json
         do_action(action, socket_index, args)
         
     Misc. variables:
@@ -247,6 +248,23 @@ def lock_until_finished(func):
         return val
     return wrapper
 
+def read_json(filepath: str) -> dict:
+    """
+    Reads json fron a file and returns the data
+
+    Args:
+        filepath (str): The filepath (from the parent directory)
+
+    Returns:
+        dict: the json data
+    """    
+    path = Path(__file__).resolve().parent.parent
+    path = os.path.join(path, filepath)
+    file = open(str(path))
+    data = json.load(file)
+    file.close()
+    return data
+
 class SqliteConnection:
     """
     A class to manage the connection to the SQL database containing programs
@@ -392,6 +410,8 @@ class Background_Process:
         _program_database(SqliteConnection): The object used to maintain a connection with and perform tasks on the SQL database
         
     Methods:
+        _load_defaults(filepath):
+            loads default settings
         turn_on(socket_index):
             Attempts to turn on Spot
         turn_off(socket_index):
@@ -530,6 +550,20 @@ class Background_Process:
 
         self.image_stitcher = None
         self._program_database = SqliteConnection()
+
+        self._load_defaults()
+
+
+    def _load_defaults(self, filepath = "./SpotSite/config.json"):
+        """
+        Loads default settings for the server
+
+        Args:
+            filepath (str, optional): the filepath(from the parent directory). Defaults to "/SpotSite/config.json".
+        """        
+        data = read_json(filepath)["defaults"]
+        self._is_accepting_commands = data['accept_commands']
+
         
     def turn_on(self, socket_index: any) -> bool:
         """
