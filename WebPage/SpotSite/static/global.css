@@ -179,6 +179,10 @@ red {
                             transparent 16%) !important;
 }
 
+#step-command {
+  height: 30px;
+}
+
 #output {
   min-width: 10px !important;
 }

@@ -59,6 +59,7 @@
                     <p id="run-commands-label">Run commands</p>
                     <button id="toggle-auto-run-commands"></button>
                 </div>
+                <button id="step-command">Step Command</button>
             </div>
             <div class="program-list-container">
                 <div class="program-list">
@@ -126,7 +127,8 @@
                 lease: "{% url 'lease' %}",
                 get_state: "{% url 'get_server_state' %}",
                 clear_queue: "{% url 'clear_queue' %}",
-                toggle_auto_run_commands: "{% url 'toggle_auto_run' %}"
+                toggle_auto_run_commands: "{% url 'toggle_auto_run' %}",
+                step_command: "{% url 'step_command' %}"
             }
         </script>
         <script>

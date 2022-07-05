@@ -1019,9 +1019,7 @@ class Background_Process:
             while self.is_running:
                 self._keep_robot_on(socket_index)
                 self._run_programs(socket_index)
-                if self._will_immediately_run_commands or self._should_run_commands:
-                    self._execute_commands(socket_index)
-                    self._should_run_commands = False
+                self._execute_commands(socket_index)
 
         except:
             print_exception(socket_index)
@@ -1054,7 +1052,19 @@ class Background_Process:
         if self.command_queue:
             self.is_running_commands = True
             self._robot_control.socket_index = -1
-            while self.command_queue:
+            if self._should_run_commands:
+                command = self.command_queue[0]
+                try:
+                    self._do_command(command)
+                except:
+                    print_exception(socket_index)
+                try:
+                    self.command_queue.pop(0)
+                except IndexError:
+                    socket_print(socket_index, "Command List is empty!")
+                self._should_run_commands = False
+
+            while self.command_queue and self._will_immediately_run_commands:
                 command = self.command_queue[0]
                 try:
                     self._do_command(command)
@@ -1587,6 +1597,16 @@ def do_action(action: str, socket_index: any, args: any = None) -> any:
 
     elif action == "toggle_auto_run":
         bg_process.toggle_auto_run()
+
+    elif action == "step_command":
+        if not bg_process.is_running:
+            socket_print(socket_index, "Background process is not running!")
+            return
+        if bg_process._will_immediately_run_commands or bg_process.is_running_commands:
+            socket_print(socket_index, "Already running commands!")
+            return
+        bg_process._should_run_commands = True
+
 
     else:
         socket_print(socket_index, f"Command not recognized: {action}")

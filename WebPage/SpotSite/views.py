@@ -1,3 +1,4 @@
+import re
 from django.shortcuts import render
 from django.http import HttpResponseRedirect
 from django.http import HttpResponse, HttpRequest
@@ -499,17 +500,18 @@ def get_keyboard_control_state(request: HttpRequest) -> JsonResponse:
             return JsonResponse({}, status=500)
 
 def clear_queue(request: HttpRequest) -> JsonResponse:
-    if (request.method == "GET"):
-        background_process.bg_process.command_queue = []
+    background_process.bg_process.command_queue = []
 
     return JsonResponse({}, status=200)
 
 def toggle_auto_run(request: HttpRequest) -> JsonResponse:
-    if (request.method == "GET"):
-        do_action(request, "toggle_auto_run");
+    do_action(request, "toggle_auto_run");
 
     return JsonResponse({}, status=200)
 
+def step_command(request: HttpRequest) -> JsonResponse:
+    do_action(request, "step_command")
+    return JsonResponse({}, status=200)
         
 async def websocket_view(socket: object) -> None:
     """

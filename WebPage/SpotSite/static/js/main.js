@@ -234,6 +234,10 @@ $("#runProgram").click(() => {
     sendRequest(urls.run_program);
 });
 
+$("#step-command").click(() => {
+    sendRequest(urls.step_command);
+})
+
 $("#bgStart").click(() => {
     sendRequest(urls.start_process);
 });

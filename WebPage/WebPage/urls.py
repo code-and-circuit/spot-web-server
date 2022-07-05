@@ -30,6 +30,7 @@ urlpatterns = [
     path('get-estop', views.acquire_estop, name='get_estop'),
     path('clear-queue', views.clear_queue, name="clear_queue"),
     path('toggle-auto-run', views.toggle_auto_run, name='toggle_auto_run'),
+    path('step-command', views.step_command, name='step_command'),
     path(
         "favicon.ico",
         RedirectView.as_view(url=staticfiles_storage.url("favicon.ico")),
