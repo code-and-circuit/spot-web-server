@@ -48,8 +48,18 @@
                 <p id="output"></p>
             </div>
         </div>
-        <h1 style="margin-top: 100px; margin-bottom: -80px;">Programs</h1>
+        <h1 style="margin-top: 100px; margin-bottom: -80px;">Programs and Commands</h1>
         <div class="container" id="programs-container">
+            <div class="command-controls">
+                <div class="toggle-accept-commands">
+                    <p id="toggle-accept-commands-label">Accept commands</p>
+                    <button id="toggle-accept-command-button"></button>
+                </div>
+                <div class="run-commands">
+                    <p id="run-commands-label">Run commands</p>
+                    <button id="toggle-auto-run-commands"></button>
+                </div>
+            </div>
             <div class="program-list-container">
                 <div class="program-list">
                 </div>
@@ -62,12 +72,6 @@
                         <button id="removeProgram">
                             Remove
                         </button>
-                        <div id="toggle-accept-command">
-                            <p id="accept-command-state"></p>
-                            <button id="toggle-accept-command-button">
-                                <small>Toggle</small>
-                            </button>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -105,7 +109,7 @@
         <script>
             // Need to declare these inside of the html file so we can take
             // advantage of the django server urls defined in urls.py
-            var urls = {
+            const urls = {
                 get_program: "{% url 'get_programs' %}",
                 remove_program: "{% url 'remove_program' %}",
                 estop_release: "{% url 'estop_release' %}",
@@ -122,6 +126,7 @@
                 lease: "{% url 'lease' %}",
                 get_state: "{% url 'get_server_state' %}",
                 clear_queue: "{% url 'clear_queue' %}",
+                toggle_auto_run_commands: "{% url 'toggle_auto_run' %}"
             }
         </script>
         <script>
@@ -162,10 +167,11 @@
                 }
 
                 if (state.is_accepting_commands == true) {
-                    $("#accept-command-state").html("Accepting Commands");
+                    $("#toggle-accept-command-button").addClass("option-true");
                 }
-                else if (state.is_accepting_commands == false) {
-                    $("#accept-command-state").html("Blocking Commands");
+
+                if (state.will_auto_run_commands == true) {
+                    $("#toggle-auto-run-commands").addClass("option-true");
                 }
             }
 

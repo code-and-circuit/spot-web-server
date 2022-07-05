@@ -504,6 +504,12 @@ def clear_queue(request: HttpRequest) -> JsonResponse:
 
     return JsonResponse({}, status=200)
 
+def toggle_auto_run(request: HttpRequest) -> JsonResponse:
+    if (request.method == "GET"):
+        do_action(request, "toggle_auto_run");
+
+    return JsonResponse({}, status=200)
+
         
 async def websocket_view(socket: object) -> None:
     """

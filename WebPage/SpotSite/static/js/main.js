@@ -101,12 +101,12 @@ socket.onmessage = (message) => {
     }
     // Updates whether the server is accepting commands or not
     else if (data["type"] == "toggle_accept_command") {
-        console.log("TOGGLE ACCEPT COMMAND!");
-        if (data["output"] == true) {
-            $("#accept-command-state").html("Accepting Commands");
+        const is_accepting_commands = data["output"];
+        if (is_accepting_commands) {
+            $("#toggle-accept-command-button").addClass("option-true");
         }
         else {
-            $("#accept-command-state").html("Blocking Commands");
+            $("#toggle-accept-command-button").removeClass("option-true");
         }
     }
     // Updates whether the robot is connected, and which action can be taken as a result
@@ -135,6 +135,16 @@ socket.onmessage = (message) => {
             $("#getLease").html("Acquire Lease")
         else
             $("#getLease").html("Clear Lease")
+    }
+    else if (data["type"] == "toggle_auto_run") {
+        const will_auto_run = data["output"];
+
+        if (will_auto_run) {
+            $("#toggle-auto-run-commands").addClass("option-true");
+        }
+        else {
+            $("#toggle-auto-run-commands").removeClass("option-true");
+        }
     }
     // General output
     else if (data["type"] == "output") {
@@ -194,14 +204,14 @@ function sendRequest(url, type = "GET") {
     });
 }
 
-$("#removeProgram").click(function () {
+$("#removeProgram").click(() => {
     sendRequest(urls.remove_program);
     program_handler.get_programs();
     $("#program-info").html("");
     $("#program-name").html("");
 });
 
-$("#estop").click(function () {
+$("#estop").click(() => {
     if (robot_is_estopped) return sendRequest(urls.estop_release);
     if ($("#isRunning").html() == "Background process is running")
         sendRequest(urls.estop);
@@ -212,37 +222,41 @@ $("#stop-program").click(() => {
 });
 
 
-$('#toggle-accept-command-button').click(function () {
+$('#toggle-accept-command-button').click(() => {
     sendRequest(urls.toggle_accept_command);
 });
 
-$("#runProgram").click(function () {
+$("#toggle-auto-run-commands").click(() => {
+    sendRequest(urls.toggle_auto_run_commands);
+})
+
+$("#runProgram").click(() => {
     sendRequest(urls.run_program);
 });
 
-$("#bgStart").click(function () {
+$("#bgStart").click(() => {
     sendRequest(urls.start_process);
 });
 
-$("#bgEnd").click(function () {
+$("#bgEnd").click(() => {
     sendRequest(urls.end_process);
 });
 
-$("#connectRobot").click(function () {
+$("#connectRobot").click(() => {
     if ($("#connectRobot").html() == "Connect to Robot")
         sendRequest(urls.connect);
     else
         sendRequest(urls.disconnect_robot)
 });
 
-$("#getEstop").click(function () {
+$("#getEstop").click(() => {
     if ($("#getEstop").html() == "Acquire Estop")
         sendRequest(urls.get_estop);
     else
         sendRequest(urls.clear_estop)
 });
 
-$("#getLease").click(function () {
+$("#getLease").click(() => {
     if ($("#getLease").html() == "Acquire Lease")
         sendRequest(urls.lease);
     else
@@ -250,7 +264,7 @@ $("#getLease").click(function () {
 });
 
 // Sends a message to the server letting it know that the socket is closing
-$(window).on("beforeunload", function () {
+$(window).on("beforeunload", () => {
     try {
         socket.send(
             JSON.stringify({

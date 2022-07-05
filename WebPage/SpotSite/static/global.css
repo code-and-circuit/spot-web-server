@@ -24,6 +24,7 @@ I have no desire to refactor since it works, but anyone who wants to is welcome 
 
   --body-bg: hsl(var(--main-hue), calc(var(--saturation-mult) * 25%), calc(var(--brightness-mult) * 20%));
   --container-bg: hsl(var(--main-hue), calc(var(--saturation-mult) * 25%), calc(var(--brightness-mult) * 14%));
+  --container-border: hsl(var(--main-hue), calc(var(--saturation-mult) * 25%), calc(var(--brightness-mult) * 12%));
   --selected-container: var(--green);
   --selected-text: hsl(var(--main-hue), calc(var(--saturation-mult) * 25%), calc(var(--brightness-mult) * 10%));
 
@@ -96,7 +97,7 @@ red {
   color: var(--red);
 }
 
-.container > div {
+.panel, .output, .program-list-container, .program-info, .command-controls {
   width: 40%;
   height: 30vh;
   display: flex;
@@ -104,6 +105,12 @@ red {
   border-radius: 20px;
   background: var(--container-bg);
   margin-bottom: 20px;
+}
+
+.program-list-container, .command-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
 }
 
 .panel, .program-list-container {
@@ -117,11 +124,59 @@ red {
   width: 100%;
 }
 
+.program-info, .command-controls {
+  width: 15%;
+}
+
 .output, .program-info {
   resize: both;
   overflow: auto;
   min-width: 200px;
   min-height: 200px;
+  box-shadow: 0 0 3px 2px var(--container-border) inset;
+}
+
+.command-controls {
+  flex-direction: column;
+  justify-content: left;
+  min-width: 250px;
+}
+
+.run-commands, .toggle-accept-commands {
+  width: 90%;
+  height: 50px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+}
+
+.run-commands, .toggle-accept-commands {
+  align-items: center;
+}
+
+#run-commands-label, #toggle-accept-commands-label {
+  width: 70%;
+  overflow-x: wrap;
+  text-align: center;
+  display: inline-block;
+}
+
+#toggle-auto-run-commands, #toggle-accept-command-button {
+  border-radius: 0;
+  width: 20px;
+  height: 20px;
+}
+
+#toggle-auto-run-commands:hover, #toggle-accept-command-button:hover {
+  box-shadow: 0 0 0px 1px var(--white) inset;
+  border: 1px solid var(--white);
+  background-color: transparent;
+}
+
+.option-true {
+  background: radial-gradient(20px circle at 9px 9px, 
+                            var(--white) 15%, 
+                            transparent 16%) !important;
 }
 
 #output {
@@ -129,7 +184,6 @@ red {
 }
 
 .bg-process-container,
-.program-list-container,
 .run-program-container {
   height: 100%;
   display: flex;
@@ -175,30 +229,11 @@ red {
 }
 
 #runProgram,
-#removeProgram, #toggle-accept-command {
+#removeProgram {
   font-size: 16px;
   width: 80%;
   height: 30px;
   margin-bottom: 3px;
-}
-
-#toggle-accept-command {
-  margin-top: 20px;
-  display: flex;
-  flex-direction: row;
-}
-
-#accept-command-state {
-  text-align: center;
-}
-
-#toggle-accept-command-button {
-  width: 110px;
-  height: 30px;
-}
-
-#toggle-accept-command-button:hover {
-  background: white;
 }
 
 #removeProgram {

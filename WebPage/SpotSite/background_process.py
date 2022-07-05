@@ -348,7 +348,7 @@ class SqliteConnection:
         """        
         query = self._cursor.execute("SELECT program FROM Programs WHERE name = ?", (name,))
         command_string = ''.join(query.fetchone()[0])
-        return eval(command_string)
+        return json.loads(command_string)
     
     @lock_until_finished
     def get_all_programs(self) -> tuple:
@@ -545,6 +545,8 @@ class Background_Process:
         self.program_socket_index = ""
 
         self._is_accepting_commands = False
+        self._will_immediately_run_commands = False
+        self._should_run_commands = False
         self.command_queue = []
         self._keys_up = []
         self._keys_down = []
@@ -553,7 +555,6 @@ class Background_Process:
         self._program_database = SqliteConnection()
 
         self.default_data = self._load_defaults()
-
 
     def _load_defaults(self, filepath = "./SpotSite/config.json") -> dict:
         """
@@ -567,6 +568,7 @@ class Background_Process:
         """        
         data = read_json(filepath)["defaults"]
         self._is_accepting_commands = data['accept_commands']
+        self._will_immediately_run_commands = data['immediately_run_commands']
         return data
 
         
@@ -898,6 +900,7 @@ class Background_Process:
         self.keyboard_control_mode = "Walk"
 
         self._is_accepting_commands = False
+        self._should_run_commands = False
         self.command_queue = []
         self.programs = {}
         self.keys = {}
@@ -1016,7 +1019,9 @@ class Background_Process:
             while self.is_running:
                 self._keep_robot_on(socket_index)
                 self._run_programs(socket_index)
-                self._execute_commands(socket_index)
+                if self._will_immediately_run_commands or self._should_run_commands:
+                    self._execute_commands(socket_index)
+                    self._should_run_commands = False
 
         except:
             print_exception(socket_index)
@@ -1076,6 +1081,10 @@ class Background_Process:
             except:
                 print_exception(self.program_socket_index)
             self.program_is_running = False
+
+    def toggle_auto_run(self):
+        self._will_immediately_run_commands = not self._will_immediately_run_commands
+        socket_print(-1, self._will_immediately_run_commands, all=True, type="toggle_auto_run")
 
     def _start_video_loop(self) -> None:
         """
@@ -1364,7 +1373,7 @@ class Background_Process:
             list: The list of programs
         """        
         programs = self._program_database.get_all_programs()
-        programs = {p[0]: eval(p[1]) for p in programs}
+        programs = {p[0]: json.loads(p[1]) for p in programs}
         
         return programs
 
@@ -1442,7 +1451,9 @@ class Background_Process:
             'active_program_name': self.active_program_name,
             'program_socket_index': self.program_socket_index,
             'command_queue': self.command_queue,
-            'is_accepting_commands': self._is_accepting_commands
+            'is_accepting_commands': self._is_accepting_commands,
+            'will_auto_run_commands': self._will_immediately_run_commands,
+            'should_run_commands': self._should_run_commands
         }
         
     def get_server_state(self) -> dict:
@@ -1499,10 +1510,8 @@ def do_action(action: str, socket_index: any, args: any = None) -> any:
     elif action == "toggle_accept_command":
         if not bg_process._is_accepting_commands:
             bg_process._is_accepting_commands = True
-            socket_print(socket_index, "<green>Now accepting commands</green>")
         else:
             bg_process._is_accepting_commands = False
-            socket_print(socket_index, "No longer accepting commands")
         
         socket_print(-1, bg_process._is_accepting_commands, type="toggle_accept_command", all=True)
             
@@ -1575,6 +1584,9 @@ def do_action(action: str, socket_index: any, args: any = None) -> any:
 
     elif action == "check_if_running":
         return bg_process.is_running
+
+    elif action == "toggle_auto_run":
+        bg_process.toggle_auto_run()
 
     else:
         socket_print(socket_index, f"Command not recognized: {action}")
