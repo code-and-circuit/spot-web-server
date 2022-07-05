@@ -22,7 +22,6 @@ Arguments for run command:
 - ```--port [Port]``` to set the port (8000 by default)
 
 **TODO**
-- Ability to accept commands but not execute them (toggle whether commands are executed immediately)
 - Document the information returned from the get_state functions
 - Rewrite or credit the creator of connection.py
 - Add a complete description of what the server does, the features, how to uses it, and how you could create your own frontend with it
