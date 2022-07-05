@@ -22,7 +22,6 @@ Arguments for run command:
 - ```--port [Port]``` to set the port (8000 by default)
 
 **TODO**
-- Option to automatically connect to the robot on server startup
 - Ability to accept commands but not execute them (toggle whether commands are executed immediately)
 - Document the information returned from the get_state functions
 - Rewrite or credit the creator of connection.py
@@ -35,3 +34,5 @@ Arguments for run command:
 - How to install and run
 - Explain the best way to add to/continue developing the server
 - Retry connection attempts if first attempt to robot failed
+- Ability to run a single command at a time from the queue (step through one-by-one)
+- Ability to set a constant wait period between commands
