@@ -33,5 +33,6 @@ Arguments for run command:
 - How to install and run
 - Explain the best way to add to/continue developing the server
 - Retry connection attempts if first attempt to robot failed
-- Ability to run a single command at a time from the queue (step through one-by-one)
+- Ability to run a single command at a time from the queue (step through one-by-one) - DONE
+  - Ability to show the commands in the queue
 - Ability to set a constant wait period between commands
