@@ -54,7 +54,7 @@ const program_handler = {
             // - If there were no arguments, there will simply be an opening parenthese,
             //      so no action required
             if (line.substring(line.length - 1, line.length) != "(") {
-                //line = line.substring(0, line.length - 2);
+                line = line.substring(0, line.length - 2);
             }
 
             line += ")<br>"; //Add the ending parenthese and move to the next line
