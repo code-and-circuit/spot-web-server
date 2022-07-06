@@ -311,11 +311,14 @@ def run_command(request: HttpRequest) -> JsonResponse:
                 "valid": True,
                 "command_sent": True
             }, status=200)
+
             
     elif request.method == "GET":
         return JsonResponse({
             'connection_valid': True
         }, status=200)
+
+    print(background_process.bg_process.is_accepting_commands)
     
     return JsonResponse({
                 "valid": True,

@@ -836,7 +836,6 @@ class Background_Process:
         if not self._acquire_lease(socket_index):
             return False
 
-        self._is_accepting_commands = False
         return True
 
     def estop(self) -> None:
@@ -1074,7 +1073,8 @@ class Background_Process:
                     self.command_queue.pop(0)
                 except IndexError:
                     socket_print(socket_index, "Command List is empty!")
-            self.is_running_commands = False
+        self.is_running_commands = False
+        self._should_run_commands = False
 
     def _run_programs(self, socket_index: any) -> None:
         """
@@ -1518,10 +1518,8 @@ def do_action(action: str, socket_index: any, args: any = None) -> any:
         socket_print(socket_index, "Main loop ended")
 
     elif action == "toggle_accept_command":
-        if not bg_process._is_accepting_commands:
-            bg_process._is_accepting_commands = True
-        else:
-            bg_process._is_accepting_commands = False
+        bg_process._is_accepting_commands = not bg_process._is_accepting_commands
+            
         
         socket_print(-1, bg_process._is_accepting_commands, type="toggle_accept_command", all=True)
             
