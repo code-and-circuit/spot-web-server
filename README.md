@@ -35,3 +35,4 @@ Arguments for run command:
 - Retry connection attempts if first attempt to robot failed
 - Ability to run a single command at a time from the queue (step through one-by-one) - DONE
   - Ability to show the commands in the queue
+- Add an "alert", or something that briefly displays new console outputs in case client is not looking at the console
