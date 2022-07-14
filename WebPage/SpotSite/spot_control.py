@@ -26,7 +26,7 @@ from bosdyn.client.robot_command import RobotCommandBuilder, blocking_stand
 from bosdyn.client.robot_state import RobotStateClient
 
 
-def clamp(num: (float, int), min_num: (float, int), max_num: (float, int)) -> (float, int):
+def clamp(num: any, min_num: any, max_num: any) -> any:
     """
     Clamps a number between 2 values
 
@@ -109,7 +109,7 @@ class Spot_Control:
         setup():
             Stands and resets the robot's ortientation
     """
-    def __init__(self, cmd_client: bosdyn.client.robot_command.RobotCommandClient, s: (int, str), robot: bosdyn.client.robot):
+    def __init__(self, cmd_client: bosdyn.client.robot_command.RobotCommandClient, s: any, robot: bosdyn.client.robot):
         self.command_client = cmd_client
         self.socket_index = s
         self.robot = robot

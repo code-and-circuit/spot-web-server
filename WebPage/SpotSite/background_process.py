@@ -1243,6 +1243,16 @@ class Background_Process:
         if action == 'wait':
             time.sleep(command['Args']['time'])
 
+        if action == 'rotate_by':
+            args = command['Args']
+            mult = spot_control.KEYBOARD_ROTATION_VELOCITY
+
+            pitch = float(args['pitch'])
+            yaw = float(args['yaw'])
+            roll = float(args['roll'])
+
+            self._robot_control.keyboard_rotate(math.radians(yaw) / mult, math.radians(roll) / mult, math.radians(pitch) / mult)
+
         if action == 'rotate':
             args = command['Args']
             pitch = float(args['pitch'])
