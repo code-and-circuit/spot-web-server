@@ -37,27 +37,32 @@ const program_handler = {
         });
     },
 
+    display_command(command) {
+        let line = command["Command"] + "("; // Start the new line to be displayed
+
+        // Display arguments in the command
+        for (const arg in command["Args"]) {
+            line += command["Args"][arg] + ", ";
+        }
+
+        // Remove the trailing comma and space before adding the closing parenthese
+        // - If there were no arguments, there will simply be an opening parenthese,
+        //      so no action required
+        if (line.substring(line.length - 1, line.length) != "(") {
+            line = line.substring(0, line.length - 2);
+        }
+        line += ")<br>"; //Add the ending parenthese and move to the next line
+        return line
+    },
+
     display_program(name) {
         this.selected_program = name;
         $("#program-name").html(this.selected_program);
         $("#program-info").html("");
         for (const c in this.programs[name]) {
             const command = this.programs[name][c]; // Get the command object
-            let line = command["Command"] + "("; // Start the new line to be displayed
 
-            // Display arguments in the command
-            for (const arg in command["Args"]) {
-                line += command["Args"][arg] + ", ";
-            }
-
-            // Remove the trailing comma and space before adding the closing parenthese
-            // - If there were no arguments, there will simply be an opening parenthese,
-            //      so no action required
-            if (line.substring(line.length - 1, line.length) != "(") {
-                line = line.substring(0, line.length - 2);
-            }
-
-            line += ")<br>"; //Add the ending parenthese and move to the next line
+            const line = this.display_command(command);
             $("#program-info").html($("#program-info").html() + line);
         }
     }
