@@ -318,7 +318,7 @@ def run_command(request: HttpRequest) -> JsonResponse:
             'connection_valid': True
         }, status=200)
 
-    print(background_process.bg_process.is_accepting_commands)
+    #print(background_process.bg_process.is_accepting_commands)
     
     return JsonResponse({
                 "valid": True,

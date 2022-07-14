@@ -97,7 +97,7 @@ red {
   color: var(--red);
 }
 
-.panel, .output, .program-list-container, .program-info, .command-controls {
+.panel, .output, .program-list-container, .program-info, .command-controls, .command-queue {
   width: 40%;
   height: 30vh;
   display: flex;
@@ -107,7 +107,7 @@ red {
   margin-bottom: 20px;
 }
 
-.program-list-container, .command-controls {
+.program-list-container, .command-controls, .command-queue {
   display: flex;
   align-items: center;
   justify-content: space-evenly;
@@ -118,13 +118,13 @@ red {
 }
 
 .output p,
-.program-info p {
+.program-info p, .command-queue p {
   padding: 10px 20px 10px 20px;
   line-height: 25px;
   width: 100%;
 }
 
-.program-info, .command-controls {
+.program-info, .command-controls, .command-queue {
   width: 15%;
 }
 

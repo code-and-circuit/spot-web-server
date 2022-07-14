@@ -1463,7 +1463,8 @@ class Background_Process:
             'command_queue': self.command_queue,
             'is_accepting_commands': self._is_accepting_commands,
             'will_auto_run_commands': self._will_immediately_run_commands,
-            'should_run_commands': self._should_run_commands
+            'should_run_commands': self._should_run_commands,
+            'command_queue': self.command_queue
         }
         
     def get_server_state(self) -> dict:
