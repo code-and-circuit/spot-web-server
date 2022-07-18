@@ -124,6 +124,10 @@ class Spot_Control:
         self.YAW_OFFSET_MAX = 0.7805
         self.PITCH_OFFSET_MAX = 0.7805
         self.rotation = {"pitch": 0, "yaw": 0, "roll": 0}
+        
+        self.HEIGHT_OFFSET_MIN = -2
+        self.HEIGHT_OFFSET_MAX = 1
+        self.height = 0
 
         self.collision_avoid_params = spot_command_pb2.ObstacleParams(
             obstacle_avoidance_padding=1, disable_vision_foot_obstacle_avoidance=False,
@@ -169,8 +173,11 @@ class Spot_Control:
         """        
         # Create rotation command
         rotation = bosdyn.geometry.EulerZXY(yaw=yaw, roll=roll, pitch=pitch)
+        self.rotation['yaw'] = yaw
+        self.rotation['roll'] = roll
+        self.rotation['pitch'] = pitch
         cmd = RobotCommandBuilder.synchro_stand_command(
-            footprint_R_body=rotation)
+            footprint_R_body=rotation, body_height = self.height)
         self.command_client.robot_command(cmd)
         # I know the line is long. I'm lazy.
         self.print(f'Rotated to yaw: {round(yaw, 2)}({round(math.degrees(yaw), 2)}°), roll: {round(roll, 2)}({round(math.degrees(roll), 2)}°), pitch: {round(pitch, 2)}({round(math.degrees(pitch), 2)}°)')
@@ -180,7 +187,7 @@ class Spot_Control:
         """
         Stands the robot
         """        
-        cmd = RobotCommandBuilder.synchro_stand_command()
+        cmd = RobotCommandBuilder.synchro_stand_command(body_height = self.height)
         self.command_client.robot_command(cmd)
 
     def sit(self) -> None:
@@ -220,7 +227,7 @@ class Spot_Control:
             z (float): The turn speed
             t (float, optional): The duration of the command. Defaults to 1.
         """        
-        walk = RobotCommandBuilder.synchro_velocity_command(x, y, z)
+        walk = RobotCommandBuilder.synchro_velocity_command(x, y, z, body_height = self.height)
         walk.synchronized_command.mobility_command.params.CopyFrom(
             RobotCommandBuilder._to_any(self.collision_avoid_params))
         self.command_client.robot_command(walk, end_time_secs=time.time() + t)
@@ -261,7 +268,7 @@ class Spot_Control:
         
 
     @dispatch
-    def set_stand_height(self, height: float) -> None:
+    def set_height(self, height: float) -> None:
         """
         Sets the stand height of the robot
 
@@ -269,7 +276,9 @@ class Spot_Control:
             height (float): The height
         """        
         # Create stand height command
-        cmd = RobotCommandBuilder.synchro_stand_command(body_height=height)
+
+        self.height = clamp(height, self.HEIGHT_OFFSET_MIN, self.HEIGHT_OFFSET_MAX)
+        cmd = RobotCommandBuilder.synchro_stand_command(body_height=self.height)
         self.command_client.robot_command(cmd)
         self.print(f'Standing at: {height}')
 
@@ -286,7 +295,8 @@ class Spot_Control:
         walk = RobotCommandBuilder.synchro_velocity_command(
             dx * self.KEYBOARD_COMMAND_VELOCITY,
             dy * self.KEYBOARD_COMMAND_VELOCITY,
-            dz * self.KEYBOARD_TURN_VELOCITY
+            dz * self.KEYBOARD_TURN_VELOCITY,
+            body_height = self.height
         )
         walk.synchronized_command.mobility_command.params.CopyFrom(
             RobotCommandBuilder._to_any(self.collision_avoid_params))
@@ -321,7 +331,7 @@ class Spot_Control:
             pitch=self.rotation['pitch']
         )
         cmd = RobotCommandBuilder.synchro_stand_command(
-            footprint_R_body=rotation)
+            footprint_R_body=rotation, body_height = self.height)
         self.command_client.robot_command(cmd)
 
     @dispatch

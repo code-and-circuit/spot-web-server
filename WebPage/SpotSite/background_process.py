@@ -1245,7 +1245,7 @@ class Background_Process:
 
         if action == 'rotate_by':
             args = command['Args']
-            mult = spot_control.KEYBOARD_ROTATION_VELOCITY
+            mult = self._robot_control.KEYBOARD_ROTATION_VELOCITY
 
             pitch = float(args['pitch'])
             yaw = float(args['yaw'])
@@ -1261,6 +1261,12 @@ class Background_Process:
 
             self._robot_control.rotate(math.radians(
                 yaw), math.radians(roll), math.radians(pitch))
+
+        if action == 'set_height':
+            args = command['Args']
+            height = float(args['height'])
+
+            self._robot_control.set_height(height)
 
         if action == 'move':
             MAX_SPEED = 0.5
