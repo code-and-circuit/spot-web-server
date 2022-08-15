@@ -36,3 +36,4 @@ Arguments for run command:
 - Ability to run a single command at a time from the queue (step through one-by-one) - DONE
   - Ability to show the commands in the queue
 - Add an "alert", or something that briefly displays new console outputs in case client is not looking at the console
+- Add ability to change the port 
