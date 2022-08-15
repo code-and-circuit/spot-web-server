@@ -268,6 +268,7 @@ $("#getLease").click(() => {
 });
 
 // Sends a message to the server letting it know that the socket is closing
+/*
 $(window).on("beforeunload", () => {
     try {
         socket.send(
@@ -280,3 +281,4 @@ $(window).on("beforeunload", () => {
         console.log(err);
     }
 });
+*/

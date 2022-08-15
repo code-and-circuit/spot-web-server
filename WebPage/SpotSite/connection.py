@@ -213,7 +213,7 @@ class WebSocket:
 
     def _test_if_can_receive(self, message: t.Mapping):
         if message == "Disconnected":
-            return
+            return message
         assert message["type"] == ReceiveEvent.RECEIVE, (
             'Invalid message type "%s". Was connection accepted?' % message["type"]
         )

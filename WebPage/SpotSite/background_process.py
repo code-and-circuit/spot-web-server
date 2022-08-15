@@ -898,8 +898,6 @@ class Background_Process:
 
         self.keyboard_control_mode = "Walk"
 
-        self._is_accepting_commands = False
-        self._should_run_commands = False
         self.command_queue = []
         self.programs = {}
         self.keys = {}

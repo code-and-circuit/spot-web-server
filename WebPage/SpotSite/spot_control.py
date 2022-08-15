@@ -180,7 +180,7 @@ class Spot_Control:
             footprint_R_body=rotation, body_height = self.height)
         self.command_client.robot_command(cmd)
         # I know the line is long. I'm lazy.
-        self.print(f'Rotated to yaw: {round(yaw, 2)}({round(math.degrees(yaw), 2)}°), roll: {round(roll, 2)}({round(math.degrees(roll), 2)}°), pitch: {round(pitch, 2)}({round(math.degrees(pitch), 2)}°)')
+        #self.print(f'Rotated to yaw: {round(yaw, 2)}({round(math.degrees(yaw), 2)}°), roll: {round(roll, 2)}({round(math.degrees(roll), 2)}°), pitch: {round(pitch, 2)}({round(math.degrees(pitch), 2)}°)')
 
     @dispatch
     def stand(self) -> None:

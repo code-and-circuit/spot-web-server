@@ -327,7 +327,7 @@ class Stitcher:
         initializes glfw, loads shaders, and starts the glfw loop
         
         """
-        return
+        # return
         self._init_glfw()
         self._load_shaders()
         self._start_glfw()
@@ -338,8 +338,8 @@ class Stitcher:
         
         """
         glfw.init()
-        self._window = glfw.create_window(self._width, self._height, "Image Stitching", None, None)
-        glfw.make_context_current(self._window)
+        # self._window = glfw.create_window(self._width, self._height, "Image Stitching", None, None)
+        # glfw.make_context_current(self._window)
 
     def _load_shaders(self) -> None:
         """
