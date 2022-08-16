@@ -31,6 +31,8 @@ import os
 import numpy
 import sys
 import time
+from xvfbwrapper import Xvfb
+
 
 from OpenGL.GL import *
 from OpenGL.GL import shaders, GL_VERTEX_SHADER
@@ -327,19 +329,32 @@ class Stitcher:
         initializes glfw, loads shaders, and starts the glfw loop
         
         """
-        return
-        self._init_glfw()
+        
+        try:
+            self._init_glfw()
+        except Exception as e:
+            print(f"Error creating glfw context")
+            return
+        print("Initialized!")
         self._load_shaders()
         self._start_glfw()
+
 
     def _init_glfw(self) -> None:
         """
         initializes glfw
         
         """
-        glfw.init()
-        glfw.window_hint(glfw.VISIBLE, glfw.FALSE)
+        try:
+            glfw.init()
+        except:
+            return
+        #glfw.window_hint(glfw.VISIBLE, glfw.FALSE)
         self._window = glfw.create_window(self._width, self._height, "Image Stitching", None, None)
+        if not self._window:
+            glfw.terminate()
+            raise Exception("No OpenGL Window")
+
         glfw.make_context_current(self._window)
 
     def _load_shaders(self) -> None:

@@ -443,9 +443,9 @@ red {
 }
 
 .battery {
-  width: 60px;
+  width: 50px;
   height: 20px;
-  outline: 1px solid white;
+  box-shadow: 0 0 0 1px white;
   position: fixed;
   top: 10px;
   right: 30px;
@@ -459,6 +459,16 @@ red {
   display:flex;
   justify-content: center;
   align-items: center;
+}
+
+.battery-decorator {
+  width: 3px;
+  height: 8px;
+  box-shadow: 0 0 0 1px white;
+  border-radius: 0 1px 1px 0;
+  position: relative;
+  top: 6px;
+  left: 51px;
 }
 
 #b_p {
