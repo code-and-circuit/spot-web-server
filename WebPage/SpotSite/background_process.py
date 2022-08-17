@@ -901,9 +901,9 @@ class Background_Process:
         self.command_queue = []
         self.programs = {}
         self.keys = {}
-        
-        self._program_database.close()
         self._is_shutting_down = False
+
+        pprint(self.get_state_of_everything())
 
     def _clear_lease(self) -> None:
         """
