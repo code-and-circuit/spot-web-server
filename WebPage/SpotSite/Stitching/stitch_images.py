@@ -262,8 +262,8 @@ def draw_routine(display, image_1, image_2, program):
     glMatrixMode(GL_MODELVIEW)
     glLoadIdentity()
     gluLookAt(eye_wrt_vo[0], eye_wrt_vo[1], eye_wrt_vo[2],
-              plane_wrt_vo[0], plane_wrt_vo[1], plane_wrt_vo[2],
-              up_wrt_vo[0], up_wrt_vo[1], up_wrt_vo[2])
+               plane_wrt_vo[0], plane_wrt_vo[1], plane_wrt_vo[2],
+               up_wrt_vo[0], up_wrt_vo[1], up_wrt_vo[2])
 
     program.use()
     program.set_camera1_mvp(image_1.MVP)
