@@ -150,6 +150,14 @@ socket.onmessage = (message) => {
     else if (data["type"] == "output") {
         addOutput(data["output"]);
     }
+    else if (data["type"] == "command_queue") {
+        const command_queue = JSON.parse(data["output"]);
+        const command_queue_div = $("#command-queue");
+        command_queue_div.html("");
+        command_queue.forEach(command => {
+            command_queue_div.html(command_queue_div.html() + program_handler.display_command(command));
+        })
+    }
     // Handles unknown output types (should not happen, just for safetey and potential debugging) 
     else {
         addOutput("<red>Type not recognized: " + data["type"] + "</red>");

@@ -308,7 +308,7 @@ def run_command(request: HttpRequest) -> JsonResponse:
         if background_process.bg_process.is_running and not background_process.bg_process.robot.is_estopped() and \
             background_process.bg_process._is_accepting_commands:
             # Adds the command to the queue of commands
-            background_process.bg_process.command_queue.append(data)
+            background_process.bg_process.add_command(data)
             return JsonResponse({
                 "valid": True,
                 "command_sent": True
@@ -506,6 +506,7 @@ def get_keyboard_control_state(request: HttpRequest) -> JsonResponse:
 
 def clear_queue(request: HttpRequest) -> JsonResponse:
     background_process.bg_process.command_queue = []
+    background_process.bg_process._update_command_queue()
 
     return JsonResponse({}, status=200)
 
@@ -532,4 +533,5 @@ async def websocket_view(socket: object) -> None:
         'type': "socket_create",
         'socket_index': socket_index
     })
+    background_process.bg_process._update_command_queue()
     await websocket.websocket_list.sockets[socket_index].keep_alive()

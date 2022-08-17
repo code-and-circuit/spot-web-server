@@ -107,7 +107,13 @@ red {
   margin-bottom: 20px;
 }
 
-.program-list-container, .command-controls, .command-queue {
+
+.command-queue {
+  overflow: auto;
+}
+
+
+.program-list-container, .command-controls {
   display: flex;
   align-items: center;
   justify-content: space-evenly;
@@ -455,10 +461,12 @@ red {
 .bar {
   position: relative;
   left: 0;
+  top: -8px;
   height: 100%;
   display:flex;
   justify-content: center;
   align-items: center;
+  border-radius: inherit;
 }
 
 .battery-decorator {

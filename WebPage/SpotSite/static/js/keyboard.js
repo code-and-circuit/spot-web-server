@@ -20,7 +20,7 @@ function toggle() {
         $(".ctrl").css({ top: "-140px" });
     } else {
         toggled = true;
-        $("#toggle").html("/\\");
+        $("#toggle").html("close");
         $(".ctrl").css({ top: "0" });
         $("#ctrl").focus();
     }

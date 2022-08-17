@@ -1060,6 +1060,7 @@ class Background_Process:
                 except IndexError:
                     socket_print(socket_index, "Command List is empty!")
                 self._should_run_commands = False
+                self._update_command_queue()
 
             while self.command_queue and self._will_immediately_run_commands:
                 command = self.command_queue[0]
@@ -1071,8 +1072,16 @@ class Background_Process:
                     self.command_queue.pop(0)
                 except IndexError:
                     socket_print(socket_index, "Command List is empty!")
+                self._update_command_queue()
         self.is_running_commands = False
         self._should_run_commands = False
+
+    def _update_command_queue(self):
+        socket_print(-1, json.dumps(self.command_queue), all=True, type="command_queue")
+
+    def add_command(self, data):
+        self.command_queue.append(data)
+        self._update_command_queue()
 
     def _run_programs(self, socket_index: any) -> None:
         """
@@ -1178,6 +1187,27 @@ class Background_Process:
         except Exception as e:
             socket_print(-1, e, all=True)
 
+    def _stitched_or_stamped(self, image: Image, front_right, front_left) -> str:
+        if image is not None:
+            return self._encode_base64(image)
+        front_right =front_right.shot.image.data
+        front_left = front_left.shot.image.data
+
+        img_file = BytesIO(front_right)
+        front_right = Image.open(img_file)
+        front_right = front_right.rotate(-90)
+
+        img_file = BytesIO(front_left)
+        front_left = Image.open(img_file)
+        front_left = front_left.rotate(-90)
+
+        full_image = Image.new("RGB", (1280, 480), "white")
+        full_image.paste(front_left, (640, 0))
+        full_image.paste(front_right, (0, 0))
+
+        return self._encode_base64(full_image)
+
+
     def _get_image(self, camera_name: str) -> None:
         """
         Gets and updates the client with an image
@@ -1191,26 +1221,7 @@ class Background_Process:
             front_left = self._image_client.get_image_from_sources(
                 ["frontleft_fisheye_image"])[0]
             image = self._stitch_images(front_right, front_left)
-            image = self._encode_base64(image)
-            # As a backup, just put the two images next to each other rather than stitching
-            if image is None:
-                front_right =front_right.shot.image.data
-                front_left = front_left.shot.image.data
-
-                img_file = BytesIO(front_right)
-                front_right = Image.open(img_file)
-                front_right = front_right.rotate(-90)
-
-                img_file = BytesIO(front_left)
-                front_left = Image.open(img_file)
-                front_left = front_left.rotate(-90)
-
-                full_image = Image.new("RGB", (1280, 480), "white")
-                full_image.paste(front_left, (640, 0))
-                full_image.paste(front_right, (0, 0))
-
-                image = self._encode_base64(full_image)
-        
+            image = self._stitched_or_stamped(image, front_right, front_left)
         if camera_name == "back":
             back = self._image_client.get_image_from_sources(
                 ["back_fisheye_image"])[0].shot.image.data
