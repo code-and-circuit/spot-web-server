@@ -1,7 +1,15 @@
 const valid_keys = ["q", "e", "w", "a", "s", "d", "r", "f", " ", "z", "x"];
 const refresh_rate = 0.2;
 
-const sitTimeout = 1;
+const sitStandTimeoutMs = 1000;
+const selfRightRollOverTimeoutMs = 5000;
+
+const time_for_commands = {
+    sit: 0,
+    stand: 0,
+    self_right: 0,
+    roll_over: 0
+}
 
 let robot_mode = "Walk";
 let toggled = false;
@@ -13,6 +21,47 @@ let cmdLoop = null;
     Functions for handling keyboard input to control the robot
     - Only one client can control the robot at a time (managed by the server)
 */
+
+function makeSureKeysArentPressedToMuch() {
+    const current_time = Date.now();
+    // console.log(current_time);
+    if (keys_down.includes("r")) {
+        if (current_time - time_for_commands.stand > sitStandTimeoutMs) {
+            time_for_commands.stand = current_time;
+            // console.log("Stand Sent!")
+        }
+        else {
+            keys_down.splice(keys_down.indexOf("r"), 1);
+        }
+    }
+    if (keys_down.includes("f")) {
+        if (current_time - time_for_commands.sit > sitStandTimeoutMs) {
+            time_for_commands.sit = current_time;
+            // console.log("Sit Sent!")
+        }
+        else {
+            keys_down.splice(keys_down.indexOf("f"), 1);
+        }
+    }
+    if (keys_down.includes("z")) {
+        if (current_time - time_for_commands.self_right > selfRightRollOverTimeoutMs) {
+            time_for_commands.self_right = current_time;
+            // console.log("Self Right Sent!")
+        }
+        else {
+            keys_down.splice(keys_down.indexOf("z"), 1);
+        }
+    }
+    if (keys_down.includes("x")) {
+        if (current_time - time_for_commands.roll_over > selfRightRollOverTimeoutMs) {
+            time_for_commands.roll_over = current_time;
+            // console.log("Roll Over Sent!")
+        }
+        else {
+            keys_down.splice(keys_down.indexOf("x"), 1);
+        }
+    }
+}
 
 // Toggles the keyboard control panel
 function toggle() {
@@ -75,6 +124,7 @@ $("#ctrl").focus(() => {
     );
     cmdLoop = setInterval(function () {
         if (keys_down.length > 0 || keys_up.length > 0) {
+            makeSureKeysArentPressedToMuch();
             socket.send(
                 JSON.stringify({
                     action: "keys",
