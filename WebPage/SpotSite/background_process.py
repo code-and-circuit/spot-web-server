@@ -659,7 +659,7 @@ class Background_Process:
         try:
             self.robot.power_off(cut_immediately=False, timeout_sec=20)
         except:
-            print_exception(socket)
+            print_exception(socket_index)
         # Checks to make sure that Spot successfully powered off
         if self.robot.is_powered_on():
             socket_print(socket_index, "<red>Robot power off failed</red>")
