@@ -130,17 +130,49 @@ def print_exception(socket_index: any):
 
     exc_type, exc_obj, exc_tb = sys.exc_info()
     fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-    print(exc_type)
+    message = ""
     if (exc_type == bosdyn.client.lease.ResourceAlreadyClaimedError):
-        socket_print(socket_index, "<red><b>Error:</b></red> A different device may have a lease,\
-                      or the robot may not be fully turned on.")
+        message = "<red><b>Error:</b></red> A different device may have a lease,\
+                      or the robot may not be fully turned on."
     elif (exc_type == bosdyn.client.exceptions.UnableToConnectToRobotError):
-        socket_print(socket_index, "<red><b>Error:</b></red> Unable to connect to the robot. Is it turned on and connected\
-            to the right WiFi?")
+        message = "<red><b>Error:</b></red> Unable to connect to the robot. Is it turned on and connected\
+            to the right WiFi?"
     elif (exc_type == bosdyn.client.estop.MotorsOnError):
-        socket_print(socket_index, "<red><b>Error:</b></red> Unable to acquire Estop while the motors are turned on.")
+        message = "<red><b>Error:</b></red> Unable to acquire Estop while the motors are turned on."
+    elif (exc_type == bosdyn.client.power.EstoppedError):
+        message = "<red><b>Error:</b></red> Robot cannot turn on while estopped."
+    elif (exc_type == bosdyn.client.lease.NoSuchLease):
+        message = "<red><b>Error:</b></red> Cannot perform this action: no lease for it has been acquired."
+    elif (exc_type == bosdyn.client.lease.NotActiveLeaseError):
+        print(f"Exception: {exc_obj} in {fname} line {exc_tb.tb_lineno}")
+        return
+    elif exc_type == bosdyn.client.exceptions.RpcError:
+        message = "<red><b>Error:</b></red> Could not perform this action"
+    elif exc_type == bosdyn.client.estop.InvalidIdError:
+        print(f"Exception: {exc_obj} in {fname} line {exc_tb.tb_lineno}")
+        return
+    elif exc_type == bosdyn.client.exceptions.LeaseUseError:
+        print(f"Exception: {exc_obj} in {fname} line {exc_tb.tb_lineno}")
+        return
+    elif exc_type == bosdyn.client.estop.EndpointUnknownError:
+        print(f"Exception: {exc_obj} in {fname} line {exc_tb.tb_lineno}")
+        return
+    elif exc_type == bosdyn.client.power.CommandTimedOutError:
+        print(f"Exception: {exc_obj} in {fname} line {exc_tb.tb_lineno}")
+        return
+    elif (exc_type == AttributeError):
+        print(f"Exception: {exc_obj} in {fname} line {exc_tb.tb_lineno}")        
+        return
+    elif (exc_type == Exception):
+        print(f"Exception: {exc_obj} in {fname} line {exc_tb.tb_lineno}")
+        return
     else:
-        socket_print(socket_index, f"<red><b>Exception</b></red><br>{exc_obj}<br>&emsp; in <u>{fname}</u> line <red>{exc_tb.tb_lineno}</red>")
+        message = f"<red><b>Exception</b></red><br>{exc_type}: {exc_obj}<br>&emsp; in <u>{fname}</u> line <red>{exc_tb.tb_lineno}</red>"
+    
+    if message == "":
+        print(f"{exc_type}, line {exc_tb.tb_lineno}")
+    else:
+        socket_print(socket_index, message, all=(socket_index==-1))
 
 def is_primitive(obj: object) -> bool:
     """
@@ -596,9 +628,17 @@ class Background_Process:
             bool: Whether the action was successful
         """        
         socket_print(socket_index, "Powering On...")
-        self.robot.power_on(timeout_sec=20)
+        try:
+            self.robot.power_on(timeout_sec=20)
+        except Exception as e:
+            print_exception(socket_index)
         # Checks to make sure that Spot successfully powered on
-        if not self.robot.is_powered_on():
+        robot_is_powered_on = False
+        try:
+            robot_is_powered_on = self.robot.is_powered_on()
+        except:
+            pass
+        if not robot_is_powered_on:
             socket_print(socket_index, "<red>Robot Power On Failed</red>")
             return False
         else:
@@ -616,7 +656,10 @@ class Background_Process:
             bool: Whether the action was successful
         """        
         socket_print(socket_index, "Powering off...")
-        self.robot.power_off(cut_immediately=False, timeout_sec=20)
+        try:
+            self.robot.power_off(cut_immediately=False, timeout_sec=20)
+        except:
+            print_exception(socket)
         # Checks to make sure that Spot successfully powered off
         if self.robot.is_powered_on():
             socket_print(socket_index, "<red>Robot power off failed</red>")
@@ -646,8 +689,8 @@ class Background_Process:
         self._is_connecting = True
 
         try:
-            if self.robot.is_estopped():
-                raise Exception("Robot is estopped. Cannot Acquire Lease.")
+            # if self.robot.is_estopped():
+            #     raise Exception("Robot is estopped. Cannot Acquire Lease.")
             socket_print(socket_index, "Acquiring Lease...")
             self._lease_client = self.robot.ensure_client(
                 bosdyn.client.lease.LeaseClient.default_service_name)
@@ -859,6 +902,7 @@ class Background_Process:
         Estops Spot
         """        
         if not self._has_estop:
+            socket_print(-1, "Estop Not Acquired", all=True)
             return
         if self._estop_keep_alive and not self.robot.is_estopped():
             socket_print(0, "estop", all=True, type="estop")
@@ -919,7 +963,7 @@ class Background_Process:
         self.keys = {}
         self._is_shutting_down = False
 
-        pprint(self.get_state_of_everything())
+        # pprint(self.get_state_of_everything())
 
     def _clear_lease(self) -> None:
         """
@@ -933,7 +977,10 @@ class Background_Process:
                     pass
 
         if self._lease_client and self._lease:
-            self._lease_client.return_lease(self._lease)
+            try:
+                self._lease_client.return_lease(self._lease)
+            except:
+                print_exception(-1)
 
         if self._lease_keep_alive:
             self._lease_keep_alive.shutdown()
@@ -953,7 +1000,10 @@ class Background_Process:
 
         if self._estop_keep_alive:
             self._estop_keep_alive.settle_then_cut()
-            self._estop_keep_alive.shutdown()
+            try:
+                self._estop_keep_alive.shutdown()
+            except AttributeError:
+                pass
 
         self._estop_keep_alive = None
         self._estop_client = None
@@ -1024,10 +1074,9 @@ class Background_Process:
         Raises:
             Exception: Raises if Spot fails to turn on
         """        
+        if not self.turn_on(socket_index):
+            return
         try:
-            if not self.turn_on(socket_index):
-                raise Exception("<red>Failed to turn robot on.</red>")
-
             self.is_running = True
             while self.is_running:
                 self._keep_robot_on(socket_index)
@@ -1152,6 +1201,8 @@ class Background_Process:
         Updates clients with the most recent robot state information
         """        
         state = self.get_robot_state()
+        if state == None:
+            return
         power_state = state.power_state
         battery_percentage = power_state.locomotion_charge_percentage.value
         battery_runtime = power_state.locomotion_estimated_runtime.seconds

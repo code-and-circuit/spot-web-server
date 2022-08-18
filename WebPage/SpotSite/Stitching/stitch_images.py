@@ -335,7 +335,7 @@ class Stitcher:
         except Exception as e:
             print(f"Error creating glfw context")
             return
-        print("Initialized!")
+        print("Initialized glfw")
         self._load_shaders()
         self._start_glfw()
 
@@ -404,11 +404,14 @@ class Stitcher:
         reads the stitched image from the glfw window and stores it
         
         """
-        glPixelStorei(GL_PACK_ALIGNMENT, 1)
-        data = glReadPixels(0, 0, self._width, self._height,
-                            GL_RGB, GL_UNSIGNED_BYTE)
-        image = Image.frombytes("RGB", self._display, data)
-        self._stitched_image = ImageOps.flip(image)
+        try:
+            glPixelStorei(GL_PACK_ALIGNMENT, 1)
+            data = glReadPixels(0, 0, self._width, self._height,
+                                GL_RGB, GL_UNSIGNED_BYTE)
+            image = Image.frombytes("RGB", self._display, data)
+            self._stitched_image = ImageOps.flip(image)
+        except Exception as e:
+            pass
 
     def _do_stitching(self) -> None:
         """
@@ -423,7 +426,10 @@ class Stitcher:
 
         image_1 = ImagePreppedForOpenGL(self._image_1)
         image_2 = ImagePreppedForOpenGL(self._image_2)
-        draw_routine(self._display, image_1, image_2, self._program)
+        try:
+            draw_routine(self._display, image_1, image_2, self._program)
+        except Exception as e:
+            pass#print("OpenGL error?")
 
     def _update_image(self) -> None:
         """

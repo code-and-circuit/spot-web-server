@@ -1,6 +1,8 @@
 const valid_keys = ["q", "e", "w", "a", "s", "d", "r", "f", " ", "z", "x"];
 const refresh_rate = 0.2;
 
+const sitTimeout = 1;
+
 let robot_mode = "Walk";
 let toggled = false;
 let keys_up = [];
