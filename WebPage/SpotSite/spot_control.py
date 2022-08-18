@@ -51,7 +51,7 @@ def dispatch(func: callable):
         try:
             return func(*args, **kwargs)
         except bosdyn.client.robot_command.BehaviorFaultError:
-            websocket.websocket_list.print(-1, f"<red>Robot has uncleared behavior faults!</red>:{func.__name__}", all=True)
+            websocket.websocket_list.print(-1, f"<red>Robot is unable to run this command: {func.__name__}.</red> <b>Try sitting</b>.", all=True)
         except Exception as e:
             websocket.websocket_list.print(-1, f"<red>ERROR</red>: {e}", all=True)
             
@@ -195,9 +195,13 @@ class Spot_Control:
         Sits the robot
         """        
         cmd = RobotCommandBuilder.synchro_sit_command()
-        self.command_client.robot_command(cmd)
+        try:
+            self.command_client.robot_command(cmd)
+        except Exception as e:
+            print(type(e))
+            if type(e) == bosdyn.client.robot_command.BehaviorFaultError:
+                websocket.websocket_list.print(-1, "<red>Robot is unable to sit.</red> Try <b>self-righting</b>.", all=True)
 
-    @dispatch
     def self_right(self) -> None:
         """
         Self-rights the robot
@@ -205,7 +209,14 @@ class Spot_Control:
         self.sit()
         time.sleep(1)
         cmd = RobotCommandBuilder.selfright_command()
-        self.command_client.robot_command(cmd)
+        try:
+            self.command_client.robot_command(cmd)
+        except Exception as e:
+            if type(e) == bosdyn.client.robot_command.BehaviorFaultError:
+                websocket.websocket_list.print(-1, "<red>Robot is unable to self-right.</red> You <b>must</b> turn the \
+                    robot motors off, and back on again. Press 'End Main Loop`, wait for the motors to turn off, \
+                        and press 'Start All'. Self-right before attemtping to sit or stand.", all=True)
+
 
     @dispatch
     def roll_over(self) -> None:

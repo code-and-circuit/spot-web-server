@@ -29,6 +29,7 @@
         lock
 """
 # General system imports
+import re
 import time
 import ctypes
 import sys
@@ -124,10 +125,22 @@ def print_exception(socket_index: any):
 
     Args:
         socket_index any: the index of the socket
-    """    
+    """
+    # ")
+
     exc_type, exc_obj, exc_tb = sys.exc_info()
     fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-    socket_print(socket_index, f"<red><b>Exception</b></red><br>{exc_obj}<br>&emsp; in <u>{fname}</u> line <red>{exc_tb.tb_lineno}</red>")
+    print(exc_type)
+    if (exc_type == bosdyn.client.lease.ResourceAlreadyClaimedError):
+        socket_print(socket_index, "<red><b>Error:</b></red> A different device may have a lease,\
+                      or the robot may not be fully turned on.")
+    elif (exc_type == bosdyn.client.exceptions.UnableToConnectToRobotError):
+        socket_print(socket_index, "<red><b>Error:</b></red> Unable to connect to the robot. Is it turned on and connected\
+            to the right WiFi?")
+    elif (exc_type == bosdyn.client.estop.MotorsOnError):
+        socket_print(socket_index, "<red><b>Error:</b></red> Unable to acquire Estop while the motors are turned on.")
+    else:
+        socket_print(socket_index, f"<red><b>Exception</b></red><br>{exc_obj}<br>&emsp; in <u>{fname}</u> line <red>{exc_tb.tb_lineno}</red>")
 
 def is_primitive(obj: object) -> bool:
     """
@@ -635,7 +648,7 @@ class Background_Process:
         try:
             if self.robot.is_estopped():
                 raise Exception("Robot is estopped. Cannot Acquire Lease.")
-
+            socket_print(socket_index, "Acquiring Lease...")
             self._lease_client = self.robot.ensure_client(
                 bosdyn.client.lease.LeaseClient.default_service_name)
             self._lease = self._lease_client.acquire()
@@ -643,6 +656,7 @@ class Background_Process:
                 self._lease_client)
 
             self._has_lease = True
+            socket_print(socket_index, "<green>Acquired Lease</green>")
             socket_print(-1, "acquire", all=True, type="lease_toggle")
 
         except Exception as e:
@@ -675,6 +689,7 @@ class Background_Process:
         self._is_connecting = True
 
         try:
+            socket_print(socket_index, "Acquiring Estop...")
             self._estop_client = self.robot.ensure_client(
                 EstopClient.default_service_name)
             ep = EstopEndpoint(self._estop_client,
@@ -684,6 +699,7 @@ class Background_Process:
             self.robot_is_estopped = False
 
             self._has_estop = True
+            socket_print(socket_index, "<green>Acquired Estop</green>")
             socket_print(-1, "acquire", all=True, type="estop_toggle")
 
         except:
@@ -801,7 +817,7 @@ class Background_Process:
                 self._command_client, socket_index, self.robot)
             
             socket_print(-1, "acquire", all=True, type="robot_toggle")
-            socket_print(socket_index, "Connected to robot")
+            socket_print(socket_index, "<green>Connected to robot</green>")
 
         except:
             print_exception(socket_index)
