@@ -124,7 +124,8 @@ $("#ctrl").focus(() => {
     );
     cmdLoop = setInterval(function () {
         if (keys_down.length > 0 || keys_up.length > 0) {
-            makeSureKeysArentPressedToMuch();
+            //makeSureKeysArentPressedToMuch();
+            // Keyboard timeouts result in weird behavior (Should try to fix at some point)
             socket.send(
                 JSON.stringify({
                     action: "keys",
