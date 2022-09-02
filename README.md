@@ -31,3 +31,4 @@ Arguments for run command:
 - Retry connection attempts if first attempt to robot failed
 - Add an "alert", or something that briefly displays new console outputs in case client is not looking at the console
 - Add ability to change the port 
+- Add rate limiting for certain keyboard controls from client (stand/sit commands should only be sent once/second, etc.)
