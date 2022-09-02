@@ -21,13 +21,21 @@ Arguments for run command:
 - ```--reload``` to automatically reload when files are changed
 - ```--port [Port]``` to set the port (8000 by default)
 
-**TODO**
-- Document the information returned from the get_state functions
-- Rewrite or credit the creator of connection.py
-- Add a complete description of what the server does, the features, how to uses it, and how you could create your own frontend with it
+**TODO** 
+
+Make a dedicated website explaining the server
+
+Important: (in order of importance)
+
+1. Explain the best way to add to/continue developing the server
+2. Add a complete description of what the server does, the features, how to use it, and how you could create your own frontend with it
+3. Add logging for erorr investigation and usage information
+4. Document the information returned from the get_state functions\
+
+General ToDos
+
+- Rewrite connection.py (it's too complicated, code was hacked together from multiple sources)
 - Create multiple walk commands if desired walking time exceeds the time allowed by the robot. If the desired time is too high, the robot says that the command is too far in the future
-- How to install and run
-- Explain the best way to add to/continue developing the server
 - Retry connection attempts if first attempt to robot failed
 - Add an "alert", or something that briefly displays new console outputs in case client is not looking at the console
 - Add ability to change the port 
