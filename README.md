@@ -15,7 +15,7 @@ Clone the repository, then run ```pip -r install /path/to/repo/WebPage/requireme
       ROBOT_USERNAME = YOUR_ROBOT_USERNAME
       ROBOT_PASSWORD = YOUR_ROBOT_PASSWORD
       SECRET_KEY = YOUR_DJANGO_SECRET_KEY
-      ROBOT_IP = YOUR_SPOT_IP (192.168.80.3 is the robot's default ip)
+      ROBOT_IP = YOUR_SPOT_IP
       ```
 2. ```cd path/to/spot-web-server/WebPage```
 3. ```uvicorn WebPage.asgi:application```
