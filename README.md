@@ -29,8 +29,8 @@ Arguments for command:
 
 Make a dedicated website explaining the server
 
-### Important: (in order of importance)
-
+### Important 
+**in order of importance**:
 1. Explain the best way to add to/continue developing the server
 2. Add a complete description of what the server does, the features, how to use it, and how you could create your own frontend with it
 3. Add logging for erorr investigation and usage information
