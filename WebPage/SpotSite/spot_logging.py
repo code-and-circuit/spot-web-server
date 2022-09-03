@@ -20,8 +20,7 @@ def log(text):
 
 
 def create_log():
-    print(os.getcwd())
-    path = "./" + str(os.getcwd()) + "/SpotSite/Logs/"
+    path = str(os.getcwd()) + "/SpotSite/Logs/"
     os.makedirs(path, exist_ok = True)
 
     now = datetime.datetime.now()
