@@ -45,7 +45,6 @@ from django.core.files.base import ContentFile
 
 from SpotSite import background_process
 from SpotSite import websocket
-from SpotSite.spot_logging import log_action
 from SpotSite.spot_logging import log
 
 import pathlib
@@ -533,5 +532,6 @@ async def websocket_view(socket: object) -> None:
         'type': "socket_create",
         'socket_index': socket_index
     })
+    log(f"New websocket connection: {socket_index}")
     background_process.bg_process._update_command_queue()
     await websocket.websocket_list.sockets[socket_index].keep_alive()

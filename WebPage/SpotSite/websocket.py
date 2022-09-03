@@ -22,7 +22,7 @@ import os
 import inspect
 from threading import Thread
 from SpotSite import background_process
-from SpotSite import spot_logging as l
+from SpotSite.spot_logging import log
 
 class Websocket:
     """
@@ -109,6 +109,7 @@ class Websocket:
                 print(f"RUNTIME ERORR: {e}")
         except Exception as e:
             print(f"EXCEPTION: {e}")
+        log(f"Socket closed: {self.index}")
 
         # Removes itself from the list of sockets so that the list does not get arbitrarily long if many devices are connecting
         # and disconnecting
@@ -234,7 +235,7 @@ class Websocket_List:
                 # print(message)
                 # print("ERROR IN SOCKETS")
 
-    def print(self, socket_index: (int, str), message: str, all: bool = False, type: str = "output") -> None:
+    def print(self, socket_index: any, message: str, all: bool = False, type: str = "output") -> None:
         """
         Takes information to be sent to ```print_out``` and creates an asynchronous task to output information
 

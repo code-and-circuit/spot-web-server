@@ -61,7 +61,7 @@ from io import BytesIO
 from SpotSite import spot_control
 from SpotSite import secrets
 from SpotSite import websocket
-from SpotSite.spot_logging import log_action
+from SpotSite.spot_logging import log
 from SpotSite.Stitching import stitch_images
 
 # Boston Dynamics imports
@@ -99,7 +99,7 @@ def close():
     """
     Helper function to help close the server properly. 
     
-    """    
+    """
     bg_process.is_running = False
     while bg_process._is_shutting_down:
         pass
@@ -131,6 +131,8 @@ def print_exception(socket_index: any):
     exc_type, exc_obj, exc_tb = sys.exc_info()
     fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
     message = ""
+
+    log(f"Exception\n\ttype: {exc_type}\n\tobject: {exc_obj}\n\tfilename: {fname} line:\n\t{exc_tb.tb_lineno}")
     if (exc_type == bosdyn.client.lease.ResourceAlreadyClaimedError):
         message = "<red><b>Error:</b></red> A different device may have a lease,\
                       or the robot may not be fully turned on."
@@ -356,6 +358,7 @@ class SqliteConnection:
     
     @lock_until_finished
     def write_program(self, name: str, program: tuple):
+        log(f"Writing program to databse: {program}")
         """
         Writes a program to the database
 
@@ -371,6 +374,7 @@ class SqliteConnection:
     
     @lock_until_finished  
     def delete_program(self, name: str):
+        log(f"Deleting program: {name}")
         """
         Deletes a program from the database
 
@@ -553,6 +557,7 @@ class Background_Process:
         
     """    
     def __init__(self):
+        log("Initializing background process")
         # Boilerplate
         self._sdk = None
         self.robot = None
@@ -614,6 +619,7 @@ class Background_Process:
         data = read_json(filepath)["defaults"]
         self._is_accepting_commands = data['accept_commands']
         self._will_immediately_run_commands = data['immediately_run_commands']
+        log(f"Loaded default data: {data}")
         return data
 
         
@@ -640,9 +646,11 @@ class Background_Process:
             pass
         if not robot_is_powered_on:
             socket_print(socket_index, "<red>Robot Power On Failed</red>")
+            log("Failed to turn on robot")
             return False
         else:
             socket_print(socket_index, "Powered On")
+            log("Turned on robot")
             return True
 
     def turn_off(self, socket_index: any) -> bool:
@@ -668,9 +676,11 @@ class Background_Process:
         # Checks to make sure that Spot successfully powered off
         if is_powered_on:
             socket_print(socket_index, "<red>Robot power off failed</red>")
+            log("Failed to turn off robot")
             return False
         else:
             socket_print(socket_index, "Powered Off")
+            log("Turned off robot")
             return True
 
     def _acquire_lease(self, socket_index: any) -> bool:
@@ -716,6 +726,8 @@ class Background_Process:
         finally:
             self._is_connecting = False
 
+        log(f"Attempted to acquire lease. Result: {success} ")
+
         return success
 
     def _acquire_estop(self, socket_index: any) -> bool:
@@ -759,6 +771,7 @@ class Background_Process:
         finally:
             self._is_connecting = False
 
+        log(f"Attempted to acquire estop. Result: {success} ")
         return success
 
     def _acquire_time_sync(self, socket_index: any) -> bool:
@@ -794,6 +807,7 @@ class Background_Process:
         finally:
             self._is_connecting = False
 
+        log(f"Attempted to acquire time sync. Result: {success} ")
         return success
 
     def _robot_is_on_wifi(self, ip: str = secrets.ROBOT_IP) -> bool:
@@ -805,7 +819,8 @@ class Background_Process:
 
         Returns:
             bool: Whether a ping was successful
-        """        
+        """
+        return True # Don't run it
         try:
             is_admin = os.getuid() == 0
         except AttributeError:
@@ -877,6 +892,7 @@ class Background_Process:
         finally:
             self._is_connecting = False
 
+        log(f"Attempted to connect to robot. Result: {success} ")
         return success
 
     def _connect_all(self, socket_index: any) -> bool:
@@ -917,6 +933,7 @@ class Background_Process:
             # Clear command queue so Spot does not execute commands the instant
             # the estop is released
             self.command_queue = []
+            log("Estopped robot")
 
     def release_estop(self) -> None:
         """
@@ -928,6 +945,7 @@ class Background_Process:
             socket_print(0, "estop_release", all=True, type="estop")
             self.robot_is_estopped = False
             self._estop_keep_alive.allow()
+            log("Released robot estop")
 
     def toggle_estop(self) -> None:
         """
@@ -994,6 +1012,7 @@ class Background_Process:
         self._lease = None
         self._lease_client = None
         
+        log("Disconnected and cleared lease")
         socket_print(-1, "clear", all=True, type="lease_toggle")
 
     def _clear_estop(self) -> None:
@@ -1014,6 +1033,7 @@ class Background_Process:
         self._estop_client = None
         self._has_estop = False
         
+        log("Disconnected and cleared estop")
         socket_print(-1, "clear", all=True, type="estop_toggle")
 
     def _clear_time_sync(self) -> None:
@@ -1029,6 +1049,7 @@ class Background_Process:
         self._time_sync_client = None
         self._time_sync_thread = None
         self._has_time_sync = False
+        log("Disconnected and cleared time sync")
 
     def _disconnect_from_robot(self) -> None:
         """
@@ -1048,6 +1069,8 @@ class Background_Process:
         self._sdk = None
         
         socket_print(-1, "clear", all=True, type="robot_toggle")
+        log("Disconnected from robot")
+
 
     def start(self, socket_index: any) -> None:
         """
@@ -1066,7 +1089,7 @@ class Background_Process:
         socket_print(socket_index, "start", all=True, type="bg_process")
         self.update_robot_state()
         self._background_loop(socket_index)
-
+        log("Clearing after background loop ended")
         self._clear(socket_index)
 
     def _background_loop(self, socket_index: any) -> None:
@@ -1083,6 +1106,7 @@ class Background_Process:
             return
         try:
             self.is_running = True
+            log("Started background loop")
             while self.is_running:
                 self._keep_robot_on(socket_index)
                 self._run_programs(socket_index)
@@ -1090,6 +1114,7 @@ class Background_Process:
 
         except:
             print_exception(socket_index)
+            log("Background loop ended due to exception")
 
     def _keep_robot_on(self, socket_index: any) -> None:
         """
@@ -1162,6 +1187,7 @@ class Background_Process:
         """        
         if self.program_is_running:
             program = self._program_database.get_program(self.active_program_name)
+            log(f"Running program: {self.active_program_name}")
             try:
                 for command in program:
                     self._do_command(command)
@@ -1187,6 +1213,7 @@ class Background_Process:
         """        
         self.image_stitcher = stitch_images.Stitcher()
         start_thread(self.image_stitcher.start_glfw_loop)
+        log("Started video loop")
         while self._show_video_feed:
             self._get_images()
             self.update_robot_state()
@@ -1313,6 +1340,7 @@ class Background_Process:
         Args:
             command (object): The command
         """        
+        log(f"Running command: {command}")
         action = command['Command']
 
         if action == 'stand':
@@ -1471,6 +1499,7 @@ class Background_Process:
         """        
         self.is_running = False
         self._show_video_feed = False
+        log("Ending background process")
 
     def get_programs(self) -> list:
         """

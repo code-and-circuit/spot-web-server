@@ -31,8 +31,6 @@ import os
 import numpy
 import sys
 import time
-from xvfbwrapper import Xvfb
-
 
 from OpenGL.GL import *
 from OpenGL.GL import shaders, GL_VERTEX_SHADER

@@ -20,9 +20,10 @@ def log(text):
 
 
 def create_log():
-    now = datetime.datetime.now()
     path = str(os.getcwd()) + "\\SpotSite\\Logs\\"
+    os.makedirs(path, exist_ok = True)
 
+    now = datetime.datetime.now()
     date = str(now.date())
     time = str(datetime.time(now.hour, now.minute,
                now.second)).replace(":", ".")

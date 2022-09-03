@@ -15,7 +15,7 @@
 import time
 import math
 from SpotSite import websocket
-from SpotSite import spot_logging as l
+from SpotSite.spot_logging import log
 from pprint import pprint
 
 from bosdyn.api import robot_command_pb2, mobility_command_pb2
@@ -110,6 +110,7 @@ class Spot_Control:
             Stands and resets the robot's ortientation
     """
     def __init__(self, cmd_client: bosdyn.client.robot_command.RobotCommandClient, s: any, robot: bosdyn.client.robot):
+        log("Initialized Spot Control")
         self.command_client = cmd_client
         self.socket_index = s
         self.robot = robot
@@ -179,6 +180,7 @@ class Spot_Control:
         cmd = RobotCommandBuilder.synchro_stand_command(
             footprint_R_body=rotation, body_height = self.height)
         self.command_client.robot_command(cmd)
+        log(f"Rotating Spot\n\tyaw: {yaw}\n\troll: {roll}\n\tpitch: {pitch}")
         # I know the line is long. I'm lazy.
         #self.print(f'Rotated to yaw: {round(yaw, 2)}({round(math.degrees(yaw), 2)}°), roll: {round(roll, 2)}({round(math.degrees(roll), 2)}°), pitch: {round(pitch, 2)}({round(math.degrees(pitch), 2)}°)')
 
@@ -189,12 +191,14 @@ class Spot_Control:
         """        
         cmd = RobotCommandBuilder.synchro_stand_command(body_height = self.height)
         self.command_client.robot_command(cmd)
+        log("Standing Spot")
 
     def sit(self) -> None:
         """
         Sits the robot
         """        
         cmd = RobotCommandBuilder.synchro_sit_command()
+        log("Sitting Spot")
         try:
             self.command_client.robot_command(cmd)
         except Exception as e:
@@ -209,6 +213,7 @@ class Spot_Control:
         self.sit()
         time.sleep(1)
         cmd = RobotCommandBuilder.selfright_command()
+        log('Self-righting Spot')
         try:
             self.command_client.robot_command(cmd)
         except Exception as e:
@@ -222,7 +227,8 @@ class Spot_Control:
     def roll_over(self) -> None:
         """
         Rolls the robot over (to take out battery)
-        """        
+        """
+        log("Rolling over Spot")
         # Direction(?) d = basic_command_pb2.BatteryChangePoseCommand.Request.HINT_RIGHT
         cmd = RobotCommandBuilder.battery_change_pose_command()
         self.command_client.robot_command(cmd)
@@ -242,7 +248,6 @@ class Spot_Control:
         walk.synchronized_command.mobility_command.params.CopyFrom(
             RobotCommandBuilder._to_any(self.collision_avoid_params))
         self.command_client.robot_command(walk, end_time_secs=time.time() + t)
-        self.print(f'Walking at ({x}, {y}, {z})m/s for {t}s')
         # Don't allow callable commands until robot is done walking
         time.sleep(t)
         
@@ -258,6 +263,7 @@ class Spot_Control:
             t (float, optional): The duration of the command. Defaults to 0.
             d (float, optional): The total distance the command should run. Defaults to 0.
         """        
+        log(f"Waling Spot\n\tx: {x}\n\ty: {y}\n\tz: {z}\n\ttime: {t}\n\tdistance: {d}")
 
         # Set the time based off of the desired distance (NOT WORKING PROPERLY - probably need to do vector math)
         if t == 0:
@@ -287,11 +293,12 @@ class Spot_Control:
             height (float): The height
         """        
         # Create stand height command
-
         self.height = clamp(height, self.HEIGHT_OFFSET_MIN, self.HEIGHT_OFFSET_MAX)
         cmd = RobotCommandBuilder.synchro_stand_command(body_height=self.height)
         self.command_client.robot_command(cmd)
         self.print(f'Standing at: {height}')
+        log(f"Standing Spot at: {self.height}")
+
 
     @dispatch
     def keyboard_walk(self, dx: float, dy: float, dz: float) -> None:

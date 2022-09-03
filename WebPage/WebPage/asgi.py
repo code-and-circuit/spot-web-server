@@ -17,7 +17,9 @@ from uvicorn.main import Server
 import django
 from django.core.asgi import get_asgi_application
 from SpotSite.middleware import websockets
-import SpotSite.spot_logging as l
+from SpotSite.spot_logging import create_log
+
+create_log()
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'WebPage.settings')
 
