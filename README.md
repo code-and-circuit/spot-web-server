@@ -33,8 +33,7 @@ Make a dedicated website explaining the server
 **in order of importance**:
 1. Explain the best way to add to/continue developing the server
 2. Add a complete description of what the server does, the features, how to use it, and how you could create your own frontend with it
-3. Add logging for erorr investigation and usage information
-4. Document the information returned from the get_state functions\
+3. Document the information returned from the get_state functions\
 
 ### General ToDos
 
@@ -45,3 +44,4 @@ Make a dedicated website explaining the server
 - Add ability to change the port 
 - Add rate limiting for certain keyboard controls from client (stand/sit commands should only be sent once/second, etc.)
 - Add more stuff to the config.json for more customizability
+- Potentially add more logging info
