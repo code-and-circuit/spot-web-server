@@ -9,7 +9,7 @@ import inspect
 
 def log(text):
     time = str(datetime.datetime.now().time())
-    files_path = os.path.join(str(os.getcwd()) + "\\SpotSite\\Logs", "*")
+    files_path = os.path.join(str(os.getcwd()) + "/SpotSite/Logs", "*")
     files = sorted(
         glob.iglob(files_path), key=os.path.getctime, reverse=True)
     filename = files[0]
@@ -20,7 +20,7 @@ def log(text):
 
 
 def create_log():
-    path = str(os.getcwd()) + "\\SpotSite\\Logs\\"
+    path = str(os.getcwd()) + "/SpotSite/Logs/"
     os.makedirs(path, exist_ok = True)
 
     now = datetime.datetime.now()
