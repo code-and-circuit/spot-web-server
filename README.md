@@ -1,6 +1,12 @@
 # spot-web-server
 
-**To Run**
+**Overview**
+*insert paragraph*
+
+**Installing**
+Clone the repository, then run ```pip -r install /path/to/repo/WebPage/requirements.txt``` to install python required python modules.
+
+**Running**
 
 - add a file to spot-web-server\WebPage\SpotSite named 
   ```
