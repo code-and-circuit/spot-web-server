@@ -27,6 +27,7 @@ I have no desire to refactor since it works, but anyone who wants to is welcome 
   --container-border: hsl(var(--main-hue), calc(var(--saturation-mult) * 25%), calc(var(--brightness-mult) * 12%));
   --selected-container: var(--green);
   --selected-text: hsl(var(--main-hue), calc(var(--saturation-mult) * 25%), calc(var(--brightness-mult) * 10%));
+  --alert: hsla(var(--main-hue), calc(var(--saturation-mult) * 25%), calc(var(--brightness-mult) * 30%), 0.7);
 
 }
 
@@ -344,7 +345,8 @@ red {
   margin-top: 40px;
   width: 100%;
   display: flex;
-  flex-direction: column;
+  column-gap: 10px;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
   margin-bottom: -60px;
@@ -368,7 +370,6 @@ red {
 }
 
 #stop-program {
-  margin-top: 10px;
   background: var(--body-bg);
   border: 1px solid var(--white);
   cursor: pointer;
@@ -490,4 +491,53 @@ red {
   font-size: 16px;
   background: var(--body-bg);
   padding: 3px;
+}
+
+.alert {
+  padding: 10px;
+  width: 15%;
+  min-width: 200px;
+  height: 50px;
+  background: var(--alert);
+  backdrop-filter: blur(1px);
+  border-radius: 0 0 0 5px;
+  cursor: pointer;
+  transition: 1s;
+  overflow: hidden;
+
+  animation: alertAnimation 0.5s ease;
+}
+
+@keyframes alertAnimation {
+  from {transform: translateX(15vw);}
+  to {transform: translateX(0);}
+}
+
+@keyframes fadeOut {
+  from {opacity: 100%}
+  to {opacity: 0%}
+}
+
+.alert:hover {
+  backdrop-filter: blur(3px);
+}
+
+.alerts-container {
+  width: calc(15% + 10px);
+  min-width: 210px;
+  top: 0;
+  right: 0;
+  position: fixed;
+  height: 220px;
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.alerts {
+  width: 100%;
+  display: flex;
+  row-gap: 5px;
+  z-index: 1000;
+  flex-direction: column;
+  justify-content: left;
 }

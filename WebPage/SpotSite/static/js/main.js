@@ -183,6 +183,7 @@ socket.onclose = (message) => {
 // Adds output to the client console and scrolls to the bottom. Text can be added to a new line or
 // on the same line.
 function addOutput(text, sameLine = false) {
+    runAlert(text);
     if (sameLine) {
         $("#output").html($("#output").html() + " " + text);
     } else {
