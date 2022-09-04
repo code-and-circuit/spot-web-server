@@ -56,16 +56,91 @@ The other option is to connect to Spot's wifi (or connect Spot to wifi with inte
 
 For people on Code & Circuit Spot/Pro Team wanting to continue developing the server, contact me and I will give you permissions to make changes.
 
-## TODO
+# Using the Server
+
+## Connecting and Main Panel
+To connect the server to the robot, press “Connect to Robot”. This will start the live video feed, as well as show the battery with the number of minutes remaining
+
+To acquire the estop, press “Acquire Estop”. This will give you the ability to use the emergency stop. The robot can be emergency stopped by pressing “ESTOP” (button only shows up when the estop has been acquired).
+
+To acquire a lease, press “Acquire Lease”. This will give the server the ability to send mobility commands to control Spot’s movement. If another device already has a lease (like the remote controller), the website will tell you that another device already has a lease. To fix this, return the lease on the device that has it (to do this on the controller, open the Spot app, press on the power icon in the top middle, and choose “give up control” ).
+
+Pressing “Start Main Loop” will do all three previous actions for you, as well as turn on Spot’s motors and enable the ability for mobility commands to be sent to Spot (such as from Scratch). This button must be pressed in order to send such commands.
+
+Pressing “Stop Main Loop” will turn off Spot’s motors and disconnect all services. It’s a good idea to do this before physically turning off the robot, if the server is connected to the robot. 
+
+The 3 services (Robot Connection, Estop, Lease) can each be manually released by pressing their corresponding “Clear” button (only available once the service has been acquired).
+
+### Keyboard Controls
+The robot can be controlled with the keyboard once “Start Main Loop” has been pressed and the robot has successfully turned on. To access keyboard controls, click on “keyboard control” in the top left. 
+
+Keyboard controls will only be sent if the keyboard control box is selected (denoted by the yellow border around it). You can click outside of this box to deselect in and click inside of it to select it again.
+
+## Keys
+- ```space``` toggle between Stand Mode(for rotating the body while standing) and Walk Mode(for moving Spot).
+
+- ```r``` stand up
+- ```f``` sit down
+- ```z``` self right (if Spot has fallen over or is otherwise not in his sitting position)
+- ```x``` roll over (for changing the battery)
+
+### Stand Mode
+- ```w``` rotate pitch towards the ground
+- ```s``` rotate pitch away from the ground
+- ```a``` rotate yaw to the left
+- ```d``` rotate yaw to the right
+- ```q``` rotate roll counterclockwise
+- ```e``` rotate roll clockwise
+		
+### Walk Mode
+- ```w``` walk forwards
+- ```s``` walk backwards
+- ```a``` strafe left
+- ```d``` strafe right
+- ```q``` turn counterclockwise
+- ```e``` turn clockwise
+
+
+## Programs and Commands
+Once “Start Main Loop” has been pressed, commands from Scratch can be sent to Spot. By default, all commands coming from Scratch will be accepted and immediately run, but this can be changed.
+
+Whether or not the server is accepting commands from Scratch can be toggled by pressing on the box to the left of “Accept commands”.
+
+Whether or not the server will immediately run commands from Scratch can be toggled by pressing on the box to the left of “Run commands”. 
+
+When commands are accepted from Scratch, they are added to a queue of commands to run. When the server immediately runs commands, this queue is generally kept empty. If commands are not immediately run, they will still be added to the queue. The queue will show up in the second box from the left (after the Programs and Commands header). 
+
+If there are commands in the queue that you want to step through one by one, you can press “step command”. This will run the command at the top of the queue, remove it from the queue, and then wait for the next action. 
+
+If there are commands in the queue and “Run commands” is toggled on, the commands will be immediately executed.
+
+If you want to clear the commands in the queue, press “Clear Command Queue” at the top of the screen.
+
+## Using The Scratch Extension
+
+Video feed is enabled by default and will be shown in the stage. There are Scratch blocks inside of the Spot extension to disable and enable the video feed. 
+
+All Scratch blocks and what they do should be fairly intuitive. Blocks telling Spot to walk will force the program to wait for 1 second to prevent commands from being sent too quickly. Blocks telling Spot to rotate his body in a specific way do not force the program to wait, to “wait” block (in the “control” section) must be used to force the program to wait.
+
+Any errors with commands sent to Spot from Scratch will be outputted on the server website. An example of this would be telling Spot to move forward, but leaving the amount blank. This will not crash anything, but it will show up on the website so you can know what went wrong. 
+
+At the moment, the server does not differentiate what computer is sending Scratch commands, so it is important that only one computer sends them at a time. If multiple computers send commands at a time, they may build up in the queue and Spot may execute commands well after they stop being sent. You can always press “ESTOP”, or toggle off accepting commands and clear the queue if this happens.
+
+## Python Programs
+There is a python module for sending programs to Scratch that can be found in Code & Circuit’s organization on Github. There are example programs that should outline how to use it.
+
+When programs are sent, they are saved to a database on the server and can be chosen, viewed, run, or deleted, in the two panels on the right side of the screen under the header “Programs and Commands”.
+
+# TODO
 
 Make a dedicated website explaining the server
 
-### Important 
-**in order of importance**:
+## Important 
+### in order of importance:
 1. Add a complete description of what the server does, the features, how to use it, and how you could create your own frontend with it
 2. Document the information returned from the get_state functions\
 
-### General ToDos
+## General ToDos
 
 - Rewrite connection.py (it's too complicated, code was hacked together from multiple sources)
 - Create multiple walk commands if desired walking time exceeds the time allowed by the robot. If the desired time is too high, the robot says that the command is too far in the future
@@ -74,3 +149,7 @@ Make a dedicated website explaining the server
 - Add rate limiting for certain keyboard controls from client (stand/sit commands should only be sent once/second, etc.)
 - Add more stuff to the config.json for more customizability
 - Potentially add more logging info
+
+
+
+
