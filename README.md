@@ -19,7 +19,29 @@ Code & Circuit's Spot Web Server was built with these ideas in mind. Not only do
 
 The web server is what connects to Spot and manages connections and services with the robot. A centralized place for such things to be managed means that people wishing to control Spot do not need to worry about them, but it also means that there is no downtime between when a program can be run. The server stays connected with Spot continuously so multiple programs can be run, edited, and rerun by multiple different people without ever having to turn Spot off or disconnect from the robot. Even for those wishing to code using the Spot SDK directly, the same is true.
 
-*more details to follow*
+The website connected to the server provides means to control Spot with the keyboard. These controls include basic motor controls in both stand mode and walk mode. Spot can also be self-righted and rolled over for battery change from the website. The website displays Spot's remaining battery percentage, as well as the estimated amount of remaining runtime. There is a live feed of Spot's front and back visual cameras. The views from the two front cameras are stitched together to make it easier to understand where Spot is. A realtime output console is also included for feedback relating to controlling Spot, as well as receiving potential errors when running code. 
+
+### Coding Spot
+There are three main ways to control Spot using Code & Circuit's Spot Web Server. Regardless of which way is chosen, any errors are caught and handled by the server as to prevent them from crashing the entire server when there is an error in the code. Errors and potential helpful feedback for them are displayed in the website's output console for easy debugging. 
+
+The three ways to control Spot, in order from least to most complex are as follows
+1. Scratch. A Scratch extension allows beginner programmers to control Spot without the need to manually write code. The Scratch extension communicates with the server and allows for bidirectional communication. Code & Circuit's fork of Scratch, and an overview of the extension, can be found [here](https://github.com/kaspesla/scratch-vm). Commands are sent one by one and executed by the server.
+
+2. Python Module. A python module allows intermediate programmers to control Spot by writing Python code. The module works similarly to the Scratch extension. Programs are packaged, sent to the server, and stored in a database, allowing them to be viewed and run at any time. This is especially useful in a classroom settings, where multiple students can write code and send it to the server at the same time. The module and an overview of it can be found [here](https://github.com/code-and-circuit/cc-python-spot-control).
+
+3. Spot SDK. The Spot SDK can still be used to control Spot. The web server allows for files or entire folders to be uploaded and run. A filename and entry function name must be provided. Necessary services to control Spot can be imported from the existing server files so that Spot can be controlled without the need to register or connect new services. This allows more advanced programmers to still use the Spot SDK, but without the need to worry about connecting, authenticating, or registering basic services.
+
+When commands are sent to the server from Scratch or the pre-packaged python scripts, they are added to a command queue. These commands are executed at the server's leisure. The commands in the queue are visible on the connected website. The website also provides the ability to not accept commands at all, to accept them and not run them, and to step through commands in the queue one-by-one. There are a variety of use cases for these options.
+
+Programs that are packaged and sent from the Python module are saved to a database and can be viewed from the website. The website lists all programs and their names, and provides the ability to run the programs or delete them from the database. When a program is selected, it is displayed on the website so that the code can be reviewed before running.
+
+Since the server accepts programs and commands through http requests, Spot could in theory be controlled by any language that supports making such requests. Video feed and some relevant information is provided through a websocket, so this information could be received and displayed using any language supporting websockets.
+
+### Making Custom Frontends
+Since the Spot Web Server operates using websockets and http requests, custom frontends can be made to display all existing information. The server can be queried for information, which can then be displayed on custom websites. The server will also periodically send some information through connected websockets, which allows for the website to be updated realtime without the need to reload. Information that can be queried for and is sent through websockets is specified in the next section.
+
+## Querying and Websockets
+*insert information*
 
 ## Installing and Running
 There is a known potential issue with image stitching when running the server on a device with no graphical context. Xvfb can be used to create this context virtually, or the issue can be ignored and the server will handle it.
