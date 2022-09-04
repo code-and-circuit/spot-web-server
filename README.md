@@ -1,7 +1,20 @@
 # Code & Circuit's Spot Web Server
 Created and maintained by Will Scheirey and the [Code & Circuit](https://codeandcircuit.org/) team
 
+### Sections
+- [Overview](https://github.com/code-and-circuit/spot-web-server#overview)
+- [Querying and Websockets](https://github.com/code-and-circuit/spot-web-server#querying-and-websockets)
+- [Installing and Running](https://github.com/code-and-circuit/spot-web-server#installing-and-running)
+- [Developing](https://github.com/code-and-circuit/spot-web-server#developing)
+- [Using the Server](https://github.com/code-and-circuit/spot-web-server#using-the-server)
+
 ## Overview
+
+### Sections
+- [Thesis](https://github.com/code-and-circuit/spot-web-server#thesis)
+- [The Server](https://github.com/code-and-circuit/spot-web-server#code--circuits-spot-web-server-1)
+- [Coding Spot](https://github.com/code-and-circuit/spot-web-server#coding-spot)
+- [Making Custom Frontends](https://github.com/code-and-circuit/spot-web-server#making-custom-frontends)
 
 ### Thesis
 
@@ -25,7 +38,7 @@ The website connected to the server provides means to control Spot with the keyb
 There are three main ways to control Spot using Code & Circuit's Spot Web Server. Regardless of which way is chosen, any errors are caught and handled by the server as to prevent them from crashing the entire server when there is an error in the code. Errors and potential helpful feedback for them are displayed in the website's output console for easy debugging. 
 
 The three ways to control Spot, in order from least to most complex are as follows
-1. Scratch. A Scratch extension allows beginner programmers to control Spot without the need to manually write code. The Scratch extension communicates with the server and allows for bidirectional communication. Code & Circuit's fork of Scratch, and an overview of the extension, can be found [here](https://github.com/kaspesla/scratch-vm). Commands are sent one by one and executed by the server.
+1. Scratch. A Scratch extension allows beginner programmers to control Spot without the need to manually write code. The Scratch extension communicates with the server and allows for bidirectional communication. Code & Circuit's fork of Scratch, and an overview of the extension, can be found [here](https://github.com/kaspesla/scratch-vm). Commands are sent one by one and executed by the server. 
 
 2. Python Module. A python module allows intermediate programmers to control Spot by writing Python code. The module works similarly to the Scratch extension. Programs are packaged, sent to the server, and stored in a database, allowing them to be viewed and run at any time. This is especially useful in a classroom settings, where multiple students can write code and send it to the server at the same time. The module and an overview of it can be found [here](https://github.com/code-and-circuit/cc-python-spot-control).
 
@@ -34,6 +47,8 @@ The three ways to control Spot, in order from least to most complex are as follo
 When commands are sent to the server from Scratch or the pre-packaged python scripts, they are added to a command queue. These commands are executed at the server's leisure. The commands in the queue are visible on the connected website. The website also provides the ability to not accept commands at all, to accept them and not run them, and to step through commands in the queue one-by-one. There are a variety of use cases for these options.
 
 Programs that are packaged and sent from the Python module are saved to a database and can be viewed from the website. The website lists all programs and their names, and provides the ability to run the programs or delete them from the database. When a program is selected, it is displayed on the website so that the code can be reviewed before running.
+
+Short overviews of using the Scratch extension and Python module from the connected website can be found [here](https://github.com/code-and-circuit/spot-web-server#using-the-scratch-extension).
 
 Since the server accepts programs and commands through http requests, Spot could in theory be controlled by any language that supports making such requests. Video feed and some relevant information is provided through a websocket, so this information could be received and displayed using any language supporting websockets.
 
@@ -79,7 +94,12 @@ The other option is to connect to Spot's wifi (or connect Spot to wifi with inte
 For people on Code & Circuit Spot/Pro Team wanting to continue developing the server, contact me and I will give you permissions to make changes.
 
 # Using the Server
-
+### Sections
+- [Connecting and Main Panel](https://github.com/code-and-circuit/spot-web-server#connecting-and-main-panel)
+- [Keyboard Controls](https://github.com/code-and-circuit/spot-web-server#keyboard-controls)
+- [Programs and Commands](https://github.com/code-and-circuit/spot-web-server#programs-and-commands)
+- [Using the Scratch Extension](https://github.com/code-and-circuit/spot-web-server#using-the-scratch-extension)
+- [Python Programs](https://github.com/code-and-circuit/spot-web-server#python-programs)
 ## Connecting and Main Panel
 To connect the server to the robot, press “Connect to Robot”. This will start the live video feed, as well as show the battery with the number of minutes remaining
 
