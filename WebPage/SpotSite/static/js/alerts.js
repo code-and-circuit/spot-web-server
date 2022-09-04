@@ -12,7 +12,7 @@ function isElementInViewport (el) {
 }
 
 function runAlert(text) {
-    // if (isElementInViewport($("#output"))) return;
+    if (isElementInViewport($("#output"))) return;
     const p = document.createElement("p");
     p.className = "alert"
     p.innerHTML = text;
