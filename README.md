@@ -3,7 +3,7 @@ Created and maintained by Will Scheirey and the [Code & Circuit](https://codeand
 
 ### Sections
 - [Overview](https://github.com/code-and-circuit/spot-web-server#overview)
-- [Querying and Websockets](https://github.com/code-and-circuit/spot-web-server#querying-and-websockets)
+- [Requests and Websockets](https://github.com/code-and-circuit/spot-web-server#querying-and-websockets)
 - [Installing and Running](https://github.com/code-and-circuit/spot-web-server#installing-and-running)
 - [Developing](https://github.com/code-and-circuit/spot-web-server#developing)
 - [Using the Server](https://github.com/code-and-circuit/spot-web-server#using-the-server)
@@ -55,7 +55,7 @@ Since the server accepts programs and commands through http requests, Spot could
 ### Making Custom Frontends
 Since the Spot Web Server operates using websockets and http requests, custom frontends can be made to display all existing information. The server can be queried for information, which can then be displayed on custom websites. The server will also periodically send some information through connected websockets, which allows for the website to be updated realtime without the need to reload. Information that can be queried for and is sent through websockets is specified in the next section.
 
-## Querying and Websockets
+## Requests and Websockets
 *insert information*
 
 ## Installing and Running
