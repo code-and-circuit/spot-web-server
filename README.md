@@ -15,7 +15,11 @@ With the right tools, Spot could be a vessel through which people learn to progr
 
 ### Code & Circuit's Spot Web Server
 
-Code & Circuit's Spot Web Server was built with this idea in mind. Not only does it provide a web interface for those wishing to control Spot without the tablet that comes with the robot, but it also provides the ability to control Spot
+Code & Circuit's Spot Web Server was built with these ideas in mind. Not only does it provide a web interface for those wishing to control Spot without the tablet that comes with the robot, but it also provides the ability to control Spot using various forms of programming to suit a programmer's experience.
+
+The web server is what connects to Spot and manages connections and services with the robot. A centralized place for such things to be managed means that people wishing to control Spot do not need to worry about them, but it also means that there is no downtime between when a program can be run. The server stays connected with Spot continuously so multiple programs can be run, edited, and rerun by multiple different people without ever having to turn Spot off or disconnect from the robot. Even for those wishing to code using the Spot SDK directly, the same is true.
+
+*more details to follow*
 
 ## Installing and Running
 There is a known potential issue with image stitching when running the server on a device with no graphical context. Xvfb can be used to create this context virtually, or the issue can be ignored and the server will handle it.
