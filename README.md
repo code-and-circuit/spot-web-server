@@ -71,7 +71,6 @@ Make a dedicated website explaining the server
 - Rewrite connection.py (it's too complicated, code was hacked together from multiple sources)
 - Create multiple walk commands if desired walking time exceeds the time allowed by the robot. If the desired time is too high, the robot says that the command is too far in the future
 - Retry connection attempts if first attempt to robot failed
-- Add an "alert", or something that briefly displays new console outputs in case client is not looking at the console
 - Add ability to change the port 
 - Add rate limiting for certain keyboard controls from client (stand/sit commands should only be sent once/second, etc.)
 - Add more stuff to the config.json for more customizability
