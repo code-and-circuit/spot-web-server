@@ -45,7 +45,7 @@ The three ways to control Spot, in order from least to most complex are as follo
 
 3. Spot SDK. The Spot SDK can still be used to control Spot. The web server allows for files or entire folders to be uploaded and run. A filename and entry function name must be provided. Necessary services to control Spot can be imported from the existing server files so that Spot can be controlled without the need to register or connect new services. This allows more advanced programmers to still use the Spot SDK but without the need to worry about connecting, authenticating, or registering basic services.
 
-When commands are sent to the server from Scratch or the pre-packaged python scripts, they are added to a command queue. These commands are executed at the server's leisure. The commands in the queue are visible on the connected website. The website also provides the ability to not accept commands at all, to accept them and not run them, and to step through commands in the queue one by one. There are a variety of use cases for these options.
+When commands are sent to the server from Scratch or the pre-packaged python scripts, they are added to a command queue. These commands are then executed by the server in order. The commands in the queue are visible on the connected website. The website also provides the ability to not accept commands at all, to accept them and not run them, and to step through commands in the queue one by one. There are a variety of use cases for these options.
 
 Programs that are packaged and sent from the Python module are saved to a database and can be viewed from the website. The website lists all programs and their names and provides the ability to run the programs or delete them from the database. When a program is selected, it is displayed on the website so that the code can be reviewed before running.
 
@@ -157,7 +157,7 @@ If you want to clear the commands in the queue, press “Clear Command Queue” 
 
 Video feed is enabled by default and will be shown in the stage. There are Scratch blocks inside of the Spot extension to disable and enable the video feed. 
 
-All Scratch blocks and what they do should be fairly intuitive. Blocks telling Spot to walk will force the program to wait for 1 second to prevent commands from being sent too quickly. Blocks telling Spot to rotate his body in a specific way do not force the program to wait, to “wait” block (in the “control” section) must be used to force the program to wait.
+All Scratch blocks and what they do should be fairly intuitive. Blocks telling Spot to walk will force the program to wait for 1 second to prevent commands from being sent too quickly. Blocks telling Spot to rotate his body in a specific way do not force the program to wait, the “wait” block (in the “control” section) must be used to force the program to wait.
 
 Any errors with commands sent to Spot from Scratch will be outputted on the server website. An example of this would be telling Spot to move forward but leaving the amount blank. This will not crash anything, but it will show up on the website so you can know what went wrong. 
 
@@ -181,5 +181,5 @@ When programs are sent, they are saved to a database on the server and can be ch
 - Retry connection attempts if the first attempt to robot failed
 - Add ability to change the port 
 - Add rate limiting for certain keyboard controls from client (stand/sit commands should only be sent once/second, etc.)
-- Add more stuff to the config.json for more customizability
+- Add more information to the config.json file for more customizability
 - Potentially add more logging info
