@@ -14,7 +14,6 @@ Created and maintained by Will Scheirey and the [Code & Circuit](https://codeand
 - [Thesis](https://github.com/code-and-circuit/spot-web-server#thesis)
 - [The Server](https://github.com/code-and-circuit/spot-web-server#code--circuits-spot-web-server-1)
 - [Coding Spot](https://github.com/code-and-circuit/spot-web-server#coding-spot)
-- [Making Custom Frontends](https://github.com/code-and-circuit/spot-web-server#making-custom-frontends)
 
 ### Thesis
 
@@ -51,12 +50,6 @@ Programs that are packaged and sent from the Python module are saved to a databa
 Short overviews of using the Scratch extension and Python module from the connected website can be found [here](https://github.com/code-and-circuit/spot-web-server#using-the-scratch-extension).
 
 Since the server accepts programs and commands through http requests, Spot could in theory be controlled by any language that supports making such requests. Video feed and some relevant information is provided through a websocket, so this information could be received and displayed using any language supporting websockets.
-
-### Making Custom Frontends
-Since the Spot Web Server operates using websockets and http requests, custom frontends can be made to display all existing information. The server can be queried for information, which can then be displayed on custom websites. The server will also periodically send some information through connected websockets, which allows for the website to be updated realtime without the need to reload. Information that can be queried for and is sent through websockets is specified in the next section.
-
-## Requests and Websockets
-*insert information*
 
 ## Installing and Running
 There is a known potential issue with image stitching when running the server on a device with no graphical context. Xvfb can be used to create this context virtually, or the issue can be ignored and the server will handle it.
