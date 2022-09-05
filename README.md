@@ -1,4 +1,6 @@
 # Code & Circuit's Spot Web Server
+A web server designed to allow Boston Dynamic's [Spot Robot](https://www.bostondynamics.com/products/spot) to be used in a collaborative and educational environment, as well as provide ease of use for programmers and non-programmers alike.
+
 Created and maintained by Will Scheirey and the [Code & Circuit](https://codeandcircuit.org/) team
 
 ### Sections
