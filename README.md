@@ -172,8 +172,7 @@ When programs are sent, they are saved to a database on the server and can be ch
 
 ## Important 
 ### in order of importance:
-1. Add a complete description of what the server does, the features, how to use it, and how you could create your own frontend with it
-2. Document the information returned from the get_state functions\
+1. Add API-like documentation
 
 ## General ToDos
 
