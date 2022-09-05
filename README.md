@@ -175,8 +175,6 @@ When programs are sent, they are saved to a database on the server and can be ch
 
 # TODO
 
-Make a dedicated website explaining the server
-
 ## Important 
 ### in order of importance:
 1. Add a complete description of what the server does, the features, how to use it, and how you could create your own frontend with it
