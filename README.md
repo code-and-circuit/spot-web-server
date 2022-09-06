@@ -5,7 +5,6 @@ Created and maintained by Will Scheirey and the [Code & Circuit](https://codeand
 
 ### Sections
 - [Overview](https://github.com/code-and-circuit/spot-web-server#overview)
-- [Requests and Websockets](https://github.com/code-and-circuit/spot-web-server#querying-and-websockets)
 - [Installing and Running](https://github.com/code-and-circuit/spot-web-server#installing-and-running)
 - [Developing](https://github.com/code-and-circuit/spot-web-server#developing)
 - [Using the Server](https://github.com/code-and-circuit/spot-web-server#using-the-server)
