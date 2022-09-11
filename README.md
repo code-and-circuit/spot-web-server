@@ -182,3 +182,4 @@ When programs are sent, they are saved to a database on the server and can be ch
 - Add rate limiting for certain keyboard controls from client (stand/sit commands should only be sent once/second, etc.)
 - Add more information to the config.json file for more customizability
 - Potentially add more logging info
+- Add screenshots and/or videos to readme
