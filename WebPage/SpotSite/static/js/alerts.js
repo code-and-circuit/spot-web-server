@@ -1,5 +1,13 @@
 const alertDiv = document.getElementsByClassName("alerts")[0];
 
+const scrollToOutput = () => {
+    const ht = $(".alerts").height()
+    console.log(ht);
+    $([document.documentElement, document.body]).animate({
+        scrollTop: $(".output").offset().top - ht - 5
+    }, 500);
+}
+
 function isElementInViewport (el) {
     var rect = el[0].getBoundingClientRect();
 
@@ -17,6 +25,8 @@ function runAlert(text) {
     p.className = "alert"
     p.innerHTML = text;
 
+    p.onclick = scrollToOutput
+
     alertDiv.appendChild(p);
     setTimeout(() => {
         p.style.opacity = "0";
@@ -25,11 +35,3 @@ function runAlert(text) {
         alertDiv.removeChild(p);
     }, 3500);
 }
-
-$(".alert").click(() => {
-    const ht = $(".alerts").height()
-    console.log(ht);
-    $([document.documentElement, document.body]).animate({
-        scrollTop: $(".output").offset().top - ht - 5
-    }, 500);
-})
