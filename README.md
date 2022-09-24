@@ -183,3 +183,5 @@ When programs are sent, they are saved to a database on the server and can be ch
 - Add more information to the config.json file for more customizability
 - Potentially add more logging info
 - Add screenshots and/or videos to readme
+- Separate frontend and backend (use a js framework like react for frontend). Could even create a standalone app using electron 
+
