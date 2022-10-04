@@ -263,7 +263,7 @@ class Spot_Control:
             t (float, optional): The duration of the command. Defaults to 0.
             d (float, optional): The total distance the command should run. Defaults to 0.
         """        
-        log(f"Waling Spot\n\tx: {x}\n\ty: {y}\n\tz: {z}\n\ttime: {t}\n\tdistance: {d}")
+        log(f"Walking Spot\n\tx: {x}\n\ty: {y}\n\tz: {z}\n\ttime: {t}\n\tdistance: {d}")
 
         # Set the time based off of the desired distance (NOT WORKING PROPERLY - probably need to do vector math)
         if t == 0:
@@ -355,7 +355,7 @@ class Spot_Control:
     @dispatch
     def setup(self) -> None:
         """
-        Stands and resets the robot's ortientation
+        Stands and resets the robot's orientation
         """        
         self.stand()
         self.rotate(0, 0, 0)

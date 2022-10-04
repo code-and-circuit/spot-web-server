@@ -132,7 +132,7 @@ def print_exception(socket_index: any):
     fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
     message = ""
 
-    log(f"Exception\n\ttype: {exc_type}\n\tobject: {exc_obj}\n\tfilename: {fname} line:\n\t{exc_tb.tb_lineno}")
+    log(f"Exception\n\ttype: {exc_type}\n\tobject: {exc_obj}\n\tfilename: {fname}\n\tline:\n\t{exc_tb.tb_lineno}")
     if (exc_type == bosdyn.client.lease.ResourceAlreadyClaimedError):
         message = "<red><b>Error:</b></red> A different device may have a lease,\
                       or the robot may not be fully turned on."

@@ -8,6 +8,7 @@ import inspect
 
 
 def log(text):
+    date = datetime.date.today().strftime("%d.%m.%Y")
     time = str(datetime.datetime.now().time())
     files_path = os.path.join(str(os.getcwd()) + "/SpotSite/Logs", "*")
     files = sorted(
@@ -15,7 +16,7 @@ def log(text):
     filename = files[0]
 
     with open(filename, 'a') as f:
-        f.write("\n" + time + " " + text)
+        f.write(f"\n{date}  {time}  {text}")
         f.close()
 
 
