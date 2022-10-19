@@ -55,7 +55,7 @@ Since the server accepts programs and commands through HTTP requests, Spot could
 ## Installing and Running
 There is a known potential issue with image stitching when running the server on a device with no graphical context. Xvfb can be used to create this context virtually, or the issue can be ignored and the server will handle it.
 ### Installing
-Clone the repository, then run ```pip -r install /path/to/repo/WebPage/requirements.txt``` to install python required python modules.
+Clone the repository, then run ```pip install -r /path/to/repo/WebPage/requirements.txt``` to install python required python modules.
 
 ### Running
 
