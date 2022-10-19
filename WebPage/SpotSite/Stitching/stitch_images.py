@@ -373,9 +373,12 @@ class Stitcher:
         
         """
         while not glfw.window_should_close(self._window):
-            glfw.poll_events()
-            self._update_image()
-            glfw.swap_buffers(self._window)
+            try:
+                glfw.poll_events()
+                self._update_image()
+                glfw.swap_buffers(self._window)
+            except Exception as e:
+                pass
         glfw.terminate()
 
     def _draw_string(self, string: str, x: float, y: float, color: tuple) -> None:
