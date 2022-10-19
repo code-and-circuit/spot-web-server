@@ -8,7 +8,7 @@ numpy==1.23.3
 opencv_python==4.6.0.66
 Pillow==9.2.0
 PyOpenGL==3.1.6
-uvicorn==0.17.6
+uvicorn==0.19.0
 django-cors-headers
 glfw
 whitenoise
