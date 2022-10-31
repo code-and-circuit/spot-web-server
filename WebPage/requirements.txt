@@ -1,4 +1,4 @@
-bosdyn_core==3.2.0
+bosdyn_core==3.2.1.post1
 bosdyn-client
 bosdyn-mission
 bosdyn-choreography-client
