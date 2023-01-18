@@ -131,10 +131,11 @@ class Spot_Control:
         self.height = 0
 
         self.collision_avoid_params = spot_command_pb2.ObstacleParams(
-            obstacle_avoidance_padding=1, disable_vision_foot_obstacle_avoidance=False,
-            disable_vision_foot_constraint_avoidance=False, disable_vision_body_obstacle_avoidance=False,
-            disable_vision_foot_obstacle_body_assist=True, disable_vision_negative_obstacles=False
+            obstacle_avoidance_padding=1, disable_vision_foot_obstacle_avoidance=True,
+            disable_vision_foot_constraint_avoidance=True, disable_vision_body_obstacle_avoidance=True,
+            disable_vision_foot_obstacle_body_assist=True, disable_vision_negative_obstacles=True
         )
+        self.locomotion_hint = spot_command_pb2.HINT_AUTO
 
         self._is_rolled_over = False
         self.is_running_command = False
@@ -244,9 +245,12 @@ class Spot_Control:
             z (float): The turn speed
             t (float, optional): The duration of the command. Defaults to 1.
         """        
-        walk = RobotCommandBuilder.synchro_velocity_command(x, y, z, body_height = self.height)
+        self.print(f"Setting body height to: {self.height}")
+        walk = RobotCommandBuilder.synchro_velocity_command(x, y, z, body_height = self.height, locomotion_hint=self.locomotion_hint)
+        '''
         walk.synchronized_command.mobility_command.params.CopyFrom(
             RobotCommandBuilder._to_any(self.collision_avoid_params))
+        '''
         self.command_client.robot_command(walk, end_time_secs=time.time() + t)
         # Don't allow callable commands until robot is done walking
         time.sleep(t)
@@ -299,6 +303,18 @@ class Spot_Control:
         self.print(f'Standing at: {height}')
         log(f"Standing Spot at: {self.height}")
 
+    def set_locomotion_hint(self, hint: str):
+        if hint == "auto":
+            self.locomotion_hint = spot_command_pb2.HINT_AUTO
+        if hint == "trot":
+            self.locomotion_hint = spot_command_pb2.HINT_TROT
+        if hint == "crawl":
+            self.locomotion_hint = spot_command_pb2.HINT_CRAWL
+        if hint == "jog":
+            self.locomotion_hint = spot_command_pb2.HINT_JOG
+        if hint == "hop":
+            self.locomotion_hint = spot_command_pb2.HINT_HOP
+
 
     @dispatch
     def keyboard_walk(self, dx: float, dy: float, dz: float) -> None:
@@ -316,8 +332,10 @@ class Spot_Control:
             dz * self.KEYBOARD_TURN_VELOCITY,
             body_height = self.height
         )
+        '''
         walk.synchronized_command.mobility_command.params.CopyFrom(
             RobotCommandBuilder._to_any(self.collision_avoid_params))
+        '''
         self.command_client.robot_command(
             walk, end_time_secs=time.time() + self.KEYBOARD_COMMAND_DURATION)
 

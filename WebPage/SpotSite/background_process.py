@@ -1394,6 +1394,9 @@ class Background_Process:
                 z /= l
 
                 self._robot_control.walk(x, y, math.radians(z), t=l)
+        
+        if action == 'set_locomotion_hint':
+            self._robot_control.set_locomotion_hint(command['Args']['hint'])
 
     def key_up(self, key: str) -> bool:
         """
