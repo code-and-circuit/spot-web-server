@@ -8,6 +8,7 @@ import inspect
 
 
 def log(text):
+    # return
     date = datetime.date.today().strftime("%d.%m.%Y")
     time = str(datetime.datetime.now().time())
     files_path = os.path.join(str(os.getcwd()) + "/SpotSite/Logs", "*")

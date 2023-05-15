@@ -1,0 +1,55 @@
+name: "Lights Dance"
+slices_per_minute: 240.0
+moves {
+    type: "set_color"
+    requested_slices: 8
+    set_color_params: {
+        left_color: {
+            red: {
+                value: 0
+            }
+            green: {
+                value: 0
+            }
+            blue: {
+                value: 180
+            }
+        }
+    }
+}
+moves {
+    type: "set_color"
+    start_slice: 8
+    requested_slices: 8
+    set_color_params: {
+        left_color: {
+            red: {
+                value: 180
+            }
+            green: {
+                value: 0
+            }
+            blue: {
+                value: 0
+            }
+        }
+    }
+}
+moves {
+    type: "set_color"
+    start_slice: 18
+    requested_slices: 8
+    set_color_params: {
+        left_color: {
+            red: {
+                value: 0
+            }
+            green: {
+                value: 180
+            }
+            blue: {
+                value: 0
+            }
+        }
+    }
+}

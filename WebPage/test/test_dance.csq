@@ -1,0 +1,17 @@
+name: "Test Dance"
+slices_per_minute: 240
+
+moves: {
+  type: "stand_to_kneel"
+  requested_slices: 8
+}
+moves: {
+  type: "kneel_clap"
+  requested_slices: 4
+  start_slice: 12
+}
+moves: {
+  type: "kneel_to_stand"
+  requested_slices: 8
+  start_slice: 20
+}

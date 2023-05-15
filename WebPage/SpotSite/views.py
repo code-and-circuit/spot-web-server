@@ -517,6 +517,10 @@ def toggle_auto_run(request: HttpRequest) -> JsonResponse:
 def step_command(request: HttpRequest) -> JsonResponse:
     do_action(request, "step_command")
     return JsonResponse({}, status=200)
+
+def execute_file(request: HttpRequest) -> JsonResponse:
+    do_action(request, "execute_file")
+    return JsonResponse({"test": "TEST"}, status=200)
         
 async def websocket_view(socket: object) -> None:
     """

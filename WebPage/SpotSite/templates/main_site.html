@@ -11,6 +11,7 @@
     </head>
     <body bgcolor="white">
         <div class="alerts-container">
+
             <div class="alerts">
 
             </div>
@@ -38,6 +39,10 @@
                     </div>
                     <div class="form">
                         <button id="bgEnd">End Main Loop</button>
+                    </div>
+                    <div class="form">
+                        <button id="execute-file">Execute From File</button>
+
                     </div>
                 </div>
                 <div class="bg-process-container">
@@ -139,7 +144,8 @@
                 get_state: "{% url 'get_server_state' %}",
                 clear_queue: "{% url 'clear_queue' %}",
                 toggle_auto_run_commands: "{% url 'toggle_auto_run' %}",
-                step_command: "{% url 'step_command' %}"
+                step_command: "{% url 'step_command' %}",
+                execute_file: "{% url 'execute_file' %}"
             }
         </script>
         <script>

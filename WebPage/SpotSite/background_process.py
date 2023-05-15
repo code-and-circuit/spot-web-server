@@ -63,6 +63,7 @@ from SpotSite import secrets
 from SpotSite import websocket
 from SpotSite.spot_logging import log
 from SpotSite.Stitching import stitch_images
+from SpotSite.file_executing import execute
 
 # Boston Dynamics imports
 import bosdyn.client
@@ -71,10 +72,10 @@ from bosdyn.client.robot_command import RobotCommandClient
 from bosdyn.client.estop import EstopEndpoint
 from bosdyn.client.estop import EstopKeepAlive
 from bosdyn.client.estop import EstopClient
-from bosdyn.client.time_sync import TimeSyncClient
-from bosdyn.client.time_sync import TimeSyncThread
-from bosdyn.client.power import power_off
+from bosdyn.client.power import power_off_motors
 from bosdyn.client.image import ImageClient
+from bosdyn.choreography.client.choreography import (ChoreographyClient,
+                                                     load_choreography_sequence_from_txt_file)
 
 invalid_keywords = [
     'cert',
@@ -84,6 +85,16 @@ invalid_keywords = [
 max_depth = 5
 
 lock = threading.Lock()
+
+def with_retries(func, number_retries=10, time_between_sec = 3, *args, **kwargs):
+    for _ in range(0, number_retries):
+        socket_print(-1, f"Retrying: #{_} ", all=True)
+        try:
+            func(args, kwargs)
+        except:
+            pass
+        time.sleep(time_between_sec)
+
 
 def start_thread(func, args: tuple = ()):
     """Starts a new thread from the given function to
@@ -132,7 +143,7 @@ def print_exception(socket_index: any):
     fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
     message = ""
 
-    log(f"Exception\n\ttype: {exc_type}\n\tobject: {exc_obj}\n\tfilename: {fname}\n\tline:\n\t{exc_tb.tb_lineno}")
+    log(f"Exception\n\ttype: {exc_type}\n\tobject: {exc_obj}\n\tfilename: {fname}\n\tline: {exc_tb.tb_lineno}")
     if (exc_type == bosdyn.client.lease.ResourceAlreadyClaimedError):
         message = "<red><b>Error:</b></red> A different device may have a lease,\
                       or the robot may not be fully turned on."
@@ -431,12 +442,10 @@ class Background_Process:
         _lease_client(bosdyn.client.lease.LeaseClient): The Boston Dynamics lease client object
         _image_client(bosdyn.client.image.ImageClient): The Boston Dynamics image client object
         _estop_client(bosdyn.client.estop.EstopClient): The Boston Dyanmics estop client object
-        _time_sync_client(bosdyn.client.time_sync.TimeSyncClient): The Boston Dynamics time sync client 
         
         _lease(bosdyn.client.lease.Lease): The Boston Dynamics lease object
         _lease_keep_alive(bosdyn.client.lease.LeaseKeepAlive): The Boston Dynamics object to keep the active lease alive
         _estop_keep_alive(bosdyn.client.estop.EstopKeepAlive): The Boston Dynamics object to keep the active estop alive
-        _time_sync_thread(bosdyn.client.time_sync.TimeSyncThread): The Boston Dyanmics object for maintaining a time sync with Spot
         
         is_running(bool): Whether the main background process is running
         _is_connecting(bool): Whether the server is currently connecting a service
@@ -448,7 +457,6 @@ class Background_Process:
         _is_shutting_down(bool): Whether the server is in the process of shutting down
         _has_lease(bool): Whether the server has an active lease with Spot
         _has_estop(bool): Whether the server has active estop cut authority with Spot
-        _has_time_sync(bool): Whether the server has an active time sync with Spot
         keyboard_control_mode(str): Which keyboard control mode is active ```"Walk" or "Stand"```
         active_program_name(str): The name of the program currently being executed
         program_socket_index(str): The index of the socket that send the command to execute the currently executing program
@@ -470,8 +478,6 @@ class Background_Process:
             Attemps to acquire a lease from Spot
         _acquire_estop(socket_index):
             Attempts to acquire estop cut authority from Spot
-        _acquire_time_sync(socket_index):
-            Attempts to acquire a time sync with 
         _robot_is_on_wifi(ip):
             Tells whether Spot is detected at a particular IP address on the wifi
         _connect_to_robot(socket_index):
@@ -490,8 +496,6 @@ class Background_Process:
             Returns and clears any active lease with Spot
         _clear_estop():
             Returns and clears any active estop authority with Spot
-        _clear_time_sync():
-            Returns and clears any active time sync with Spot
         _disconnect_from_robot():
             Disconnects from Spot
         start(socket_index):
@@ -568,13 +572,11 @@ class Background_Process:
         self._lease_client = None
         self._image_client = None
         self._estop_client = None
-        self._time_sync_client = None
 
         # Robot control
         self._lease = None
         self._lease_keep_alive = None
         self._estop_keep_alive = None
-        self._time_sync_thread = None
 
         # Server state
         self.is_running = False
@@ -588,7 +590,6 @@ class Background_Process:
 
         self._has_lease = False
         self._has_estop = False
-        self._has_time_sync = False
 
         self.keyboard_control_mode = "Walk"
         self.active_program_name = ""
@@ -636,6 +637,12 @@ class Background_Process:
         socket_print(socket_index, "Powering On...")
         try:
             self.robot.power_on(timeout_sec=20)
+        except bosdyn.client.power.OverriddenError:
+            socket_print(socket_index, "Command overidden? Trying again.")
+            try:
+                self.robot.power_on(timeout_sec=20)
+            except Exception as e:
+                print_exception(socket_index)
         except Exception as e:
             print_exception(socket_index)
         # Checks to make sure that Spot successfully powered on
@@ -666,6 +673,10 @@ class Background_Process:
         socket_print(socket_index, "Powering off...")
         try:
             self.robot.power_off(cut_immediately=False, timeout_sec=20)
+        # except bosdyn.api.RobotCommandResponseE:
+        #     socket_print(socket_index, "Time sync error.")
+        except bosdyn.client.robot_command.NoTimeSyncError:
+            print("No time sync!")
         except:
             print_exception(socket_index)
         is_powered_on = False
@@ -709,7 +720,7 @@ class Background_Process:
             socket_print(socket_index, "Acquiring Lease...")
             self._lease_client = self.robot.ensure_client(
                 bosdyn.client.lease.LeaseClient.default_service_name)
-            self._lease = self._lease_client.acquire()
+            self._lease = self._lease_client.take()
             self._lease_keep_alive = bosdyn.client.lease.LeaseKeepAlive(
                 self._lease_client)
 
@@ -750,17 +761,22 @@ class Background_Process:
 
         try:
             socket_print(socket_index, "Acquiring Estop...")
+            # def func():
             self._estop_client = self.robot.ensure_client(
                 EstopClient.default_service_name)
             ep = EstopEndpoint(self._estop_client,
-                               name="cc-estop", estop_timeout=20)
+                            name="cc-estop", estop_timeout=20)
             ep.force_simple_setup()
             self._estop_keep_alive = EstopKeepAlive(ep)
             self.robot_is_estopped = False
 
             self._has_estop = True
-            socket_print(socket_index, "<green>Acquired Estop</green>")
-            socket_print(-1, "acquire", all=True, type="estop_toggle")
+            # with_retries(func)
+            if (self._has_estop):
+                socket_print(socket_index, "<green>Acquired Estop</green>")
+                socket_print(-1, "acquire", all=True, type="estop_toggle")
+            else:
+                raise Exception("No Estop!!")
 
         except:
             print_exception(socket_index)
@@ -772,42 +788,6 @@ class Background_Process:
             self._is_connecting = False
 
         log(f"Attempted to acquire estop. Result: {success} ")
-        return success
-
-    def _acquire_time_sync(self, socket_index: any) -> bool:
-        """
-        Attempts to acquire a time sync with Spot
-
-        Args:
-            socket_index any: The socket of the index to display information to
-
-        Returns:
-            bool: Whether the action was successful
-        """        
-        if self._time_sync_client is not None:
-            return True
-
-        success = True
-        self._is_connecting = True
-
-        try:
-            self._time_sync_client = self.robot.ensure_client(
-                TimeSyncClient.default_service_name)
-            self._time_sync_thread = TimeSyncThread(self._time_sync_client)
-            self._time_sync_thread.start()
-
-            self._has_time_sync = True
-
-        except:
-            print_exception(socket_index)
-            socket_print(socket_index, "Failed to accquire Time Sync")
-            success = False
-            self._clear_time_sync()
-
-        finally:
-            self._is_connecting = False
-
-        log(f"Attempted to acquire time sync. Result: {success} ")
         return success
 
     def _robot_is_on_wifi(self, ip: str = secrets.ROBOT_IP) -> bool:
@@ -862,13 +842,11 @@ class Background_Process:
     
         try:
             self._sdk = bosdyn.client.create_standard_sdk('cc-server')
+            self._sdk.register_service_client(ChoreographyClient)
 
             self.robot = self._sdk.create_robot(secrets.ROBOT_IP)
             self.robot.authenticate(
                 secrets.ROBOT_USERNAME, secrets.ROBOT_PASSWORD)
-
-            if not self._acquire_time_sync(socket_index):
-                raise Exception("Could not acquire time sync with Spot")
 
             self._image_client = self.robot.ensure_client(
                 ImageClient.default_service_name)
@@ -970,7 +948,6 @@ class Background_Process:
         self._show_video_feed = False
         self._clear_lease()
         self._clear_estop()
-        self._clear_time_sync()
         self._disconnect_from_robot()
 
         self.is_running = False
@@ -1036,20 +1013,6 @@ class Background_Process:
         log("Disconnected and cleared estop")
         socket_print(-1, "clear", all=True, type="estop_toggle")
 
-    def _clear_time_sync(self) -> None:
-        """
-        Returns and clears any active time sync with Spot
-        """        
-        if not self.robot:
-            return
-
-        if self._time_sync_thread:
-            self._time_sync_thread.stop()
-
-        self._time_sync_client = None
-        self._time_sync_thread = None
-        self._has_time_sync = False
-        log("Disconnected and cleared time sync")
 
     def _disconnect_from_robot(self) -> None:
         """
@@ -1057,8 +1020,6 @@ class Background_Process:
         """        
         if self._has_lease or self._has_estop:
             self._clear_estop()
-        if self._has_time_sync:
-            self._clear_time_sync()
 
         self._show_video_feed = False
         self._image_client = None
@@ -1313,25 +1274,28 @@ class Background_Process:
 
         Args:
             camera_name (str): The name of the desired image
-        """        
-        if camera_name == "front":
-            front_right = self._image_client.get_image_from_sources(
-                ["frontright_fisheye_image"])[0]
-            front_left = self._image_client.get_image_from_sources(
-                ["frontleft_fisheye_image"])[0]
-            image = self._stitch_images(front_right, front_left)
-            image = self._stitched_or_stamped(image, front_right, front_left)
-        if camera_name == "back":
-            back = self._image_client.get_image_from_sources(
-                ["back_fisheye_image"])[0].shot.image.data
-            image = base64.b64encode(back).decode("utf8")
-            
-        if camera_name == "left":
-            left = self._image_client.get_image_from_sources(["left_fisheye_image"])[0].shot.image.data
-            image = base64.b64encode(left).decode("utf8")
+        """     
+        try:   
+            if camera_name == "front":
+                front_right = self._image_client.get_image_from_sources(
+                    ["frontright_fisheye_image"])[0]
+                front_left = self._image_client.get_image_from_sources(
+                    ["frontleft_fisheye_image"])[0]
+                image = self._stitch_images(front_right, front_left)
+                image = self._stitched_or_stamped(image, front_right, front_left)
+            if camera_name == "back":
+                back = self._image_client.get_image_from_sources(
+                    ["back_fisheye_image"])[0].shot.image.data
+                image = base64.b64encode(back).decode("utf8")
+                
+            if camera_name == "left":
+                left = self._image_client.get_image_from_sources(["left_fisheye_image"])[0].shot.image.data
+                image = base64.b64encode(left).decode("utf8")
 
-        socket_print(-1,image,
-                    all=True, type=("@" + camera_name))
+            socket_print(-1,image,
+                        all=True, type=("@" + camera_name))
+        except AttributeError:
+            pass
 
     def _do_command(self, command: object) -> None:
         """
@@ -1581,7 +1545,7 @@ class Background_Process:
             dict: The information
         """        
         return {
-            'robot_is_connected': self._has_time_sync,
+            'robot_is_connected': self._has_estop,
             'server_has_estop': self._has_estop,
             'server_has_lease': self._has_lease,
             'background_is_running': self.is_running,
@@ -1645,6 +1609,9 @@ def do_action(action: str, socket_index: any, args: any = None) -> any:
             return
 
         bg_process.end_bg_process()
+        socket_print(socket_index, "Ending main loop...")
+        while bg_process.robot:
+            pass
         socket_print(socket_index, "Main loop ended")
 
     elif action == "toggle_accept_command":
@@ -1688,7 +1655,10 @@ def do_action(action: str, socket_index: any, args: any = None) -> any:
         start_thread(bg_process._connect_to_robot, args=(socket_index))
 
     elif action == "disconnect_robot":
+        socket_print(socket_index, "Disconnecting from robot...")
         bg_process._disconnect_from_robot()
+        socket_print(socket_index, "Disconnected from robot")
+
         
     elif action == "clear_estop":
         bg_process._clear_estop()
@@ -1735,6 +1705,8 @@ def do_action(action: str, socket_index: any, args: any = None) -> any:
             return
         bg_process._should_run_commands = True
 
+    elif action == "execute_file":
+        execute(bg_process.robot, bg_process._command_client)
 
     else:
         socket_print(socket_index, f"Command not recognized: {action}")

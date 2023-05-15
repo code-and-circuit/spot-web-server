@@ -276,6 +276,10 @@ $("#getLease").click(() => {
         sendRequest(urls.clear_lease)
 });
 
+$("#execute-file").click(() => {
+    sendRequest(urls.execute_file);
+});
+
 // Sends a message to the server letting it know that the socket is closing
 /*
 $(window).on("beforeunload", () => {
