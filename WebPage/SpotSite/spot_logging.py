@@ -4,7 +4,6 @@
 import os
 import glob
 import datetime
-import inspect
 
 
 def log(text):
@@ -23,7 +22,7 @@ def log(text):
 
 def create_log():
     path = str(os.getcwd()) + "/SpotSite/Logs/"
-    os.makedirs(path, exist_ok = True)
+    os.makedirs(path, exist_ok=True)
 
     now = datetime.datetime.now()
     date = str(now.date())

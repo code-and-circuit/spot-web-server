@@ -23,14 +23,10 @@ Functions:
     draw_routine  (from example)
 """
 
-import OpenGL
 import bosdyn.api
 import bosdyn.client.util
 import io
-import os
 import numpy
-import sys
-import time
 
 from OpenGL.GL import *
 from OpenGL.GL import shaders, GL_VERTEX_SHADER
@@ -40,9 +36,6 @@ from PIL import Image
 from PIL import ImageOps
 from bosdyn.api import image_pb2
 from bosdyn.client.frame_helpers import BODY_FRAME_NAME, get_vision_tform_body, get_a_tform_b
-from ctypes import *
-
-from SpotSite import background_process
 
 
 class ImagePreppedForOpenGL():
