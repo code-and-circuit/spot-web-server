@@ -134,6 +134,9 @@ def do_action(action: str, socket_index: any, args: any = None) -> any:
         bg_process._should_run_commands = True
 
     elif action == "execute_file":
+        if not bg_process._has_lease:
+            output_to_socket(
+                socket_index, "Can't execute from file becase lease has not been acquired!")
         execute(bg_process.robot, bg_process._command_client)
 
     else:

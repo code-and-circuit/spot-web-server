@@ -11,21 +11,25 @@ from SpotSite.utils import output_to_socket
 
 
 class Image_Handler:
-    def __init__(self, update_robot_state_func, image_client):
+    def __init__(self, update_robot_state_func=None, image_client=None):
         self.image_stitcher = None
         self._show_video_feed = False
         self._update_robot_state = update_robot_state_func
         self._image_client = image_client
-        self._start_video_loop()
 
     def set_show_video_feed(self, value):
         self._show_video_feed = value
 
-    def _start_video_loop(self) -> None:
+    def _start_video_loop(self, update_robot_state_func, image_client) -> None:
         """
         Creates a thread to start the main video loop
         """
+
+        self._update_robot_state = update_robot_state_func
+        self._image_client = image_client
         self._show_video_feed = True
+        if self._update_robot_state is None or self._image_client is None:
+            return
 
         start_thread(self._video_loop)
 

@@ -7,7 +7,7 @@ import json
 from SpotSite import spot_control
 from SpotSite import secrets
 from SpotSite.spot_logging import log
-from utils import output_to_socket, print_exception, start_thread, read_json
+from SpotSite.utils import output_to_socket, print_exception, start_thread, read_json
 from SpotSite.sql_stuff import SqliteConnection
 from SpotSite.spot_images.image_handler import Image_Handler
 
@@ -57,7 +57,8 @@ class Background_Process:
         self.is_running_commands = False
         self.is_handling_keyboard_commands = False
         self.robot_is_estopped = False
-        self.image_handler = None
+        self.image_handler = Image_Handler(
+            self.update_robot_state, self._image_client)
         self._is_shutting_down = False
 
         self._has_lease = False
@@ -298,13 +299,14 @@ class Background_Process:
 
             self._image_client = self.robot.ensure_client(
                 ImageClient.default_service_name)
-            self.image_handler = Image_Handler(
-                self.update_robot_state, self._image_client)
 
             self._command_client = self.robot.ensure_client(
                 RobotCommandClient.default_service_name)
             self._robot_control = spot_control.Spot_Control(
                 self._command_client, socket_index, self.robot)
+
+            self.image_handler._start_video_loop(
+                self.update_robot_state, self.image_client)
 
             output_to_socket(-1, "acquire", all=True, type="robot_toggle")
             output_to_socket(socket_index, "<green>Connected to robot</green>")
