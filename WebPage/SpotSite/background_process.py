@@ -306,7 +306,7 @@ class Background_Process:
                 self._command_client, socket_index, self.robot)
 
             self.image_handler._start_video_loop(
-                self.update_robot_state, self.image_client)
+                self.update_robot_state, self._image_client)
 
             output_to_socket(-1, "acquire", all=True, type="robot_toggle")
             output_to_socket(socket_index, "<green>Connected to robot</green>")

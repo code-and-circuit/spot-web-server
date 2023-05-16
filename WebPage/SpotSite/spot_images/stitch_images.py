@@ -354,9 +354,9 @@ class Stitcher:
         compiles shaders and stores the program
 
         """
-        with open('SpotSite/Stitching/shader_vert.glsl', 'r') as file:
+        with open('SpotSite/spot_images/shader_vert.glsl', 'r') as file:
             vert_shader = file.read()
-        with open('SpotSite/Stitching/shader_frag.glsl', 'r') as file:
+        with open('SpotSite/spot_images/shader_frag.glsl', 'r') as file:
             frag_shader = file.read()
 
         self._program = CompiledShader(vert_shader, frag_shader)
