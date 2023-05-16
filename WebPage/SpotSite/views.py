@@ -43,6 +43,7 @@ from django.core.files.base import ContentFile
 from SpotSite import action_handling, background_process
 from SpotSite import websocket
 from SpotSite.spot_logging import log
+from SpotSite.scratch_handling import scratch_handler
 
 import pathlib
 import json
@@ -569,3 +570,8 @@ async def websocket_view(socket: object) -> None:
     log(f"New websocket connection: {socket_index}")
     background_process.bg_process._update_command_queue()
     await websocket.websocket_list.sockets[socket_index].keep_alive()
+
+async def scratch_websocket(socket: object) -> None:
+    await socket.accept()
+    await scratch_handler.accept_ws_connection(socket)
+

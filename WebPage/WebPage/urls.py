@@ -8,6 +8,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.main_site),
     path("ws/", views.websocket_view, name="websocket"),
+    path("scratch-ws/", views.scratch_websocket, name="scratch_websocket"),
     path('start-process', views.start_process, name='start_process'),
     path('end-process', views.end_process, name="end_process"),
     path('run-program', views.run_program, name='run_program'),

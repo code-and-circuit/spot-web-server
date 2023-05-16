@@ -83,8 +83,7 @@ class Websocket:
             """
             newMessage = await self.socket.receive_text()
             if newMessage == "Disconnected":
-                self.alive = False
-                continue
+                break
             message = json.loads(newMessage)
             if message:
                 if message['action'] == "unload":
@@ -99,16 +98,6 @@ class Websocket:
                 else:
                     raise RuntimeError(
                         f"Action {message['action']} not recognized.")
-
-        try:
-            await self.close()
-        except RuntimeError as e:
-            if str(e) == "Unexpected ASGI message 'websocket.close', after sending 'websocket.close'.":
-                pass
-            else:
-                print(f"RUNTIME ERORR: {e}")
-        except Exception as e:
-            print(f"EXCEPTION: {e}")
         log(f"Socket closed: {self.index}")
 
         # Removes itself from the list of sockets so that the list does not get arbitrarily long if many devices are connecting
