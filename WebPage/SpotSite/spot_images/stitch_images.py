@@ -260,8 +260,8 @@ def draw_routine(display, image_1, image_2, program):
     glMatrixMode(GL_MODELVIEW)
     glLoadIdentity()
     gluLookAt(eye_wrt_vo[0], eye_wrt_vo[1], eye_wrt_vo[2],
-               plane_wrt_vo[0], plane_wrt_vo[1], plane_wrt_vo[2],
-               up_wrt_vo[0], up_wrt_vo[1], up_wrt_vo[2])
+              plane_wrt_vo[0], plane_wrt_vo[1], plane_wrt_vo[2],
+              up_wrt_vo[0], up_wrt_vo[1], up_wrt_vo[2])
 
     program.use()
     program.set_camera1_mvp(image_1.MVP)
@@ -275,7 +275,7 @@ def draw_routine(display, image_1, image_2, program):
 class Stitcher:
     """
         A class to automatically stitch incoming images and return them to be shown
-                
+
         Attributes
             _width(int): width of the stitched image
             _height (int): height of the stitched image
@@ -287,7 +287,7 @@ class Stitcher:
             _images_should_exist (bool): tells whether a new image should exist, so the program knows whether to stitch the existing images
             _stitched_image (Image): the stitched image
             _is_running (bool): tells whether the image stitching loop is running
-            
+
         Methods
             start_glfw_loop():
                 initializes glfw, loads the shaders, and starts the glfw loop
@@ -308,6 +308,7 @@ class Stitcher:
             stitch(image_1, image_2):
                 updates the program with new images and returns the already stitched image
     """
+
     def __init__(self):
         self._width = 1080
         self._height = 720
@@ -325,9 +326,9 @@ class Stitcher:
     def start_glfw_loop(self) -> None:
         """
         initializes glfw, loads shaders, and starts the glfw loop
-        
+
         """
-        
+
         try:
             self._init_glfw()
         except Exception as e:
@@ -337,18 +338,18 @@ class Stitcher:
         self._load_shaders()
         self._start_glfw()
 
-
     def _init_glfw(self) -> None:
         """
         initializes glfw
-        
+
         """
         try:
             glfw.init()
         except:
             return
-        #glfw.window_hint(glfw.VISIBLE, glfw.FALSE)
-        self._window = glfw.create_window(self._width, self._height, "Image Stitching", None, None)
+        # glfw.window_hint(glfw.VISIBLE, glfw.FALSE)
+        self._window = glfw.create_window(
+            self._width, self._height, "Image Stitching", None, None)
         if not self._window:
             glfw.terminate()
             raise Exception("No OpenGL Window")
@@ -370,7 +371,7 @@ class Stitcher:
     def _start_glfw(self) -> None:
         """
         Starts and houses the glfw loop
-        
+
         """
         while not glfw.window_should_close(self._window):
             try:
@@ -403,7 +404,7 @@ class Stitcher:
     def _save_image(self) -> None:
         """
         reads the stitched image from the glfw window and stores it
-        
+
         """
         try:
             glPixelStorei(GL_PACK_ALIGNMENT, 1)
@@ -417,7 +418,7 @@ class Stitcher:
     def _do_stitching(self) -> None:
         """
         stitches the two images
-        
+
         """
         if not self._images_should_exist:
             return
@@ -430,12 +431,12 @@ class Stitcher:
         try:
             draw_routine(self._display, image_1, image_2, self._program)
         except Exception as e:
-            pass#print("OpenGL error?")
+            pass  # print("OpenGL error?")
 
     def _update_image(self) -> None:
         """
         stitches and saves the image
-        
+
         """
         self._is_running = True
         glClearColor(1, 1, 1, 0)
@@ -444,11 +445,11 @@ class Stitcher:
         try:
             self._do_stitching()
         except bosdyn.client.frame_helpers.ValidateFrameTreeError:
-            # background_process.socket_print(-1, "<red><b>Issue with cameras, robot must be rebooted</b></red>", all=True)
+            # background_process.output_to_socket(-1, "<red><b>Issue with cameras, robot must be rebooted</b></red>", all=True)
             pass
         self._save_image()
 
-    def stitch(self, image_1 : bosdyn.client.image, image_2 : bosdyn.client.image) -> Image:
+    def stitch(self, image_1: bosdyn.client.image, image_2: bosdyn.client.image) -> Image:
         """
         updates the program with new images and returns the already stitched image
 
@@ -459,7 +460,7 @@ class Stitcher:
         Returns:
             Image: the stitched image
         """
-        
+
         if not self._is_running:
             return None
         self._images_should_exist = False

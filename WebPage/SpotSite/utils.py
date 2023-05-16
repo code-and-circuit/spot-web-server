@@ -13,7 +13,7 @@ from SpotSite.spot_logging import log
 
 def with_retries(func, number_retries=10, time_between_sec=3, *args, **kwargs):
     for _ in range(0, number_retries):
-        socket_print(-1, f"Retrying: #{_} ", all=True)
+        output_to_socket(-1, f"Retrying: #{_} ", all=True)
         try:
             func(args, kwargs)
         except:
@@ -32,7 +32,7 @@ def start_thread(func, args: tuple = ()):
     thread.start()
 
 
-def socket_print(socket_index: any, message: str, all: bool = False, type: str = "output"):
+def output_to_socket(socket_index: any, message: str, all: bool = False, type: str = "output"):
     """
     Outputs information to a given socket
 
@@ -101,7 +101,7 @@ def print_exception(socket_index: any):
     if message == "":
         print(f"{exc_type}, line {exc_tb.tb_lineno}")
     else:
-        socket_print(socket_index, message, all=(socket_index == -1))
+        output_to_socket(socket_index, message, all=(socket_index == -1))
 
 
 def read_json(filepath: str) -> dict:
