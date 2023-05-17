@@ -158,6 +158,17 @@ socket.onmessage = (message) => {
             command_queue_div.html(command_queue_div.html() + program_handler.display_command(command));
         })
     }
+    else if (data["type"] == "client-list") {
+        const clients = data["output"];
+        const client_list = document.querySelector(".client-list");
+        client_list.innerHTML = "";
+        clients.forEach(client => {
+            const name_element = document.createElement("p");
+            name_element.innerHTML = client[0];
+            name_element.id = client[1];
+            client_list.appendChild(name_element)
+        })
+    }
     // Handles unknown output types (should not happen, just for safetey and potential debugging) 
     else {
         addOutput("<red>Type not recognized: " + data["type"] + "</red>");

@@ -1,7 +1,5 @@
-import re
 import datetime
 from django.shortcuts import render
-from django.http import HttpResponseRedirect
 from django.http import HttpResponse, HttpRequest
 """
 Handles requests sent to the server
@@ -39,20 +37,21 @@ Functions:
 """
 
 from django.http import JsonResponse
-from django.core import serializers
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 
-from SpotSite import background_process
+from SpotSite import action_handling, background_process
 from SpotSite import websocket
 from SpotSite.spot_logging import log
+from SpotSite.scratch_handling import scratch_handler
 
 import pathlib
 import json
 import os
-import time
 
 # Renders the main site
+
+
 def main_site(request: HttpRequest) -> HttpResponse:
     """
     Renders the main site
@@ -67,10 +66,12 @@ def main_site(request: HttpRequest) -> HttpResponse:
     return render(request, 'main_site.html')
 
 # Utility function to relay action information. method_check allows post requests to be passed if parameter is true
+
+
 def do_action(request: HttpRequest, action: str, method_check: bool = False):
     """
     Relays action information to background_process.py
-    
+
     See background_process.py.do_action for the handling of the actions
 
     Args:
@@ -82,8 +83,9 @@ def do_action(request: HttpRequest, action: str, method_check: bool = False):
         selected_program = None
         if "selected_program" in request.GET:
             selected_program = request.GET["selected_program"]
-        background_process.do_action(
+        action_handling.do_action(
             action, request.GET["socket_index"], selected_program)
+
 
 def start_process(request: HttpRequest) -> JsonResponse:
     """
@@ -101,6 +103,7 @@ def start_process(request: HttpRequest) -> JsonResponse:
         "valid": True,
     }, status=200)
 
+
 def end_process(request: HttpRequest) -> JsonResponse:
     """
     Ends the main background process
@@ -115,6 +118,7 @@ def end_process(request: HttpRequest) -> JsonResponse:
     return JsonResponse({
         "valid": True,
     }, status=200)
+
 
 def connect_to_robot(request: HttpRequest) -> JsonResponse:
     """
@@ -131,6 +135,7 @@ def connect_to_robot(request: HttpRequest) -> JsonResponse:
         "valid": True,
     }, status=200)
 
+
 def disconnect_robot(request: HttpRequest) -> JsonResponse:
     """
     Attemps to disconnect the server from the robot to
@@ -145,7 +150,8 @@ def disconnect_robot(request: HttpRequest) -> JsonResponse:
     return JsonResponse({
         "valid": True,
     }, status=200)
-    
+
+
 def acquire_estop(request: HttpRequest) -> JsonResponse:
     """
     Attemps to acquire the estop from the robot to
@@ -160,6 +166,7 @@ def acquire_estop(request: HttpRequest) -> JsonResponse:
     return JsonResponse({
         "valid": True,
     }, status=200)
+
 
 def clear_estop(request: HttpRequest) -> JsonResponse:
     """
@@ -176,6 +183,7 @@ def clear_estop(request: HttpRequest) -> JsonResponse:
         "valid": True,
     }, status=200)
 
+
 def acquire_lease(request: HttpRequest) -> JsonResponse:
     """
     Attemps to acquire the lease from the robot
@@ -191,6 +199,7 @@ def acquire_lease(request: HttpRequest) -> JsonResponse:
         "valid": True,
     }, status=200)
 
+
 def clear_lease(request: HttpRequest) -> JsonResponse:
     """
     Clears and returns the lease
@@ -205,6 +214,7 @@ def clear_lease(request: HttpRequest) -> JsonResponse:
     return JsonResponse({
         "valid": True,
     }, status=200)
+
 
 def run_program(request: HttpRequest) -> JsonResponse:
     """
@@ -222,6 +232,7 @@ def run_program(request: HttpRequest) -> JsonResponse:
         "valid": True,
     }, status=200)
 
+
 def remove_program(request: HttpRequest) -> JsonResponse:
     """
     Removes a program with a given name
@@ -237,6 +248,7 @@ def remove_program(request: HttpRequest) -> JsonResponse:
     return JsonResponse({
         "valid": True
     }, status=200)
+
 
 def estop(request: HttpRequest) -> JsonResponse:
     """
@@ -254,6 +266,7 @@ def estop(request: HttpRequest) -> JsonResponse:
         "valid": True
     }, status=200)
 
+
 def estop_release(request: HttpRequest) -> JsonResponse:
     """
     Attempts to release the estop
@@ -270,6 +283,7 @@ def estop_release(request: HttpRequest) -> JsonResponse:
         "valid": True
     }, status=200)
 
+
 def toggle_accept_command(request: HttpRequest) -> JsonResponse:
     """
     Toggles whether the server is accepting robot commands
@@ -281,12 +295,14 @@ def toggle_accept_command(request: HttpRequest) -> JsonResponse:
         JsonResponse: Valid response returned if action was successful
     """
     do_action(request, "toggle_accept_command")
-        
+
     return JsonResponse({
-                "valid": True,
-            }, status=200)
+        "valid": True,
+    }, status=200)
 
 # Handles and relays commands sent from Scratch to be executed by the robot
+
+
 def run_command(request: HttpRequest) -> JsonResponse:
     """
     Runs a robot command
@@ -305,7 +321,7 @@ def run_command(request: HttpRequest) -> JsonResponse:
         data = json.loads(request.body.decode("utf-8"))
         print(f"{datetime.datetime.now()} Command: ", data)
         if background_process.bg_process.is_running and not background_process.bg_process.robot.is_estopped() and \
-            background_process.bg_process._is_accepting_commands:
+                background_process.bg_process._is_accepting_commands:
             # Adds the command to the queue of commands
             background_process.bg_process.add_command(data)
             return JsonResponse({
@@ -313,18 +329,18 @@ def run_command(request: HttpRequest) -> JsonResponse:
                 "command_sent": True
             }, status=200)
 
-            
     elif request.method == "GET":
         return JsonResponse({
             'connection_valid': True
         }, status=200)
 
-    #print(background_process.bg_process.is_accepting_commands)
-    
+    # print(background_process.bg_process.is_accepting_commands)
+
     return JsonResponse({
-                "valid": True,
-                "command_sent": False
-            }, status=200)
+        "valid": True,
+        "command_sent": False
+    }, status=200)
+
 
 def add_program(request: HttpRequest) -> JsonResponse:
     """
@@ -350,6 +366,7 @@ def add_program(request: HttpRequest) -> JsonResponse:
         "valid": False,
     }, status=200)
 
+
 def get_programs(request: HttpRequest) -> JsonResponse:
     """
     Returns all program information in the database.
@@ -365,6 +382,7 @@ def get_programs(request: HttpRequest) -> JsonResponse:
         "programs": background_process.bg_process.get_programs()
     }, status=200)
 
+
 def write_file(file: object) -> None:
     """
     Writes a file to the folder ```files_to_run\```
@@ -378,8 +396,10 @@ def write_file(file: object) -> None:
         os.remove(path)
     default_storage.save(path, ContentFile(file.read()))
 
-# Allows entire files to be sent and run. 
+# Allows entire files to be sent and run.
 # ---> NOT GOOD FOR SECURITY <---
+
+
 def receive_file(request: HttpRequest) -> JsonResponse:
     """
     Receives a file or list of files and writes them to a folder.
@@ -414,7 +434,9 @@ def receive_file(request: HttpRequest) -> JsonResponse:
         "valid": valid,
     }, status=200)
 
-# 
+#
+
+
 def get_info(request: HttpRequest) -> JsonResponse:
     """
     Gets information about the state of the server
@@ -431,6 +453,7 @@ def get_info(request: HttpRequest) -> JsonResponse:
             "valid": True,
             "is_running": background_process.bg_process.is_running,
         }, status=200)
+
 
 def get_state_of_everything(request: HttpRequest) -> JsonResponse:
     """
@@ -449,7 +472,8 @@ def get_state_of_everything(request: HttpRequest) -> JsonResponse:
             return JsonResponse(state, status=200)
         except Exception as e:
             return JsonResponse({}, status=500)
-        
+
+
 def get_server_state(request: HttpRequest) -> JsonResponse:
     """
     Returns helpful information about the state of the server
@@ -467,7 +491,8 @@ def get_server_state(request: HttpRequest) -> JsonResponse:
         except Exception as e:
             print(e)
             return JsonResponse({}, status=500)
-        
+
+
 def get_internal_state(request: HttpRequest) -> JsonResponse:
     """
     Returns the internal state of the server
@@ -485,7 +510,8 @@ def get_internal_state(request: HttpRequest) -> JsonResponse:
             return JsonResponse(state, status=200)
         except Exception:
             return JsonResponse({}, status=500)
-        
+
+
 def get_keyboard_control_state(request: HttpRequest) -> JsonResponse:
     """
     Returns information about the keyboard control state
@@ -503,25 +529,30 @@ def get_keyboard_control_state(request: HttpRequest) -> JsonResponse:
         except Exception:
             return JsonResponse({}, status=500)
 
+
 def clear_queue(request: HttpRequest) -> JsonResponse:
     background_process.bg_process.command_queue = []
     background_process.bg_process._update_command_queue()
 
     return JsonResponse({}, status=200)
 
+
 def toggle_auto_run(request: HttpRequest) -> JsonResponse:
-    do_action(request, "toggle_auto_run");
+    do_action(request, "toggle_auto_run")
 
     return JsonResponse({}, status=200)
+
 
 def step_command(request: HttpRequest) -> JsonResponse:
     do_action(request, "step_command")
     return JsonResponse({}, status=200)
 
+
 def execute_file(request: HttpRequest) -> JsonResponse:
     do_action(request, "execute_file")
     return JsonResponse({"test": "TEST"}, status=200)
-        
+
+
 async def websocket_view(socket: object) -> None:
     """
     Handles new websockets and adds them to a list of active sockets. Then keeps the socket alive forever (until it closes itself)
@@ -530,7 +561,7 @@ async def websocket_view(socket: object) -> None:
         socket (object): the websocket object
     """
     socket_index = websocket.websocket_list.add_socket(socket)
-    
+
     await socket.accept()
     await socket.send_json({
         'type': "socket_create",
@@ -539,3 +570,8 @@ async def websocket_view(socket: object) -> None:
     log(f"New websocket connection: {socket_index}")
     background_process.bg_process._update_command_queue()
     await websocket.websocket_list.sockets[socket_index].keep_alive()
+
+async def scratch_websocket(socket: object) -> None:
+    await socket.accept()
+    await scratch_handler.accept_ws_connection(socket)
+

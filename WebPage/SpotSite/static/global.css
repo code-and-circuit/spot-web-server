@@ -108,6 +108,29 @@ red {
   margin-bottom: 20px;
 }
 
+.scratch-lease-container {
+  width: 100%;
+  display: grid;
+  place-items: center;
+}
+
+.scratch-leases h2 {
+  width: 100%;
+  text-align: center;
+  padding-top: 5px;
+}
+
+.scratch-leases {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  align-items: center;
+}
+
+.client-list {
+  width: 80%;
+  height: calc(80% - 20px);
+}
 
 .command-queue {
   overflow: auto;
@@ -541,3 +564,4 @@ red {
   flex-direction: column;
   justify-content: left;
 }
+
