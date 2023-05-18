@@ -10,6 +10,7 @@ from SpotSite.spot_logging import log
 from SpotSite.utils import output_to_socket, print_exception, start_thread, read_json
 from SpotSite.sql_stuff import SqliteConnection
 from SpotSite.spot_images.image_handler import Image_Handler
+from SpotSite.scratch_handling import scratch_handler
 
 # Boston Dynamics imports
 import bosdyn.client
@@ -883,7 +884,9 @@ class Background_Process:
             'is_accepting_commands': self._is_accepting_commands,
             'will_auto_run_commands': self._will_immediately_run_commands,
             'should_run_commands': self._should_run_commands,
-            'command_queue': self.command_queue
+            'command_queue': self.command_queue,
+            'scratch_clients': scratch_handler.get_client_list(),
+            'scratch_controller': (scratch_handler.get_allowed_client_name(), scratch_handler.allowed_ip)
         }
 
     def get_server_state(self) -> dict:

@@ -132,6 +132,28 @@ red {
   height: calc(80% - 20px);
 }
 
+.client-list p {
+  font-size: 22px;
+  outline: 2px solid hsla(0, 0%, 100%, 0.8);
+  width: min-content;
+  padding: 5px 12px 5px 12px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: 200ms;
+}
+
+.client-list p:hover {
+  background-color: var(--white);
+  outline: 2px solid hsla(0, 0%, 100%);
+  color: var(--body-bg);
+}
+
+.client-list p.chosen {
+  background-color: var(--white);
+  outline: 2px solid hsla(0, 0%, 100%);
+  color: var(--body-bg);
+}
+
 .command-queue {
   overflow: auto;
 }

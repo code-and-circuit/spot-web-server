@@ -159,15 +159,15 @@ socket.onmessage = (message) => {
         })
     }
     else if (data["type"] == "client-list") {
-        const clients = data["output"];
-        const client_list = document.querySelector(".client-list");
-        client_list.innerHTML = "";
-        clients.forEach(client => {
-            const name_element = document.createElement("p");
-            name_element.innerHTML = client[0];
-            name_element.id = client[1];
-            client_list.appendChild(name_element)
-        })
+        update_client_list(data["output"]);
+        
+    }
+
+    else if (data["type"] == "scratch_clients") {
+        update_client_list(data["output"][0]);
+        const scratch_controller = data["output"][1];
+        document.querySelector("#ip-" + scratch_controller[1].replaceAll(".", "-")).classList.add("chosen");
+        document.querySelector("#scratch-controller-name").innerHTML = scratch_controller[0];
     }
     // Handles unknown output types (should not happen, just for safetey and potential debugging) 
     else {
@@ -290,6 +290,11 @@ $("#getLease").click(() => {
 $("#execute-file").click(() => {
     sendRequest(urls.execute_file);
 });
+
+
+$(".client_name").click((e) => {
+    console.log(e.target);
+})
 
 // Sends a message to the server letting it know that the socket is closing
 /*
