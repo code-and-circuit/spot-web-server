@@ -158,6 +158,17 @@ socket.onmessage = (message) => {
             command_queue_div.html(command_queue_div.html() + program_handler.display_command(command));
         })
     }
+    else if (data["type"] == "client-list") {
+        update_client_list(data["output"]);
+        
+    }
+
+    else if (data["type"] == "scratch_clients") {
+        update_client_list(data["output"][0]);
+        const scratch_controller = data["output"][1];
+        document.querySelector("#ip-" + scratch_controller[1].replaceAll(".", "-")).classList.add("chosen");
+        document.querySelector("#scratch-controller-name").innerHTML = scratch_controller[0];
+    }
     // Handles unknown output types (should not happen, just for safetey and potential debugging) 
     else {
         addOutput("<red>Type not recognized: " + data["type"] + "</red>");
@@ -279,6 +290,11 @@ $("#getLease").click(() => {
 $("#execute-file").click(() => {
     sendRequest(urls.execute_file);
 });
+
+
+$(".client_name").click((e) => {
+    console.log(e.target);
+})
 
 // Sends a message to the server letting it know that the socket is closing
 /*

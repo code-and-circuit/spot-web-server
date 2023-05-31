@@ -96,6 +96,13 @@
                 <p id="program-info"></p>
             </div>
         </div>
+        <div class="scratch-lease-container">
+            <div class="scratch-leases panel">
+                <h2 id="scratch-lease-header""><span id="scratch-controller-name"></span> is controlling Spot</h2>
+                <div class="client-list">
+                </div>
+            </div> 
+        </div>
         <div class="ctrl">
             <button id="toggle" onclick="toggle()">keyboard control</button>
             <p class="key" id="space">Walk Mode</p>
@@ -145,10 +152,45 @@
                 clear_queue: "{% url 'clear_queue' %}",
                 toggle_auto_run_commands: "{% url 'toggle_auto_run' %}",
                 step_command: "{% url 'step_command' %}",
-                execute_file: "{% url 'execute_file' %}"
+                execute_file: "{% url 'execute_file' %}",
+                set_scratch_controller: "{% url 'set_scratch_controller' %}"
             }
         </script>
         <script>
+
+            function update_client_list(clients) {
+                const client_list = document.querySelector(".client-list");
+                client_list.innerHTML = "";
+                clients.forEach(client => {
+                    const name_element = document.createElement("p");
+                    name_element.innerHTML = client[0];
+                    
+                    name_element.classList.add("client_name");
+                    name_element.id = "ip-" + client[1].replaceAll(".", "-");
+
+                    name_element.onclick = (e) => {
+                        const ip = e.target.id.replaceAll("-", ".").substring(3);
+                        $.ajax({
+                            type: "get",
+                            url: urls.set_scratch_controller,
+                            data: {
+                                ip: ip
+                            },
+                            success: function (response) { },
+                            error: function (response) {
+                                addOutput("<red>Server error: " + response["status"] + ".</red>");
+                                // A 500 error is generally caused by the socket being closed when output tries to be sent back
+                                if (response["status"] == "500") {
+                                    addOutput("Did the socket close? If so, try reloading.", true);
+                                }
+                            },
+                        });
+                    }
+
+                    client_list.appendChild(name_element)
+                    })
+            }
+
             function update_server_state(state) {
                 if (state.server_has_estop == true) {
                     $("#estop").css({
@@ -192,6 +234,19 @@
                 if (state.will_auto_run_commands == true) {
                     $("#toggle-auto-run-commands").addClass("option-true");
                 }
+                
+                update_client_list(state.scratch_clients)
+
+                try {
+                    document.querySelector("#ip-" + state.scratch_controller[1].replaceAll(".", "-")).classList.add("chosen");
+                
+                    document.querySelector("#scratch-controller-name").innerHTML = state.scratch_controller[0];
+                }
+
+                catch (TypeError) {
+                    ;
+                }
+                
             }
 
             onload = () => {

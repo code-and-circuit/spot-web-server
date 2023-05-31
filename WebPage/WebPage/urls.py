@@ -2,13 +2,13 @@ from django.contrib import admin
 from django.contrib.staticfiles.storage import staticfiles_storage
 from django.views.generic.base import RedirectView
 from django.urls import path
-from django.urls import include
 from SpotSite import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.main_site),
     path("ws/", views.websocket_view, name="websocket"),
+    path("scratch-ws/", views.scratch_websocket, name="scratch_websocket"),
     path('start-process', views.start_process, name='start_process'),
     path('end-process', views.end_process, name="end_process"),
     path('run-program', views.run_program, name='run_program'),
@@ -16,7 +16,8 @@ urlpatterns = [
     path('estop_release', views.estop_release, name='estop_release'),
     path('get-info', views.get_info, name='get_info'),
     path('get-server-state', views.get_server_state, name='get_server_state'),
-    path('toggle-accept-command', views.toggle_accept_command, name='toggle_accept_command'),
+    path('toggle-accept-command', views.toggle_accept_command,
+         name='toggle_accept_command'),
     path('command', views.run_command, name='command'),
     path('program', views.add_program, name='add_program'),
     path('get-programs', views.get_programs, name='get_programs'),
@@ -32,9 +33,10 @@ urlpatterns = [
     path('toggle-auto-run', views.toggle_auto_run, name='toggle_auto_run'),
     path('step-command', views.step_command, name='step_command'),
     path('execute-file', views.execute_file, name='execute_file'),
+    path('set_scratch_controller', views.set_scratch_controller, name='set_scratch_controller'),
     path(
         "favicon.ico",
         RedirectView.as_view(url=staticfiles_storage.url("favicon.ico")),
     ),
-    #path('__debug__/', include('debug_toolbar.urls')),
+    # path('__debug__/', include('debug_toolbar.urls')),
 ]
