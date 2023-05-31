@@ -12,11 +12,23 @@ from bosdyn.client import ResponseError, RpcError, create_standard_sdk
 from bosdyn.client.exceptions import UnauthenticatedError
 from bosdyn.client.lease import LeaseClient, LeaseKeepAlive
 from bosdyn.client.license import LicenseClient
+from bosdyn.api.basic_command_pb2 import RobotCommandFeedbackStatus
+from bosdyn.client import math_helpers
+from bosdyn.client.frame_helpers import (BODY_FRAME_NAME, ODOM_FRAME_NAME, VISION_FRAME_NAME,
+                                         get_se2_a_tform_b)
+from bosdyn.client.robot_state import RobotStateClient
+
+from bosdyn.api import geometry_pb2
+
+
 
 
 import os, time
 
 def main(robot, command_client):
+    blocking_stand(command_client)
+
+    '''
     license_client = robot.ensure_client(LicenseClient.default_service_name)
     if not license_client.get_feature_enabled([ChoreographyClient.license_name
                                               ])[ChoreographyClient.license_name]:
@@ -29,7 +41,7 @@ def main(robot, command_client):
     # return
 
 
-    DEFAULT_DANCE = "lights_dance.csq"
+    DEFAULT_DANCE = "test_dance.csq"
     default_filepath = os.path.join(os.path.dirname(os.path.abspath(__file__)), DEFAULT_DANCE)
     choreography = load_choreography_sequence_from_txt_file(default_filepath)
     try:
@@ -66,4 +78,7 @@ def main(robot, command_client):
     for move in choreography.moves:
         total_choreography_slices += move.requested_slices
     estimated_time_seconds = total_choreography_slices / choreography.slices_per_minute * 60.0
-    time.sleep(estimated_time_seconds + 1)
+    time.sleep(estimated_time_seconds
+               
+               )
+    '''

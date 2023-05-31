@@ -2,16 +2,33 @@ name: "Test Dance"
 slices_per_minute: 240
 
 moves: {
-  type: "stand_to_kneel"
-  requested_slices: 8
-}
-moves: {
-  type: "kneel_clap"
-  requested_slices: 4
-  start_slice: 12
-}
-moves: {
-  type: "kneel_to_stand"
-  requested_slices: 8
-  start_slice: 20
+  type: "fidget_stand"
+  requested_slices: 60
+  fidget_stand_params: {
+    preset: PRESET_EXHAUSTED
+    gaze_mean_period: {
+      value: 100
+    }
+    shift_mean_period {
+      value: 100
+    }
+    shift_max_transition_time {
+      value: 100
+    }
+    breath_min_z {
+      value: 0
+    }
+    breath_max_z {
+      value: 0.2
+    }
+    breath_max_period {
+      value: 2
+    }
+    leg_gesture_mean_period {
+      value: 100
+    }
+    gaze_slew_rate {
+      value: 0
+    }
+  }
 }
