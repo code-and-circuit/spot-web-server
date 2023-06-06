@@ -689,17 +689,8 @@ class Background_Process:
             x = float(args['x'])
             y = float(args['y'])
             z = float(args['z'])
-
-            l = math.sqrt(x * x + y * y)
-
-            if (l < 1):
-                self._robot_control.walk(x, y, math.radians(z), t=1)
-            else:
-                x /= l
-                y /= l
-                z /= l
-
-                self._robot_control.walk(x, y, math.radians(z), t=l)
+            
+            self._robot_control.move(x, y, 3)
 
         if action == 'set_locomotion_hint':
             self._robot_control.set_locomotion_hint(command['Args']['hint'])

@@ -1,34 +1,38 @@
 name: "Test Dance"
-slices_per_minute: 240
+slices_per_minute: 480
 
 moves: {
-  type: "fidget_stand"
-  requested_slices: 60
-  fidget_stand_params: {
-    preset: PRESET_EXHAUSTED
-    gaze_mean_period: {
-      value: 100
+  type: "running_man"
+  requested_slices: 15
+  running_man_params: {
+    velocity {
+      x {
+
+      }
+      y {
+
+      }
     }
-    shift_mean_period {
-      value: 100
+    swing_height {
+      value: 0.25
     }
-    shift_max_transition_time {
-      value: 100
+    spread {
+      value: 0.15
     }
-    breath_min_z {
-      value: 0
+    reverse {
+
     }
-    breath_max_z {
-      value: 0.2
+    pre_move_cycles {
+
     }
-    breath_max_period {
-      value: 2
+    speed_multiplier {
+      value: 1.0
     }
-    leg_gesture_mean_period {
-      value: 100
+    duty_cycle {
+      value: 0.5
     }
-    gaze_slew_rate {
-      value: 0
-    }
+    com_height {
+      value: 0.52
+    } 
   }
 }

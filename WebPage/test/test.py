@@ -28,7 +28,8 @@ import os, time
 def main(robot, command_client):
     blocking_stand(command_client)
 
-    '''
+    return
+    
     license_client = robot.ensure_client(LicenseClient.default_service_name)
     if not license_client.get_feature_enabled([ChoreographyClient.license_name
                                               ])[ChoreographyClient.license_name]:
@@ -78,7 +79,4 @@ def main(robot, command_client):
     for move in choreography.moves:
         total_choreography_slices += move.requested_slices
     estimated_time_seconds = total_choreography_slices / choreography.slices_per_minute * 60.0
-    time.sleep(estimated_time_seconds
-               
-               )
-    '''
+    time.sleep(estimated_time_seconds + 2)

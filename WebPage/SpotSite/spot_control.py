@@ -295,14 +295,14 @@ class Spot_Control:
             self._send_walk_command(x, y, z, t = t)
 
     @dispatch
-    def move(self, x, y, max_vel: 0.5):
+    def move(self, x, y, z, max_vel=0.5):
         robot_state_client = self.robot.ensure_client(RobotStateClient.default_service_name)
         transforms = robot_state_client.get_robot_state().kinematic_state.transforms_snapshot
 
         frame_name = ODOM_FRAME_NAME
 
         # Build the transform for where we want the robot to be relative to where the body currently is.
-        body_tform_goal = math_helpers.SE2Pose(x=x, y=y, angle=-1)
+        body_tform_goal = math_helpers.SE2Pose(x=x, y=y, angle=z)
         # We do not want to command this goal in body frame because the body will move, thus shifting
         # our goal. Instead, we transform this offset to get the goal position in the output frame
         # (which will be either odom or vision).

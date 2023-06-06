@@ -552,6 +552,9 @@ def execute_file(request: HttpRequest) -> JsonResponse:
     do_action(request, "execute_file")
     return JsonResponse({"test": "TEST"}, status=200)
 
+def set_scratch_controller(request:HttpRequest) -> JsonResponse:
+    return
+
 
 async def websocket_view(socket: object) -> None:
     """
@@ -573,5 +576,8 @@ async def websocket_view(socket: object) -> None:
 
 async def scratch_websocket(socket: object) -> None:
     await socket.accept()
+    # print(dir(socket))
+    print(socket._scope['client'][0])
+    # print(socket._scope)
     await scratch_handler.accept_ws_connection(socket)
 
