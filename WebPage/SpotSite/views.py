@@ -553,7 +553,8 @@ def execute_file(request: HttpRequest) -> JsonResponse:
     return JsonResponse({"test": "TEST"}, status=200)
 
 def set_scratch_controller(request:HttpRequest) -> JsonResponse:
-    return
+    scratch_handler.set_allowed_client(request.GET.get("ip"))
+    return JsonResponse({}, status=200)
 
 
 async def websocket_view(socket: object) -> None:

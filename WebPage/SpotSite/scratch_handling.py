@@ -1,6 +1,7 @@
 from pprint import pprint
 import time
 from SpotSite.utils import start_thread
+from SpotSite import background_process
 import socket as socket_lib
 import json
 from SpotSite.utils import output_to_socket
@@ -48,6 +49,9 @@ class Scratch_Handler:
                 if message["type"] == "change-name":
                     self.sockets[ip]["name"] = message["name"] if message["name"] != "" else ip
                     self.update_scratch_clients()
+                if message["type"] == "command" and self.allowed_ip == ip:
+                    background_process.bg_process.add_command(message)
+                    
         
     def get_client_list(self):
         return [(client["name"], ip) for ip, client in self.sockets.items()]

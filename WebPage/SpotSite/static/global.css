@@ -115,9 +115,12 @@ red {
 }
 
 .scratch-leases h2 {
-  width: 100%;
+  width: 80%;
   text-align: center;
   padding-top: 5px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .scratch-leases {
@@ -130,12 +133,21 @@ red {
 .client-list {
   width: 80%;
   height: calc(80% - 20px);
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .client-list p {
+  text-align: center;
   font-size: 22px;
   outline: 2px solid hsla(0, 0%, 100%, 0.8);
-  width: min-content;
+  width: 20%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  height: min-content;
   padding: 5px 12px 5px 12px;
   border-radius: 3px;
   cursor: pointer;

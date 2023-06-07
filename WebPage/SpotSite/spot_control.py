@@ -311,11 +311,8 @@ class Spot_Control:
 
         max_vel = 0.5
 
-        vel_limit = geometry_pb2.SE2VelocityLimit(max_vel=geometry_pb2.SE2Velocity(linear=geometry_pb2.Vec2(x=max_vel, y=max_vel)
-    ,
-                                            angular=0.5))
-
-
+        vel_limit = geometry_pb2.SE2VelocityLimit(max_vel=geometry_pb2.SE2Velocity(linear=geometry_pb2.Vec2(x=max_vel, y=max_vel),angular=0.5))
+        
         params = RobotCommandBuilder.mobility_params()
         params.vel_limit.CopyFrom(vel_limit)
 

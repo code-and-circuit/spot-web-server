@@ -169,6 +169,7 @@ socket.onmessage = (message) => {
         document.querySelector("#ip-" + scratch_controller[1].replaceAll(".", "-")).classList.add("chosen");
         document.querySelector("#scratch-controller-name").innerHTML = scratch_controller[0];
     }
+
     // Handles unknown output types (should not happen, just for safetey and potential debugging) 
     else {
         addOutput("<red>Type not recognized: " + data["type"] + "</red>");
