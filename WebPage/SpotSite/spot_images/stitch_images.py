@@ -327,7 +327,7 @@ class Stitcher:
         except Exception as e:
             print(f"Error creating glfw context")
             return
-        print("Initialized glfw")
+        # print("Initialized glfw")
         self._load_shaders()
         self._start_glfw()
 

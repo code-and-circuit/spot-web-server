@@ -415,8 +415,6 @@ class Background_Process:
         self.keys = {}
         self._is_shutting_down = False
 
-        # pprint(self.get_state_of_everything())
-
     def _clear_lease(self) -> None:
         """
         Returns and clears any active lease with Spot

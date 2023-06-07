@@ -319,7 +319,6 @@ def run_command(request: HttpRequest) -> JsonResponse:
     if request.method == "POST":
         # Obtains data from the json file
         data = json.loads(request.body.decode("utf-8"))
-        print(f"{datetime.datetime.now()} Command: ", data)
         if background_process.bg_process.is_running and not background_process.bg_process.robot.is_estopped() and \
                 background_process.bg_process._is_accepting_commands:
             # Adds the command to the queue of commands
@@ -577,8 +576,5 @@ async def websocket_view(socket: object) -> None:
 
 async def scratch_websocket(socket: object) -> None:
     await socket.accept()
-    # print(dir(socket))
-    print(socket._scope['client'][0])
-    # print(socket._scope)
     await scratch_handler.accept_ws_connection(socket)
 

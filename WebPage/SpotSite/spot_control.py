@@ -16,7 +16,6 @@ import time
 import math
 from SpotSite import websocket
 from SpotSite.spot_logging import log
-from pprint import pprint
 
 from bosdyn.api import robot_command_pb2, mobility_command_pb2
 from bosdyn.api.spot import robot_command_pb2 as spot_command_pb2
@@ -312,7 +311,7 @@ class Spot_Control:
         max_vel = 0.5
 
         vel_limit = geometry_pb2.SE2VelocityLimit(max_vel=geometry_pb2.SE2Velocity(linear=geometry_pb2.Vec2(x=max_vel, y=max_vel),angular=0.5))
-        
+
         params = RobotCommandBuilder.mobility_params()
         params.vel_limit.CopyFrom(vel_limit)
 

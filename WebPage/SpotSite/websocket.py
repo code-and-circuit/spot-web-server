@@ -220,9 +220,6 @@ class Websocket_List:
                 pass
             else:
                 self.print(-1, str(message), all=True)
-                # print(e)
-                # print(message)
-                # print("ERROR IN SOCKETS")
 
     def print(self, socket_index: any, message: str, all: bool = False, type: str = "output") -> None:
         """

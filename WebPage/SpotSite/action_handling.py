@@ -139,8 +139,5 @@ def do_action(action: str, socket_index: any, args: any = None) -> any:
                 socket_index, "Can't execute from file becase lease has not been acquired!")
         execute(bg_process.robot, bg_process._command_client)
 
-    elif action == "set_scratch_controller":
-        print("!!!!")
-
     else:
         output_to_socket(socket_index, f"Command not recognized: {action}")

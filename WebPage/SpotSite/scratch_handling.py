@@ -1,4 +1,3 @@
-from pprint import pprint
 import time
 from SpotSite.utils import start_thread
 from SpotSite import background_process
