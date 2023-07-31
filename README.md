@@ -172,6 +172,7 @@ When programs are sent, they are saved to a database on the server and can be ch
 ## Important 
 ### in order of importance:
 1. Add API-like documentation
+2. Change stand height/walk mode from website UI, show the values as well
 
 ## General ToDos
 
