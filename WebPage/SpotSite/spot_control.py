@@ -14,8 +14,10 @@
 """
 import time
 import math
+import os
 from SpotSite import websocket
 from SpotSite.spot_logging import log
+from bosdyn.client import ResponseError
 
 from bosdyn.api import robot_command_pb2, mobility_command_pb2
 from bosdyn.api.spot import robot_command_pb2 as spot_command_pb2
@@ -28,6 +30,11 @@ from bosdyn.client import math_helpers
 from bosdyn.client.frame_helpers import (BODY_FRAME_NAME, ODOM_FRAME_NAME, VISION_FRAME_NAME,
                                          get_se2_a_tform_b)
 from bosdyn.api import geometry_pb2
+from bosdyn.client.license import LicenseClient
+from bosdyn.choreography.client.choreography import (ChoreographyClient,
+                                                     load_choreography_sequence_from_txt_file)
+from bosdyn.client.exceptions import UnauthenticatedError
+
 
 
 
@@ -148,6 +155,15 @@ class Spot_Control:
 
         self.robot_state_client = robot.ensure_client(
             RobotStateClient.default_service_name)
+        
+        self.choreography_client = None
+        
+        license_client = robot.ensure_client(LicenseClient.default_service_name)
+        if not license_client.get_feature_enabled([ChoreographyClient.license_name
+                                              ])[ChoreographyClient.license_name]:
+            print("This robot is not licensed for choreography.")
+        else:
+            self.choreography_client = robot.ensure_client(ChoreographyClient.default_service_name)
 
     def print(self, message: str, all=False, type="output"):
         """
@@ -301,7 +317,7 @@ class Spot_Control:
         frame_name = ODOM_FRAME_NAME
 
         # Build the transform for where we want the robot to be relative to where the body currently is.
-        body_tform_goal = math_helpers.SE2Pose(x=x, y=y, angle=z)
+        body_tform_goal = math_helpers.SE2Pose(x=x, y=y, angle=math.pi / 180 * z)
         # We do not want to command this goal in body frame because the body will move, thus shifting
         # our goal. Instead, we transform this offset to get the goal position in the output frame
         # (which will be either odom or vision).
@@ -312,8 +328,8 @@ class Spot_Control:
 
         vel_limit = geometry_pb2.SE2VelocityLimit(max_vel=geometry_pb2.SE2Velocity(linear=geometry_pb2.Vec2(x=max_vel, y=max_vel),angular=0.5))
 
-        params = RobotCommandBuilder.mobility_params()
-        params.vel_limit.CopyFrom(vel_limit)
+        params = RobotCommandBuilder.mobility_params(locomotion_hint=self.locomotion_hint, body_height=self.height)
+        params.vel_limit.CopyFrom(vel_limit)        
 
         # Command the robot to go to the goal point in the specified frame. The command will stop at the
         # new position.
@@ -359,10 +375,12 @@ class Spot_Control:
             self.locomotion_hint = spot_command_pb2.HINT_TROT
         if hint == "crawl":
             self.locomotion_hint = spot_command_pb2.HINT_CRAWL
+        '''
         if hint == "jog":
             self.locomotion_hint = spot_command_pb2.HINT_JOG
         if hint == "hop":
             self.locomotion_hint = spot_command_pb2.HINT_HOP
+        '''
 
 
     @dispatch
@@ -418,6 +436,48 @@ class Spot_Control:
         cmd = RobotCommandBuilder.synchro_stand_command(
             footprint_R_body=rotation, body_height = self.height)
         self.command_client.robot_command(cmd)
+
+    
+    @dispatch
+    def do_dance_sequence(self, sequence_filename: str):
+        default_filepath = os.path.join(os.path.dirname(os.path.abspath(__file__)), ("Dance Moves/" + sequence_filename))
+        choreography = load_choreography_sequence_from_txt_file(default_filepath)
+        try:
+            upload_response = self.choreography_client.upload_choreography(choreography, non_strict_parsing=True)
+        except UnauthenticatedError as err:
+            print(
+                "The robot license must contain 'choreography' permissions to upload and execute dances. "
+                "Please contact Boston Dynamics Support to get the appropriate license file. ")
+            return True
+        except ResponseError as err:
+            # Check if the ChoreographyService considers the uploaded routine as valid. If not, then the warnings must be
+            # addressed before the routine can be executed on robot.
+            error_msg = "Choreography sequence upload failed. The following warnings were produced: "
+            for warn in err.response.warnings:
+                error_msg += warn
+            print(error_msg)
+            return
+        
+        cmd = RobotCommandBuilder.synchro_stand_command(body_height = 0)
+        self.command_client.robot_command(cmd)
+        routine_name = choreography.name
+        # Then, set a start time five seconds after the current time.
+        client_start_time = time.time() + 1
+        # Specify the starting slice of the choreography. We will set this to slice=0 so that the routine begins at
+        # the very beginning.
+        start_slice = 0
+        # Issue the command to the robot's choreography service.
+        self.choreography_client.execute_choreography(choreography_name=routine_name,
+                                                client_start_time=client_start_time,
+                                                choreography_starting_slice=start_slice)
+
+        # Estimate how long the choreographed sequence will take, and sleep that long.
+        total_choreography_slices = 0
+        for move in choreography.moves:
+            total_choreography_slices += move.requested_slices
+        estimated_time_seconds = total_choreography_slices / choreography.slices_per_minute * 60.0
+        time.sleep(estimated_time_seconds + 2)
+
 
     @dispatch
     def setup(self) -> None:

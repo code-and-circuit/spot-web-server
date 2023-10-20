@@ -1,6 +1,7 @@
 from SpotSite.background_process import bg_process
 from SpotSite.utils import output_to_socket, start_thread
 from SpotSite.file_executing import execute
+from SpotSite.scratch_handling import scratch_handler
 
 
 def do_action(action: str, socket_index: any, args: any = None) -> any:
@@ -44,6 +45,7 @@ def do_action(action: str, socket_index: any, args: any = None) -> any:
 
     elif action == "toggle_accept_command":
         bg_process._is_accepting_commands = not bg_process._is_accepting_commands
+        scratch_handler.set_allowed_client("-1")
 
         output_to_socket(-1, bg_process._is_accepting_commands,
                          type="toggle_accept_command", all=True)

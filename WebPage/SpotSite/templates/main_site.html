@@ -238,13 +238,17 @@
                 update_client_list(state.scratch_clients)
 
                 try {
-                    document.querySelector("#ip-" + state.scratch_controller[1].replaceAll(".", "-")).classList.add("chosen");
-                
+
+                    if (state.scratch_controller[1] == "-1")
+                        state.scratch_controller[0] = "No One"
+                    else
+                        document.querySelector("#ip-" + state.scratch_controller[1].replaceAll(".", "-")).classList.add("chosen");
+
                     document.querySelector("#scratch-controller-name").innerHTML = state.scratch_controller[0];
                 }
 
                 catch (TypeError) {
-                    ;
+                    console.log(state.scratch_controller)
                 }
                 
             }

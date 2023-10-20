@@ -347,36 +347,36 @@ red {
 }
 
 #q {
-  right: 110px;
+  right: 140px;
   top: 10px;
 }
 
 #e {
-  right: 80px;
+  right: 110px;
   top: 10px;
 }
 
 #r {
-  right: 80px;
+  right: 110px;
   top: 40px;
   width: 50px;
 }
 
 #f {
-  right: 80px;
+  right: 110px;
   top: 70px;
   width: 50px;
 }
 
 #z {
-  right: 6px;
+  right: 36px;
   top: 20px;
   width: 60px;
   height: 40px;
 }
 
 #x {
-  right: 6px;
+  right: 36px;
   top: 70px;
   width: 60px;
   height: 40px;
@@ -385,7 +385,7 @@ red {
 #space {
   left: 11px;
   top: 100px;
-  width: calc(100% - 27px - 70px);
+  width: calc(100% - 27px - 100px);
 }
 #toggle {
   width: 100%;
@@ -438,8 +438,6 @@ red {
   color: white;
 }
 
-
-
 .key-selected {
   cursor: default;
   background: var(--selected-container);
@@ -455,7 +453,7 @@ red {
   position: fixed;
   left: 30px;
   top: 0;
-  width: 250px;
+  width: 280px;
   height: 135px;
   top: -140px;
   padding-top: 25px;

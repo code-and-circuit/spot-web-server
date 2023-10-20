@@ -56,7 +56,7 @@ class Scratch_Handler:
         return [(client["name"], ip) for ip, client in self.sockets.items()]
     
     def get_allowed_client_name(self):
-        if self.allowed_ip != "":
+        if self.allowed_ip != "" and self.allowed_ip != "-1":
             return self.sockets[self.allowed_ip]["name"]
         else:
             return "No one"

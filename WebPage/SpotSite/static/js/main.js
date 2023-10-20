@@ -166,7 +166,10 @@ socket.onmessage = (message) => {
     else if (data["type"] == "scratch_clients") {
         update_client_list(data["output"][0]);
         const scratch_controller = data["output"][1];
-        document.querySelector("#ip-" + scratch_controller[1].replaceAll(".", "-")).classList.add("chosen");
+        if (scratch_controller[1] == "-1")
+            scratch_controller[0] = "No One"
+        else
+            document.querySelector("#ip-" + scratch_controller[1].replaceAll(".", "-")).classList.add("chosen");
         document.querySelector("#scratch-controller-name").innerHTML = scratch_controller[0];
     }
 
@@ -241,7 +244,6 @@ $("#estop").click(() => {
 $("#stop-program").click(() => {
     sendRequest(urls.clear_queue);
 });
-
 
 $('#toggle-accept-command-button').click(() => {
     sendRequest(urls.toggle_accept_command);

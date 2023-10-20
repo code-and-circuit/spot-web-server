@@ -688,10 +688,21 @@ class Background_Process:
             y = float(args['y'])
             z = float(args['z'])
             
-            self._robot_control.move(x, y, 3)
+            self._robot_control.move(x, y, z)
 
         if action == 'set_locomotion_hint':
             self._robot_control.set_locomotion_hint(command['Args']['hint'])
+        
+        if action == 'bow':
+            self._robot_control.do_dance_sequence("bow.csq")
+
+        if action == 'twerk':
+            self._robot_control.do_dance_sequence("twerk.csq")
+
+        if action == 'butt_circle':
+            self._robot_control.do_dance_sequence("butt_circle.csq")
+        if action == 'breathe':
+            self._robot_control.do_dance_sequence("breathe.csq")
 
     def key_up(self, key: str) -> bool:
         """

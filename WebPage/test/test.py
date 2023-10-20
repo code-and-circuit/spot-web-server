@@ -26,9 +26,9 @@ from bosdyn.api import geometry_pb2
 import os, time
 
 def main(robot, command_client):
-    blocking_stand(command_client)
+    # blocking_stand(command_client)
 
-    return
+    
     
     license_client = robot.ensure_client(LicenseClient.default_service_name)
     if not license_client.get_feature_enabled([ChoreographyClient.license_name
@@ -38,8 +38,9 @@ def main(robot, command_client):
 
     choreography_client = robot.ensure_client(ChoreographyClient.default_service_name)
 
-
-    # return
+    sequences_on_robot = choreography_client.list_all_moves().move_param_config
+    print(sequences_on_robot)
+    return
 
 
     DEFAULT_DANCE = "test_dance.csq"
