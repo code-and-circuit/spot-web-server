@@ -72,7 +72,7 @@ Clone the repository, then run ```pip install -r /path/to/repo/WebPage/requireme
 Arguments for command: 
 - ```--host [Address]``` (0.0.0.0 to make it publicly accessible)
 - ```--reload``` to automatically reload when files are changed
-- ```--port [Port]``` to set the port (8000 by default)
+- ```--port [Port]``` to set the port (8000 by default) - Leave out this argument, port 8000 should be used, as this is what the Scratch interface is expecting 
 
 ## Developing
 While making changes directly on the dedicated server and simply restarting the corresponding service is good for quick fixes, this method is not good for debugging or automatic reload of the server. 
