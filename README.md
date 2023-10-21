@@ -60,11 +60,11 @@ Clone the repository, then run ```pip install -r /path/to/repo/WebPage/requireme
 ### Running
 
 1. add a file to spot-web-server\WebPage\SpotSite named  ``` secrets.py``` containing 
-      ```
-      ROBOT_USERNAME = YOUR_ROBOT_USERNAME
-      ROBOT_PASSWORD = YOUR_ROBOT_PASSWORD
-      SECRET_KEY = YOUR_DJANGO_SECRET_KEY
-      ROBOT_IP = YOUR_SPOT_IP
+      ```python
+      ROBOT_USERNAME = "YOUR_ROBOT_USERNAME"
+      ROBOT_PASSWORD = "YOUR_ROBOT_PASSWORD"
+      SECRET_KEY = "YOUR_DJANGO_SECRET_KEY" # I believe this is arbitrary and can be any string
+      ROBOT_IP = "YOUR_SPOT_IP"
       ```
 2. ```cd path/to/spot-web-server/WebPage```
 3. ```python3 -m uvicorn WebPage.asgi:application```
