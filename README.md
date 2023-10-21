@@ -60,11 +60,11 @@ Clone the repository, then run ```pip install -r /path/to/repo/WebPage/requireme
 ### Running
 
 1. add a file to spot-web-server\WebPage\SpotSite named  ``` secrets.py``` containing 
-      ```
-      ROBOT_USERNAME = YOUR_ROBOT_USERNAME
-      ROBOT_PASSWORD = YOUR_ROBOT_PASSWORD
-      SECRET_KEY = YOUR_DJANGO_SECRET_KEY
-      ROBOT_IP = YOUR_SPOT_IP
+      ```python
+      ROBOT_USERNAME = "YOUR_ROBOT_USERNAME"
+      ROBOT_PASSWORD = "YOUR_ROBOT_PASSWORD"
+      SECRET_KEY = "YOUR_DJANGO_SECRET_KEY" # I believe this is arbitrary and can be any string
+      ROBOT_IP = "YOUR_SPOT_IP"
       ```
 2. ```cd path/to/spot-web-server/WebPage```
 3. ```python3 -m uvicorn WebPage.asgi:application```
@@ -72,7 +72,7 @@ Clone the repository, then run ```pip install -r /path/to/repo/WebPage/requireme
 Arguments for command: 
 - ```--host [Address]``` (0.0.0.0 to make it publicly accessible)
 - ```--reload``` to automatically reload when files are changed
-- ```--port [Port]``` to set the port (8000 by default)
+- ```--port [Port]``` to set the port (8000 by default) - Leave out this argument, port 8000 should be used, as this is what the Scratch interface is expecting 
 
 ## Developing
 While making changes directly on the dedicated server and simply restarting the corresponding service is good for quick fixes, this method is not good for debugging or automatic reload of the server. 
@@ -173,6 +173,7 @@ When programs are sent, they are saved to a database on the server and can be ch
 ### in order of importance:
 1. Add API-like documentation
 2. Change stand height/walk mode from website UI, show the values as well
+3. Transition away from Django towards something more lightweight like FastAPI
 
 ## General ToDos
 
