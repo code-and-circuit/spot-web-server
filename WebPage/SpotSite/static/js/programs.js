@@ -3,7 +3,6 @@ const program_handler = {
     selected_program : "",
 
     show_programs() {
-        console.log("!")
         $(".program-list").html("");
             for (const program in this.programs) {
                 // Create a button that allows the program to be selected
