@@ -7,3 +7,4 @@ WebPage/SpotSite/Logs/
 *.png
 .vscode/tasks.json
 WebPage/db.sqlite3
+*.dstore
