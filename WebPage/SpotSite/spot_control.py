@@ -297,20 +297,15 @@ class Spot_Control:
             t = d/distance
 
         # Splits commands up if specified turn value is too high. Works, but can probably be improved
-        if abs(z) >= 1.5:
-            num_steps = int(abs(z) / 1.5)
-            leftover_x = x % num_steps
-            leftover_y = y % num_steps
-            leftover_z = 1.5 - z % 1.5
-            print(leftover_z)
-            for _ in range(num_steps):
-                self._send_walk_command(x/num_steps, y/num_steps, 1.5 if z > 0 else -1.5)
-            self._send_walk_command(leftover_x, leftover_y, leftover_z if z > 0 else -leftover_z)
-        else:
-            self._send_walk_command(x, y, z, t = t)
+        self._send_walk_command(x, y, z, t = t)
 
     @dispatch
     def move(self, x, y, z, max_vel=0.5):
+
+        if self.locomotion_hint == spot_command_pb2.HINT_JOG or self.locomotion_hint == spot_command_pb2.HINT_HOP:
+            self.walk(x,y,z, t=1)
+            return
+
         robot_state_client = self.robot.ensure_client(RobotStateClient.default_service_name)
         transforms = robot_state_client.get_robot_state().kinematic_state.transforms_snapshot
 
@@ -375,12 +370,12 @@ class Spot_Control:
             self.locomotion_hint = spot_command_pb2.HINT_TROT
         if hint == "crawl":
             self.locomotion_hint = spot_command_pb2.HINT_CRAWL
-        '''
+
         if hint == "jog":
             self.locomotion_hint = spot_command_pb2.HINT_JOG
         if hint == "hop":
             self.locomotion_hint = spot_command_pb2.HINT_HOP
-        '''
+    
 
 
     @dispatch
@@ -397,7 +392,7 @@ class Spot_Control:
             dx * self.KEYBOARD_COMMAND_VELOCITY,
             dy * self.KEYBOARD_COMMAND_VELOCITY,
             dz * self.KEYBOARD_TURN_VELOCITY,
-            body_height = self.height
+            body_height = 0
         )
         '''
         walk.synchronized_command.mobility_command.params.CopyFrom(
