@@ -54,6 +54,9 @@ Since the server accepts programs and commands through HTTP requests, Spot could
 
 ## Installing and Running
 There is a known potential issue with image stitching when running the server on a device with no graphical context. Xvfb can be used to create this context virtually, or the issue can be ignored and the server will handle it.
+
+Guides on how to set up the server as well as the Scratch interface can be found [here](https://github.com/code-and-circuit/spot-web-server/tree/main/Guides)
+
 ### Installing
 Clone the repository, then run ```pip install -r /path/to/repo/WebPage/requirements.txt``` to install required python modules.
 
