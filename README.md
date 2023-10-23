@@ -167,6 +167,10 @@ There is a python module for sending programs to Scratch that can be found in Co
 
 When programs are sent, they are saved to a database on the server and can be chosen, viewed, run, or deleted, in the two panels on the right side of the screen under the header “Programs and Commands”.
 
+# Known Issues
+- Server crashes if the lease is hijacked
+- Server is unable to clear certain behavior faults
+
 # TODO
 
 ## Important 
