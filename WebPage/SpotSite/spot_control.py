@@ -302,10 +302,12 @@ class Spot_Control:
     @dispatch
     def move(self, x, y, z, max_vel=0.5):
 
+        '''
         if self.locomotion_hint == spot_command_pb2.HINT_JOG or self.locomotion_hint == spot_command_pb2.HINT_HOP:
             self.walk(x,y,z, t=1)
             return
-
+        '''
+        
         robot_state_client = self.robot.ensure_client(RobotStateClient.default_service_name)
         transforms = robot_state_client.get_robot_state().kinematic_state.transforms_snapshot
 
@@ -331,7 +333,9 @@ class Spot_Control:
         robot_cmd = RobotCommandBuilder.synchro_se2_trajectory_point_command(
             goal_x=out_tform_goal.x, goal_y=out_tform_goal.y, goal_heading=out_tform_goal.angle,
             frame_name=frame_name, params=params)
-        end_time = 20.0
+        
+        end_time = math.sqrt(x * x + y * y) / 0.5
+
         cmd_id = self.command_client.robot_command(lease=None, command=robot_cmd,
                                                     end_time_secs=time.time() + end_time)
         # Wait until the robot has reached the goal.
@@ -370,7 +374,6 @@ class Spot_Control:
             self.locomotion_hint = spot_command_pb2.HINT_TROT
         if hint == "crawl":
             self.locomotion_hint = spot_command_pb2.HINT_CRAWL
-
         if hint == "jog":
             self.locomotion_hint = spot_command_pb2.HINT_JOG
         if hint == "hop":
