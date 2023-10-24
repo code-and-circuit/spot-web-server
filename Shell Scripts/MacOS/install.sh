@@ -4,7 +4,6 @@ mkdir ~/Documents/GitHub && cd ~/Documents/GitHub
 # Web Server
 git clone https://github.com/code-and-circuit/spot-web-server.git
 
-touch spot-web-server/WebPage/SpotSite/secrets.py
 echo "ROBOT_USERNAME = \"[YOUR SPOT USERNAME]\"
 ROBOT_PASSWORD = \"[YOUR SPOT PASSWORD]\"
 SECRET_KEY = \"dummy secret key\" # This does not have to be changed
