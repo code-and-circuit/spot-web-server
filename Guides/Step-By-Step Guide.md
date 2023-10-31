@@ -63,7 +63,7 @@ cd WebPage && python3 -m uvicorn WebPage.asgi:application --host 0.0.0.0
 1. Install node modules for the Scratch GUI and the Scratch VM
 	- Open the Scratch GUI repository in GitHub Desktop by clicking on the "Current Repository" button in the top left and choosing `scratch-gui` from the list.
 	- From the menu on the top bar of your window/screen in GitHub Desktop, choose `Repository > Open in Terminal`.
-	- Run the command `npm install --legacy-peer-deps` to install the node modules.
+	- Run the command `sudo npm install --legacy-peer-deps` to install the node modules.
 	- Once the modules have finished, keep the terminal open for linking (next step).
 	- Repeat this process for the Scratch VM as well, you should have two terminals open at this point.
 2. Link the Scratch GUI with the Scratch VM.
