@@ -551,7 +551,8 @@ def execute_file(request: HttpRequest) -> JsonResponse:
     do_action(request, "execute_file")
     return JsonResponse({"test": "TEST"}, status=200)
 
-def set_scratch_controller(request:HttpRequest) -> JsonResponse:
+
+def set_scratch_controller(request: HttpRequest) -> JsonResponse:
     scratch_handler.set_allowed_client(request.GET.get("ip"))
     return JsonResponse({}, status=200)
 
@@ -574,7 +575,7 @@ async def websocket_view(socket: object) -> None:
     background_process.bg_process._update_command_queue()
     await websocket.websocket_list.sockets[socket_index].keep_alive()
 
+
 async def scratch_websocket(socket: object) -> None:
     await socket.accept()
     await scratch_handler.accept_ws_connection(socket)
-
