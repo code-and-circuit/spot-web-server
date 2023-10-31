@@ -1,5 +1,6 @@
 # GitHub directory
-mkdir ~/Documents/GitHub && cd ~/Documents/GitHub
+mkdir ~/Documents/GitHub
+cd ~/Documents/GitHub
 
 # Web Server
 git clone https://github.com/code-and-circuit/spot-web-server.git
@@ -27,3 +28,4 @@ sudo npm link scratch-vm --legacy-peer-deps
 # Open files to write constants
 cd ..
 open -e spot-web-server/WebPage/SpotSite/secrets.py
+open -e scratch-vm/src/extensions/scratch3_spot/constants.js
