@@ -17,11 +17,11 @@ git clone https://github.com/kaspesla/scratch-vm.git
 
 # Node Stuff
 cd scratch-vm
-npm install --legacy-peer-deps
+sudo npm install --legacy-peer-deps
 sudo npm link --legacy-peer-deps
 
 cd ../scratch-gui
-npm install --legacy-peer-deps
+sudo npm install --legacy-peer-deps
 sudo npm link scratch-vm --legacy-peer-deps
 
 # Open files to write constants
