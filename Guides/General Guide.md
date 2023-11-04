@@ -21,7 +21,7 @@
 ## Running
 
 1. Run the Web Server, the Scratch GUI, and the Scratch VM according to their respective instructions ([Web Server](https://github.com/code-and-circuit/spot-web-server#installing-and-running), [Scratch](https://github.com/scratchfoundation/scratch-gui/wiki/Getting-Started#example-scratch-gui-vm-and-blocks-linked)).
-	- On my device, when running the Scratch GUI and VM, I encountered an error related to OpenSSL that said `Error: error:0308010C:digital envelope routines::unsupported`. To fix this, I ran the command `export NODE_OPTIONS=--openssl-legacy-provider` inside of both terminals in which I was running the GUI and the VM.
+	- On my device, when running the Scratch GUI and VM, I encountered an error related to OpenSSL that said `Error: error:0308010C:digital envelope routines::unsupported`. To fix this, I ran the command `export NODE_OPTIONS=--openssl-legacy-provider` inside of both terminals in which I was running the GUI and the VM. (found this on [Stack Overflow](https://stackoverflow.com/questions/69692842/error-message-error0308010cdigital-envelope-routinesunsupported?page=1&tab=scoredesc#tab-top))
 2. Connect to the Web Server on port `8000` and the Scratch client on port `8601`.
 3. Activate the Spot extension in Scratch.
 	- View all extensions by clicking on the blue button with the "plus" symbol in the bottom left of the Scratch client.
