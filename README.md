@@ -12,11 +12,11 @@ Created and maintained by Will Scheirey and the [Code & Circuit](https://codeand
 ## Overview
 
 ### Sections
-- [Premise](https://github.com/code-and-circuit/spot-web-server#Premise)
+- [Motivation](https://github.com/code-and-circuit/spot-web-server#Motivation)
 - [The Server](https://github.com/code-and-circuit/spot-web-server#code--circuits-spot-web-server-1)
 - [Coding Spot](https://github.com/code-and-circuit/spot-web-server#coding-spot)
 
-### Premise
+### Motivation
 
 Spot is an incredible tool for companies and organizations to use when they have specific purposes and missions for the robot to carry out and people with experience or knowledge using Spot, whether that be through the tablet or the Spot SDK. The tools that are given to owners of Spot allow for many different uses of the robot, but do not very well support the use of Spot in a collaborative environment. Further, the Spot SDK is mainly only accessible to people with experience in programming. This is completely fine and expected, as Boston Dynamics is more focused on creating robots, and allowing them to be used by people with experience in the field, than on teaching people how to program or learn how to use robots in general. 
 
