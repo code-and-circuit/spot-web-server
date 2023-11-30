@@ -334,7 +334,9 @@ class Spot_Control:
             goal_x=out_tform_goal.x, goal_y=out_tform_goal.y, goal_heading=out_tform_goal.angle,
             frame_name=frame_name, params=params)
         
-        end_time = math.sqrt(x * x + y * y) / 0.5
+        walk_time = math.sqrt(x * x + y * y) / max_vel
+        turn_time = z * 180/math.pi / 0.5
+        end_time = max(walk_time, turn_time)
 
         cmd_id = self.command_client.robot_command(lease=None, command=robot_cmd,
                                                     end_time_secs=time.time() + end_time)
