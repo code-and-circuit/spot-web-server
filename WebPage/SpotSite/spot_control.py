@@ -335,7 +335,7 @@ class Spot_Control:
             frame_name=frame_name, params=params)
         
         walk_time = math.sqrt(x * x + y * y) / max_vel
-        turn_time = z * 180/math.pi / 0.5
+        turn_time = z * math.pi/180 / 0.5
         end_time = max(walk_time, turn_time)
 
         cmd_id = self.command_client.robot_command(lease=None, command=robot_cmd,
