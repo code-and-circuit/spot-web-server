@@ -307,6 +307,11 @@ class Spot_Control:
             self.walk(x,y,z, t=1)
             return
         '''
+
+        x = float(x)
+        y = float(y)
+
+        z *= math.pi / 180
         
         robot_state_client = self.robot.ensure_client(RobotStateClient.default_service_name)
         transforms = robot_state_client.get_robot_state().kinematic_state.transforms_snapshot
@@ -314,7 +319,7 @@ class Spot_Control:
         frame_name = ODOM_FRAME_NAME
 
         # Build the transform for where we want the robot to be relative to where the body currently is.
-        body_tform_goal = math_helpers.SE2Pose(x=x, y=y, angle=math.pi / 180 * z)
+        body_tform_goal = math_helpers.SE2Pose(x=x, y=y, angle=z)
         # We do not want to command this goal in body frame because the body will move, thus shifting
         # our goal. Instead, we transform this offset to get the goal position in the output frame
         # (which will be either odom or vision).
@@ -334,9 +339,14 @@ class Spot_Control:
             goal_x=out_tform_goal.x, goal_y=out_tform_goal.y, goal_heading=out_tform_goal.angle,
             frame_name=frame_name, params=params)
         
-        walk_time = math.sqrt(x * x + y * y) / max_vel
-        turn_time = z * math.pi/180 / 0.5
-        end_time = max(walk_time, turn_time)
+        turn_time = abs(z) / 0.5
+
+        print(f"turn_time: {turn_time}")
+        print(f"x: {x}, y: {y}")
+
+        end_time = max(max(abs(x), abs(y)) / max_vel,  turn_time)
+
+        print(f"end_time: {end_time}")
 
         cmd_id = self.command_client.robot_command(lease=None, command=robot_cmd,
                                                     end_time_secs=time.time() + end_time)
