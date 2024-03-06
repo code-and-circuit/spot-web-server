@@ -40,7 +40,7 @@ def main(robot, command_client):
 
     sequences_on_robot = choreography_client.list_all_moves().move_param_config
     print(sequences_on_robot)
-    return
+    # return
 
 
     DEFAULT_DANCE = "test_dance.csq"

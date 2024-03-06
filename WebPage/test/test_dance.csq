@@ -3,11 +3,11 @@ slices_per_minute: 480
 
 moves: {
   type: "running_man"
-  requested_slices: 15
+  requested_slices: 48
   running_man_params: {
     velocity {
       x {
-
+        
       }
       y {
 
