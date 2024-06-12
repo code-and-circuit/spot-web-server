@@ -15,6 +15,7 @@ try {
 }
 
 let socket_index = null;
+let robot_height = 1;
 let robot_is_estopped = false;
 
 // Handles socket messages from the server
@@ -173,6 +174,12 @@ socket.onmessage = (message) => {
         document.querySelector("#scratch-controller-name").innerHTML = scratch_controller[0];
     }
 
+    else if (data["type"] == "robot_height") {
+        robot_height = round(parseFloat(data["output"]));
+
+        console.log("Robot height: ", robot_height);
+    }
+
     // Handles unknown output types (should not happen, just for safetey and potential debugging) 
     else {
         addOutput("<red>Type not recognized: " + data["type"] + "</red>");
@@ -216,6 +223,7 @@ function sendRequest(url, type = "GET") {
             // Socket index is sent so the server knows which socket to use for output
             socket_index: socket_index,
             selected_program: program_handler.selected_program,
+            robot_height: robot_height,
         },
         success: function (response) { },
         error: function (response) {
@@ -297,6 +305,11 @@ $("#execute-file").click(() => {
 
 $(".client_name").click((e) => {
     console.log(e.target);
+})
+
+$(".height-picker").click((e) => {
+    robot_height = e.target.value;
+    sendRequest(urls.set_robot_height);
 })
 
 // Sends a message to the server letting it know that the socket is closing

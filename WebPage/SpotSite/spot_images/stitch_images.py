@@ -27,6 +27,7 @@ import bosdyn.api
 import bosdyn.client.util
 import io
 import numpy
+import time
 
 from OpenGL.GL import *
 from OpenGL.GL import shaders, GL_VERTEX_SHADER
@@ -373,6 +374,7 @@ class Stitcher:
                 glfw.swap_buffers(self._window)
             except Exception as e:
                 pass
+            time.sleep(0.01)
         glfw.terminate()
 
     def _draw_string(self, string: str, x: float, y: float, color: tuple) -> None:

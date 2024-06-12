@@ -597,3 +597,18 @@ red {
   justify-content: left;
 }
 
+#height-picker
+{
+  z-index: 10;
+  position: absolute;
+  right: 5px;
+  top: 0;
+  width: 20px;
+  height: inherit;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+

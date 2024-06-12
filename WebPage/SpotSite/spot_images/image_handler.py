@@ -3,6 +3,7 @@ import io
 from io import BytesIO
 import base64
 import bosdyn
+import time
 
 from SpotSite.utils import start_thread
 from SpotSite.spot_images import stitch_images
@@ -41,6 +42,7 @@ class Image_Handler:
         start_thread(self.image_stitcher.start_glfw_loop)
         log("Started video loop")
         while self._show_video_feed:
+            time.sleep(0.01)
             self._get_images()
             self._update_robot_state()
 

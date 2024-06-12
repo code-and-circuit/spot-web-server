@@ -407,7 +407,7 @@ class Spot_Control:
             dx * self.KEYBOARD_COMMAND_VELOCITY,
             dy * self.KEYBOARD_COMMAND_VELOCITY,
             dz * self.KEYBOARD_TURN_VELOCITY,
-            body_height = 0
+            body_height = self.height
         )
         '''
         walk.synchronized_command.mobility_command.params.CopyFrom(

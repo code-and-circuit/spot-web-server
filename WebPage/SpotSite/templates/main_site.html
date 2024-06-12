@@ -119,6 +119,13 @@
 
             <p class="key" id="z">Z<br><small>Self Right</small></p>
             <p class="key" id="x">X<br><small>Roll Over</small></p>
+
+            <div id="height-picker">
+                <input type="radio" id="height-1" name="height" class="height-picker" value="1"/>
+                <input type="radio" id="height-2" name="height" class="height-picker" value="0"/>
+                <input type="radio" id="height-3" name="height" class="height-picker" value="-1"/>
+            </div>
+
             <input type="" id="ctrl">
         </div>
         <div class="video-feed">
@@ -153,7 +160,8 @@
                 toggle_auto_run_commands: "{% url 'toggle_auto_run' %}",
                 step_command: "{% url 'step_command' %}",
                 execute_file: "{% url 'execute_file' %}",
-                set_scratch_controller: "{% url 'set_scratch_controller' %}"
+                set_scratch_controller: "{% url 'set_scratch_controller' %}",
+                set_robot_height: "{% url 'set_robot_height' %}",
             }
         </script>
         <script>

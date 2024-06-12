@@ -556,6 +556,24 @@ def set_scratch_controller(request: HttpRequest) -> JsonResponse:
     scratch_handler.set_allowed_client(request.GET.get("ip"))
     return JsonResponse({}, status=200)
 
+def set_robot_height(request: HttpRequest) -> JsonResponse:
+    if background_process.bg_process.is_running and not background_process.bg_process.robot.is_estopped() and \
+            background_process.bg_process._is_accepting_commands:
+        
+        height = float(request.GET["robot_height"])
+        
+        # Adds the command to the queue of commands
+        background_process.bg_process._robot_control.set_height(height)
+        return JsonResponse({
+            "valid": True,
+            "command_sent": True
+        }, status=200)
+
+    return JsonResponse({
+        "valid": False,
+        "command_sent": True
+    }, status=200)
+
 
 async def websocket_view(socket: object) -> None:
     """

@@ -166,6 +166,31 @@ class Background_Process:
             log("Turned off robot")
             return True
 
+    def _handle_lease_keep_alive_error(self, err: any):
+        output_to_socket(-1, f"<red>Error with lease keep alive: </red>{err}", all=True)
+
+        if self._lease_client and self._lease:
+            try:
+                self._lease_client.return_lease(self._lease)
+            except bosdyn.client.lease.NotActiveLeaseError:
+                pass
+            except Exception:
+                print_exception(-1)
+
+        if self._lease_keep_alive:
+            try:
+                self._lease_keep_alive.shutdown()
+            except:
+                pass
+
+        self._has_lease = False
+
+        self._lease_keep_alive = None
+        self._lease = None
+        self._lease_client = None
+
+        output_to_socket(-1, "clear", all=True, type="lease_toggle")
+
     def _acquire_lease(self, socket_index: any) -> bool:
         """
         Attempts to acquire a lease from Spot
@@ -195,7 +220,7 @@ class Background_Process:
                 bosdyn.client.lease.LeaseClient.default_service_name)
             self._lease = self._lease_client.take()
             self._lease_keep_alive = bosdyn.client.lease.LeaseKeepAlive(
-                self._lease_client)
+                self._lease_client, on_failure_callback=self._handle_lease_keep_alive_error)
 
             self._has_lease = True
             output_to_socket(socket_index, "<green>Acquired Lease</green>")
@@ -423,8 +448,6 @@ class Background_Process:
         if self.robot:
             if self._lease_keep_alive and self.robot.is_powered_on():
                 self.turn_off(-1)
-                while self.robot.is_powered_on():
-                    pass
 
         if self._lease_client and self._lease:
             try:
@@ -521,6 +544,7 @@ class Background_Process:
                 self._keep_robot_on(socket_index)
                 self._run_programs(socket_index)
                 self._execute_commands(socket_index)
+                time.sleep(0.01)
 
         except:
             print_exception(socket_index)

@@ -34,6 +34,7 @@ urlpatterns = [
     path('step-command', views.step_command, name='step_command'),
     path('execute-file', views.execute_file, name='execute_file'),
     path('set_scratch_controller', views.set_scratch_controller, name='set_scratch_controller'),
+    path('set-robot-height', views.set_robot_height, name='set_robot_height'),
     path(
         "favicon.ico",
         RedirectView.as_view(url=staticfiles_storage.url("favicon.ico")),
